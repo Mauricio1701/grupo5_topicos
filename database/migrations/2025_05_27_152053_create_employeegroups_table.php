@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('coords', function (Blueprint $table) {
+        Schema::create('employeegroups', function (Blueprint $table) {
             $table->id();
-            $table->integer('type_coord');
-            $table->integer('coord_index');
-            $table->double('latitudes');
-            $table->double('longitudes');
+            $table->string('name');            
             $table->unsignedBigInteger('zone_id');
             $table->foreign('zone_id')->references('id')->on('zones');
+            $table->unsignedBigInteger('shift_id');
+            $table->foreign('shift_id')->references('id')->on('shifts');
+            $table->unsignedBigInteger('vehicle_id');
+            $table->foreign('vehicle_id')->references('id')->on('vehicles');
+            $table->string('days');
+            $table->integer('status');
             $table->timestamps();
         });
     }
@@ -28,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('coords');
+        Schema::dropIfExists('employeegroups');
     }
 };

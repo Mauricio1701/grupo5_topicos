@@ -11,14 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('coords', function (Blueprint $table) {
+        Schema::create('shifts', function (Blueprint $table) {
             $table->id();
-            $table->integer('type_coord');
-            $table->integer('coord_index');
-            $table->double('latitudes');
-            $table->double('longitudes');
-            $table->unsignedBigInteger('zone_id');
-            $table->foreign('zone_id')->references('id')->on('zones');
+            $table->string('name');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('coords');
+        Schema::dropIfExists('shifts');
     }
 };
