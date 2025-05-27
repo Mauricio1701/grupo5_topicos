@@ -1,0 +1,16 @@
+composer create-project "laravel/laravel:^10.0" 
+
+composer require laravel/jetstream
+
+php artisan jetstream:install livewire
+
+npm install
+npm run build
+php artisan migrate
+
+composer require jeroennoten/laravel-adminlte
+php artisan adminlte:install
+
+composer require laravelcollective/html
+
+php artisan migrate --seed
