@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             ProvinceSeeder::class,
             DistrictSeeder::class,
             VehicleTypeSeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }
