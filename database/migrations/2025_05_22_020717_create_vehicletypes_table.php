@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('zones', function (Blueprint $table) {
+        Schema::create('vehicletypes', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-            $table->double('average_waste')->nullable();
             $table->text('description')->nullable();
-            $table->string('status',1)->default('A');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('zones');
+        Schema::dropIfExists('vehicletypes');
     }
 };

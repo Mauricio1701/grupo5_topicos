@@ -157,17 +157,9 @@ CREATE TABLE Changes (
     FOREIGN KEY (reason_id) REFERENCES Reasons(id)
 );
 
--- 16. Detalle de cambios :check:
-CREATE TABLE ChangeDetails (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    change_id BIGINT UNSIGNED,
-    scheduling_id BIGINT UNSIGNED,
-    notes TEXT,
-    FOREIGN KEY (change_id) REFERENCES Changes(id),
-    FOREIGN KEY (scheduling_id) REFERENCES Scheduling(id)
-);
 
--- 17. Vacaciones :check:
+
+-- 16. Vacaciones :check:
 CREATE TABLE Vacations (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED,
@@ -180,7 +172,7 @@ CREATE TABLE Vacations (
     FOREIGN KEY (employee_id) REFERENCES Employees(id)
 );
 
--- 18. Asistencias :check:
+-- 17. Asistencias :check:
 CREATE TABLE Attendances (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL,

@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('plate', 20);
             $table->integer('year');
             $table->double('load_capacity');
+            $table->double('fuel_capacity');
+            $table->double('compactation_capacity');
+            $table->integer('people_capacity');
             $table->text('description')->nullable();
             $table->boolean('status')->default(true);
             $table->unsignedBigInteger('color_id');
@@ -26,7 +29,7 @@ return new class extends Migration
             $table->unsignedBigInteger('model_id');
             $table->foreign('color_id')->references('id')->on('colors');
             $table->foreign('brand_id')->references('id')->on('brands');
-            $table->foreign('type_id')->references('id')->on('vehiclestypes');
+            $table->foreign('type_id')->references('id')->on('vehicletypes');
             $table->foreign('model_id')->references('id')->on('brandmodels');
             $table->timestamps();
         });

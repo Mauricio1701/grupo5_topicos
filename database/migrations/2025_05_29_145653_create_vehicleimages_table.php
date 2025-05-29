@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('zones', function (Blueprint $table) {
+        Schema::create('vehicleimages', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
-            $table->double('average_waste')->nullable();
-            $table->text('description')->nullable();
-            $table->string('status',1)->default('A');
+            $table->unsignedBigInteger('vehicle_id');
+            $table->foreign('vehicle_id')->references('id')->on('vehicles');
+            $table->string('image', 255);
+            $table->integer('profile')->default(0);
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('zones');
+        Schema::dropIfExists('vehicleimages');
     }
 };

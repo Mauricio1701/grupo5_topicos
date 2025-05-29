@@ -13,18 +13,22 @@ return new class extends Migration
     {
         Schema::create('changes', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('new_employee_id');
+            $table->unsignedBigInteger('scheduling_id');
+            $table->foreign('scheduling_id')->references('id')->on('scheduling');
+            $table->unsignedBigInteger('new_employee_id')->nullable();
             $table->foreign('new_employee_id')->references('id')->on('employees');
-            $table->unsignedBigInteger('old_employee_id');
+            $table->unsignedBigInteger('old_employee_id')->nullable();
             $table->foreign('old_employee_id')->references('id')->on('employees');
-            $table->unsignedBigInteger('new_vehicle_id');
+            $table->unsignedBigInteger('new_vehicle_id')->nullable();
             $table->foreign('new_vehicle_id')->references('id')->on('vehicles');
-            $table->unsignedBigInteger('old_vehicle_id');
+            $table->unsignedBigInteger('old_vehicle_id')->nullable();
             $table->foreign('old_vehicle_id')->references('id')->on('vehicles');
-            $table->unsignedBigInteger('shift_id');
-            $table->foreign('shift_id')->references('id')->on('shifts');
-            $table->unsignedBigInteger('reason_id');
+            $table->unsignedBigInteger('reason_id')->nullable();
             $table->foreign('reason_id')->references('id')->on('reasons');
+            $table->unsignedBigInteger('new_shift_id')->nullable();
+            $table->foreign('new_shift_id')->references('id')->on('shifts');
+            $table->unsignedBigInteger('old_shift_id')->nullable();
+            $table->foreign('old_shift_id')->references('id')->on('shifts');
             $table->date('change_date');
             $table->timestamps();
         });
