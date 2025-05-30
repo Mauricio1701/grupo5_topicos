@@ -324,10 +324,16 @@ return [
             'text' => 'Marcas',
             'route' => 'admin.brands.index',
             'icon' => 'fas fa-fw fa-tags',
-        ],[
+        ],
+        [
             'text' => 'Modelos',
             'route' => 'admin.models.index',
             'icon' => 'fas fa-fw fa-wrench',
+        ],
+        [
+            'text' => 'Motivos',
+            'route' => 'admin.reasons.index',
+            'icon' => 'fas fa-fw fa-clipboard-list',
         ],
         [
             'text' => 'pages',
@@ -385,7 +391,7 @@ return [
                 ],
             ],
         ],
-        
+
     ],
 
     /*
@@ -446,7 +452,7 @@ return [
                     'asset' => false,
                     'location' => '//cdn.datatables.net/2.3.0/css/dataTables.dataTables.css',
                 ],
-                
+
             ],
         ],
         'Select2' => [
