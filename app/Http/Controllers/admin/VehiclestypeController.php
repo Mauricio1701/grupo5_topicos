@@ -1,0 +1,121 @@
+<?php
+
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Vehiclestype;
+use Yajra\DataTables\Facades\DataTables;
+
+class VehiclestypeController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $vehiclestypes = Vehiclestype::select(
+            'id',
+            'name',
+            'description',
+            'created_at',
+            'updated_at'
+        )->get();
+        
+        if($request->ajax()){
+            return DataTables::of($vehiclestypes)
+            ->addColumn('action', function($vehiclestype){
+                return "
+                <button class='btn btn-warning btnEditar' id='".$vehiclestype->id."'><i class='fas fa-edit'></i></button>
+                <form action=". route('admin.vehiclestypes.destroy', $vehiclestype->id) ." id='delete-form-".$vehiclestype->id."' method='POST' class='d-inline'>
+                    " . csrf_field() . "
+                    " . method_field('DELETE') . "
+                    <button type='button' onclick='confirmDelete(".$vehiclestype->id.")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                </form>
+                ";
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+        }else{
+            return view('admin.vehiclestypes.index', compact('vehiclestypes'));
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('admin.vehiclestypes.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+            ]);
+            
+            Vehiclestype::create($request->all());
+            return response()->json(['success'=>true,'message' => 'Motivo creado exitosamente'],200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Error al crear el motivo: '.$th->getMessage()]);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        $vehiclestype = Vehiclestype::findOrFail($id);
+        return view('admin.vehicletypes.show', compact('vehiclestype'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $vehiclestype = Vehiclestype::find($id);
+        return view('admin.vehiclestypes.edit', compact('vehiclestype'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+            ]);
+            
+            $vehiclestype = Vehiclestype::find($id);
+            $vehiclestype->update($request->all());
+            return response()->json(['success'=>true,'message' => 'Motivo actualizado exitosamente'],200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Error al actualizar el motivo: '.$th->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        try {
+            $vehiclestype = Vehiclestype::find($id);
+            $vehiclestype->delete();
+            return response()->json(['success'=>true,'message' => 'Motivo eliminado exitosamente'],200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Error al eliminar el Tipo de vehiculo: '.$th->getMessage()]);
+        }
+    }
+}

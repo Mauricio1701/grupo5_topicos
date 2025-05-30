@@ -320,6 +320,7 @@ return [
             'text' => 'search',
         ],
         ['header' => 'GESTIÓN DE VEHICULOS'],
+        
         [
             'text' => 'Marcas',
             'route' => 'admin.brands.index',
@@ -334,6 +335,21 @@ return [
             'text' => 'Motivos',
             'route' => 'admin.reasons.index',
             'icon' => 'fas fa-fw fa-clipboard-list',
+        ],
+        [
+            'text' => 'Tipo de Vehiculo',
+            'route' => 'admin.vehiclestypes.index',
+            'icon' => 'fas fa-car',
+        ],
+        [
+            'text' => 'Color',
+            'route' => 'admin.colors.index',
+            'icon' => 'fas fa-palette',
+        ],
+        [
+            'text' => 'Vehículo',
+            'route' => 'admin.vehicles.index',
+            'icon'  => 'fas fa-car-side',
         ],
         [
             'text' => 'pages',
