@@ -114,4 +114,12 @@ class BrandmodelController extends Controller
             return response()->json(['message' => 'Error al eliminar el modelo: '.$th->getMessage()]);
         }
     }
+
+    public function getModelsByBrand($brand_id)
+{
+    $models = Brandmodel::where('brand_id', $brand_id)->get();
+
+    return response()->json($models);
+}
+
 }

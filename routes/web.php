@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\admin\AdminController;
-use App\Http\Controllers\admin\BrandController;
+use App\Http\Controllers\admin\BrandmodelController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +28,8 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 });
+
+Route::get('/get-models/{brand_id}', [BrandModelController::class, 'getModelsByBrand'])->name('admin.getModelsByBrand');
 
 
 

@@ -31,6 +31,6 @@ class Vehicle extends Model
 
     public function model()
     {
-        return $this->belongsTo(Brandmodel::class, 'model_id');
+        return $this->belongsTo(Brandmodel::class);
     }
 }

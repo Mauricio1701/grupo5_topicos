@@ -206,10 +206,8 @@ class VehicleController extends Controller
 
 public function getModels($brand_id)
 {
-    $models = Brandmodel::where('brand_id', $brand_id)->get(['id', 'name']);
+    $models = Brand::where('brand_id', $brand_id)->get(['id', 'name']);
     return response()->json($models);
 }
-
-
 
 }

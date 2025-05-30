@@ -145,7 +145,9 @@ $(document).ready(function() {
                 });
             }
         });
+
     });
+
 
     // Editar vehículo - abrir modal
     $(document).on('click', '.btnEditar', function() {
@@ -244,38 +246,29 @@ $(document).ready(function() {
     });
 });
 
+ function loadModels(brandId) {
+        let modelSelect = document.getElementById('modelSelect');
 
-   document.addEventListener('DOMContentLoaded', function () {
-        const brandSelect = document.getElementById('brandSelect');
-        const modelSelect = document.getElementById('modelSelect');
+        // Limpiar modelos anteriores
+        modelSelect.innerHTML = '<option value="">Seleccione un modelo</option>';
 
-        brandSelect.addEventListener('change', function () {
-            const brandId = this.value;
-
-            // Limpia las opciones anteriores
-            modelSelect.innerHTML = '<option value="">Cargando modelos...</option>';
-
+        if (brandId) {
             fetch(`/get-models/${brandId}`)
                 .then(response => response.json())
                 .then(data => {
-                    modelSelect.innerHTML = '<option value="">Seleccione un modelo</option>';
-                    data.forEach(model => {
-                        const option = document.createElement('option');
+                    data.forEach(function(model) {
+                        let option = document.createElement('option');
                         option.value = model.id;
-                        option.textContent = model.name;
+                        option.text = model.name;
                         modelSelect.appendChild(option);
                     });
                 })
                 .catch(error => {
                     console.error('Error al cargar modelos:', error);
-                    modelSelect.innerHTML = '<option value="">Error al cargar</option>';
+                    alert('Error al cargar modelos');
                 });
-        });
-    });
-
-
-
-
+        }
+    }
 
 </script>
 @stop

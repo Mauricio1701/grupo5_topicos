@@ -55,7 +55,13 @@
 
 <div class="form-group">
     {!! Form::label('brand_id', 'Marca') !!}
-    {!! Form::select('brand_id', $brands, null, ['class' => 'form-control', 'placeholder' => 'Seleccione una marca', 'required', 'id' => 'brandSelect']) !!}
+    {!! Form::select('brand_id', $brands, null, [
+        'class' => 'form-control', 
+        'placeholder' => 'Seleccione una marca', 
+        'required', 
+        'id' => 'brandSelect',
+        'onchange' => 'loadModels(this.value)'
+    ]) !!}
 </div>
 
 
@@ -64,8 +70,15 @@
     {!! Form::select('type_id', $types, null, ['class' => 'form-control', 'placeholder' => 'Seleccione un tipo', 'required']) !!}
 </div>
 
+
 <div class="form-group">
     {!! Form::label('model_id', 'Modelo') !!}
-    {!! Form::select('model_id', [], null, ['class' => 'form-control', 'placeholder' => 'Seleccione un modelo', 'required', 'id' => 'modelSelect']) !!}
+    {!! Form::select('model_id', [], null, [
+        'class' => 'form-control', 
+        'placeholder' => 'Seleccione un modelo', 
+        'required', 
+        'id' => 'modelSelect'
+    ]) !!}
 </div>
+
 

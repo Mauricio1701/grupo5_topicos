@@ -16,4 +16,3 @@ Route::resource('colors', ColorController::class)->names('admin.colors');
 Route::resource('vehiclestypes', VehiclestypeController::class)->names('admin.vehiclestypes');
 Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
 Route::resource('/', AdminController::class)->names('admin');
-Route::get('/get-models/{brand_id}', [VehicleController::class, 'getModels']);
