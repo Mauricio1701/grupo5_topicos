@@ -31,5 +31,16 @@ Route::middleware([
 
 Route::get('/get-models/{brand_id}', [BrandModelController::class, 'getModelsByBrand'])->name('admin.getModelsByBrand');
 
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
+});
 
+// Rutas para Turnos
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('shifts', App\Http\Controllers\Admin\ShiftController::class);
+});
 
+// Rutas para Empleados
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('employees', App\Http\Controllers\Admin\EmployeeController::class);
+});
