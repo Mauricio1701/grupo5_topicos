@@ -320,7 +320,11 @@ return [
             'text' => 'search',
         ],
         ['header' => 'GESTIÓN DE VEHICULOS'],
-        
+        [
+            'text' => 'Color',
+            'route' => 'admin.colors.index',
+            'icon' => 'fas fa-palette',
+        ],
         [
             'text' => 'Marcas',
             'route' => 'admin.brands.index',
@@ -332,32 +336,59 @@ return [
             'icon' => 'fas fa-fw fa-wrench',
         ],
         [
-            'text' => 'Motivos',
-            'route' => 'admin.reasons.index',
-            'icon' => 'fas fa-fw fa-clipboard-list',
-        ],
-        [
             'text' => 'Tipo de Vehiculo',
             'route' => 'admin.vehiclestypes.index',
             'icon' => 'fas fa-car',
-        ],
-        [
-            'text' => 'Color',
-            'route' => 'admin.colors.index',
-            'icon' => 'fas fa-palette',
         ],
         [
             'text' => 'Vehículo',
             'route' => 'admin.vehicles.index',
             'icon'  => 'fas fa-car-side',
         ],
+        ['header' => 'GESTIÓN DE EMPLEADOS'],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'text'=>'Tipo de Empleados',
+            'route'=>'admin.employeetypes.index',
+            'icon'=>'fas fa-fw fa-user-tie',
         ],
+        [
+            'text'=>'Empleados',
+            'route'=>'admin.employees.index',
+            'icon'=>'fas fa-fw fa-user',
+        ],
+        [
+            'text'=>'Asistencia',
+            'icon'=>'fas fa-fw fa-user-clock',
+        ],
+        [
+            'text'=>'Vacaciones',
+            'icon'=>'fas fa-fw fa-clock',
+        ],
+        ['header' => 'PROGRAMACIÓN'],
+        [
+            'text' => 'Turnos',
+            'route' => 'admin.shifts.index',
+            'icon' => 'fas fa-fw fa-clock',
+        ],
+        [
+            'text'=>'Zonas',
+            'icon'=>'fas fa-fw fa-clock',
+        ],
+        [
+            'text'=>'Programación',
+            'icon'=>'fas fa-fw fa-clock',
+        ],
+        ['header' => 'GESTIÓN DE CAMBIOS'],
+        [
+            'text' => 'Motivos',
+            'route' => 'admin.reasons.index',
+            'icon' => 'fas fa-fw fa-clipboard-list',
+        ],
+        [
+            'text' => 'Cambios',
+            'icon' => 'fas fa-fw fa-clipboard-list',
+        ],
+
         ['header' => 'account_settings'],
         [
             'text' => 'profile',

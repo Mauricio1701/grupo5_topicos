@@ -2,10 +2,6 @@
 
 @section('title', 'Turnos')
 
-@section('content_header')
-    <h1>Lista de Turnos</h1>
-@stop
-
 @section('content')
 <div class="p-2"></div>
 

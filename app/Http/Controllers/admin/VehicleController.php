@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Models\Color;
 use App\Models\Brand;
-use App\Models\Vehiclestype;
+use App\Models\VehicleType;
 use App\Models\Brandmodel;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -39,7 +39,7 @@ class VehicleController extends Controller
         )
         ->join('colors as c', 'vehicles.color_id', '=', 'c.id')
         ->join('brands as b', 'vehicles.brand_id', '=', 'b.id')
-        ->join('vehiclestypes as t', 'vehicles.type_id', '=', 't.id')
+        ->join('vehicletypes as t', 'vehicles.type_id', '=', 't.id')
         ->join('brandmodels as m', 'vehicles.model_id', '=', 'm.id')
         ->get();
 
@@ -70,7 +70,7 @@ class VehicleController extends Controller
     {
         $colors = Color::all()->pluck('name', 'id');
         $brands = Brand::all()->pluck('name', 'id');
-        $types = Vehiclestype::all()->pluck('name', 'id');
+        $types = VehicleType::all()->pluck('name', 'id');
         $models = Brandmodel::all()->pluck('name', 'id');
 
         return view('admin.vehicles.create', compact('colors', 'brands', 'types', 'models'));
@@ -137,7 +137,7 @@ class VehicleController extends Controller
         $vehicle = Vehicle::findOrFail($id);
         $colors = Color::all()->pluck('name', 'id');
         $brands = Brand::all()->pluck('name', 'id');
-        $types = Vehiclestype::all()->pluck('name', 'id');
+        $types = VehicleType::all()->pluck('name', 'id');
         $models = Brandmodel::all()->pluck('name', 'id');
 
         return view('admin.vehicles.edit', compact('vehicle', 'colors', 'brands', 'types', 'models'));

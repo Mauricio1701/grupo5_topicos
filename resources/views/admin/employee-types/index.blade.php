@@ -2,10 +2,6 @@
 
 @section('title', 'Tipos de Empleados')
 
-@section('content_header')
-    <h1>Lista de Tipos de Empleados</h1>
-@stop
-
 @section('content')
 <div class="p-2"></div>
 

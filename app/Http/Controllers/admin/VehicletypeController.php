@@ -5,19 +5,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Vehiclestype;
+use App\Models\Vehicletype;
 use Yajra\DataTables\Facades\DataTables;
 
-class VehiclestypeController extends Controller
+class VehicletypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $vehiclestypes = Vehiclestype::select(
+        $vehiclestypes = Vehicletype::select(
             'id',
-            'name',
+            'name', 
             'description',
             'created_at',
             'updated_at'
@@ -61,7 +61,7 @@ class VehiclestypeController extends Controller
                 'description' => 'nullable|string',
             ]);
             
-            Vehiclestype::create($request->all());
+            Vehicletype::create($request->all());
             return response()->json(['success'=>true,'message' => 'Motivo creado exitosamente'],200);
         } catch (\Throwable $th) {
             return response()->json(['message' => 'Error al crear el motivo: '.$th->getMessage()]);
@@ -73,7 +73,7 @@ class VehiclestypeController extends Controller
      */
     public function show(string $id)
     {
-        $vehiclestype = Vehiclestype::findOrFail($id);
+        $vehiclestype = Vehicletype::findOrFail($id);
         return view('admin.vehicletypes.show', compact('vehiclestype'));
     }
 
@@ -82,7 +82,7 @@ class VehiclestypeController extends Controller
      */
     public function edit(string $id)
     {
-        $vehiclestype = Vehiclestype::find($id);
+        $vehiclestype = Vehicletype::find($id);
         return view('admin.vehiclestypes.edit', compact('vehiclestype'));
     }
 
@@ -97,7 +97,7 @@ class VehiclestypeController extends Controller
                 'description' => 'nullable|string',
             ]);
             
-            $vehiclestype = Vehiclestype::find($id);
+            $vehiclestype = Vehicletype::find($id);
             $vehiclestype->update($request->all());
             return response()->json(['success'=>true,'message' => 'Motivo actualizado exitosamente'],200);
         } catch (\Throwable $th) {
@@ -111,7 +111,7 @@ class VehiclestypeController extends Controller
     public function destroy(string $id)
     {
         try {
-            $vehiclestype = Vehiclestype::find($id);
+            $vehiclestype = Vehicletype::find($id);
             $vehiclestype->delete();
             return response()->json(['success'=>true,'message' => 'Motivo eliminado exitosamente'],200);
         } catch (\Throwable $th) {

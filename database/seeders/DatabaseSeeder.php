@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             DistrictSeeder::class,
             VehicleTypeSeeder::class,
             ShiftSeeder::class,
+            ReasonsSeeder::class,
         ]);
     }
 }
