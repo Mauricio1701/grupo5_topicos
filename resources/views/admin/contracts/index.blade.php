@@ -1,7 +1,7 @@
 
 @extends('adminlte::page')
 
-@section('title', 'Motivos')
+@section('title', 'Contratos')
 
 @section('content_header')
     
@@ -11,8 +11,8 @@
 <div class="p-2"></div>
 
 <!-- Modal -->
-<div class="modal fade" id="modalReason" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="modalContract" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="ModalLongTitle"></h5>
@@ -29,17 +29,23 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Motivos</h3>
+        <h3 class="card-title">Lista de Contratos</h3>
         <div class="card-tools">
-            <button id="btnNewReason" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Nuevo Motivo</button> 
+            <button id="btnNewContract" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Nuevo Contrato</button> 
         </div>
     </div>
     <div class="card-body">
             <table class="table table-striped" id="datatable">
-                <thead >
+                <thead>
                     <tr>
-                        <th>NOMBRE</th>
-                        <th>DESCRIPCIÓN</th>
+                        <th>EMPLEADO</th>
+                        <th>TIPO DE CONTRATO</th>
+                        <th>FECHA INICIO</th>
+                        <th>FECHA FIN</th>
+                        <th>SALARIO</th>
+                        <th>POSICIÓN</th>
+                        <th>DEPARTAMENTO</th>
+                        <th>ESTADO</th>
                         <th>ACCIÓN</th>
                     </tr>
                 </thead>
@@ -63,31 +69,39 @@
     let table;
 
     $(document).ready(function() {
+        
         table = $('#datatable').DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
             "processing": true,
             "serverSide": true,
-            "ajax": "{{ route('admin.reasons.index') }}",
+            "ajax": "{{ route('admin.contracts.index') }}",
             "columns": [
-                { "data": "name" },
-                { "data": "description" },
+                { "data": "employee" },
+                { "data": "contract_type" },
+                
+                { "data": "start_date" },
+                { "data": "end_date" },
+                { "data": "salary" },
+                { "data": "position" },
+                { "data": "department" },
+                { "data": "status" },
                 { "data": "action", "orderable": false, "searchable": false }
             ]
         });
     });
 
-    $('#btnNewReason').click(function() {
+    $('#btnNewContract').click(function() {
         $.ajax({
-            url: "{{ route('admin.reasons.create') }}",
+            url: "{{ route('admin.contracts.create') }}",
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Nuevo Motivo');
-                $('#modalReason .modal-body').html(response);
-                $('#modalReason').modal('show');
+                $('#ModalLongTitle').text('Nuevo Contrato');
+                $('#modalContract .modal-body').html(response);
+                $('#modalContract').modal('show');
 
-                $('#modalReason form').submit(function(e){
+                $('#modalContract form').submit(function(e){
                     e.preventDefault();
                     var form = $(this);
                     var formData = form.serialize();
@@ -97,7 +111,7 @@
                         data: formData,
                         success: function(response) {
                             if(response.success){
-                                $('#modalReason').modal('hide');
+                                $('#modalContract').modal('hide');
                                 table.ajax.reload();
                                 Swal.fire({
                                     icon: 'success',
@@ -129,16 +143,16 @@
     });
 
     $(document).on('click', '.btnEditar', function() {
-        var reasonId = $(this).attr('id');
+        var contractId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.reasons.edit', 'id') }}".replace('id', reasonId),
+            url: "{{ route('admin.contracts.edit', 'id') }}".replace('id', contractId),
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Editar Motivo');
-                $('#modalReason .modal-body').html(response);
-                $('#modalReason').modal('show');
+                $('#ModalLongTitle').text('Editar Contrato');
+                $('#modalContract .modal-body').html(response);
+                $('#modalContract').modal('show');
 
-                $('#modalReason form').submit(function(e){
+                $('#modalContract form').submit(function(e){
                     e.preventDefault();
                     var form = $(this);
                     var formData = form.serialize();
@@ -148,7 +162,7 @@
                         data: formData,
                         success: function(response) {
                             if(response.success){
-                                $('#modalReason').modal('hide');
+                                $('#modalContract').modal('hide');
                                 table.ajax.reload();
                                 Swal.fire({
                                     icon: 'success',
@@ -210,7 +224,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: 'Ha ocurrido un error al eliminar el motivo.',
+                            text: 'Ha ocurrido un error al eliminar el contrato.',
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });

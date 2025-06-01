@@ -157,7 +157,26 @@ CREATE TABLE Changes (
     FOREIGN KEY (reason_id) REFERENCES Reasons(id)
 );
 
-
+-- Contratos
+CREATE TABLE Contracts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    employee_id BIGINT UNSIGNED NOT NULL,
+    contract_type INT NOT NULL, 
+    start_date DATE NOT NULL,
+    end_date DATE, 
+    salary DECIMAL(10,2) NOT NULL,
+    position_id BIGINT UNSIGNED NOT NULL, 
+    department_id BIGINT UNSIGNED NOT NULL,
+    vacation_days_per_year INT NOT NULL, 
+    probation_period_months INT DEFAULT 3,
+    is_active BOOLEAN DEFAULT TRUE,
+    termination_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES Employees(id),
+    FOREIGN KEY (position_id) REFERENCES EmployeeType(id),
+    FOREIGN KEY (department_id) REFERENCES Departments(id)
+);
 
 -- 16. Vacaciones :check:
 CREATE TABLE Vacations (
