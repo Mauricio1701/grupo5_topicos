@@ -357,6 +357,11 @@ return [
             'icon'=>'fas fa-fw fa-user',
         ],
         [
+            'text'=>'Contratos',
+            'route'=>'admin.contracts.index',
+            'icon'=>'fas fa-fw fa-file-contract',
+        ],
+        [
             'text'=>'Asistencia',
             'icon'=>'fas fa-fw fa-user-clock',
         ],

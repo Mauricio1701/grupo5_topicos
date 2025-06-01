@@ -18,9 +18,8 @@ class ReasonController extends Controller
         $reasons = Reason::select(
             'id',
             'name',
-            'description',
-            'created_at',
-            'updated_at'
+            'description'
+            
         )->get();
         
         if($request->ajax()){
