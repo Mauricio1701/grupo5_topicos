@@ -10,7 +10,9 @@ use App\Http\Controllers\admin\VehicleController;
 use App\Http\Controllers\admin\EmployeeTypeController;
 use App\Http\Controllers\admin\EmployeeController;
 use App\Http\Controllers\admin\ShiftController;
+use App\Http\Controllers\admin\VacationController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::resource('brands', BrandController::class)->names('admin.brands');
 Route::resource('brandmodels', BrandModelController::class)->names('admin.models');
@@ -21,4 +23,10 @@ Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
 Route::resource('employeetypes', EmployeeTypeController::class)->names('admin.employeetypes');
 Route::resource('employees', EmployeeController::class)->names('admin.employees');
 Route::resource('shifts', ShiftController::class)->names('admin.shifts');
+
+Route::resource('vacations', VacationController::class)->names('admin.vacations');
+Route::post('vacations/calculate-days', [VacationController::class, 'calculateDays'])->name('admin.vacations.calculate-days');
+Route::post('vacations/check-available-days', [VacationController::class, 'checkAvailableDays'])->name('admin.vacations.check-available-days');
+Route::post('vacations/{vacation}/change-status', [VacationController::class, 'changeStatus'])->name('admin.vacations.change-status');
+
 Route::resource('/', AdminController::class)->names('admin');

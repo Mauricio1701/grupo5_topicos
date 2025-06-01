@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
+    'logo' => '<b>Grupo</b>5',
     'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -362,7 +362,8 @@ return [
         ],
         [
             'text'=>'Vacaciones',
-            'icon'=>'fas fa-fw fa-clock',
+            'route'=>'admin.vacations.index',
+            'icon'=>'fas fa-fw fa-plane',
         ],
         ['header' => 'PROGRAMACIÓN'],
         [

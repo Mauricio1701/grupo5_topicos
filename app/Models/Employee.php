@@ -33,50 +33,25 @@ class Employee extends Model
 
     protected $casts = [
         'birthday' => 'date',
-        'status' => 'boolean'
     ];
 
-    // Relación con tipo de empleado
-    public function employeeType()
-    {
-        return $this->belongsTo(EmployeeType::class, 'type_id');
-    }
-
-    // Relación con detalles de grupos
-    public function groupDetails()
-    {
-        return $this->hasMany(GroupDetail::class, 'employee_id');
-    }
-
-    // Relación con vacaciones
-    public function vacations()
-    {
-        return $this->hasMany(Vacation::class, 'employee_id');
-    }
-
-    // Relación con asistencias
-    public function attendances()
-    {
-        return $this->hasMany(Attendance::class, 'employee_id');
-    }
-
-    // Accessor para nombre completo
     public function getFullNameAttribute()
     {
         return $this->names . ' ' . $this->lastnames;
     }
 
-    // Accessor para estado
-    public function getStatusTextAttribute()
+    public function vacations()
     {
-        return $this->status ? 'Activo' : 'Inactivo';
+        return $this->hasMany(Vacation::class);
     }
-
-    // Mutator para password
-    public function setPasswordAttribute($value)
+    
+    public function employeeType()
     {
-        if ($value) {
-            $this->attributes['password'] = Hash::make($value);
-        }
+        return $this->belongsTo(EmployeeType::class, 'type_id', 'id');
+    }
+    
+    public function groupDetails()
+    {
+        return $this->hasMany(GroupDetail::class);
     }
 }
