@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('attendances', function (Blueprint $table) {
+        Schema::create('configgroups_talbe', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('employee_id');
+            $table->bigInteger('group_id')->unsigned();
+            $table->bigInteger('employee_id')->unsigned();
+            $table->foreign('group_id')->references('id')->on('employeegroups');
             $table->foreign('employee_id')->references('id')->on('employees');
-            $table->date('attendance_date');
-            $table->integer('status')->default(0);
-            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('attendances');
+        Schema::dropIfExists('configgroups_talbe');
     }
 };

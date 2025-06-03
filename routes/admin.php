@@ -12,6 +12,8 @@ use App\Http\Controllers\admin\EmployeeController;
 use App\Http\Controllers\admin\ShiftController;
 use App\Http\Controllers\admin\VacationController;
 use App\Http\Controllers\admin\ContractController;
+use App\Http\Controllers\admin\AttendanceController;
+use App\Http\Controllers\admin\EmployeegroupController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -32,5 +34,7 @@ Route::post('vacations/calculate-days', [VacationController::class, 'calculateDa
 Route::post('vacations/check-available-days', [VacationController::class, 'checkAvailableDays'])->name('admin.vacations.check-available-days');
 Route::post('vacations/{vacation}/change-status', [VacationController::class, 'changeStatus'])->name('admin.vacations.change-status');
 
+Route::resource('attendances', AttendanceController::class)->names('admin.attendances');
+Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
 
 Route::resource('/', AdminController::class)->names('admin');

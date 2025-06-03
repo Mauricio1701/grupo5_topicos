@@ -129,6 +129,14 @@ CREATE TABLE GroupDetails (
     FOREIGN KEY (employee_id) REFERENCES Employees(id)
 );
 
+CREATE TABLE ConfigGroups (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    group_id BIGINT UNSIGNED,
+    employee_id BIGINT UNSIGNED,
+    FOREIGN KEY (group_id) REFERENCES EmployeeGroups(id),
+    FOREIGN KEY (employee_id) REFERENCES Employees(id)
+);
+
 -- 14. Programación / Scheduling :check:
 CREATE TABLE Scheduling (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -195,10 +203,8 @@ CREATE TABLE Vacations (
 CREATE TABLE Attendances (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     employee_id BIGINT UNSIGNED NOT NULL,
-    scheduling_id BIGINT UNSIGNED NULL, 
     attendance_date DATE NOT NULL,
     status INT DEFAULT 0 , -- 0: Pendiente, 1: Asistió, 2: Falta
     notes TEXT NULL,
     FOREIGN KEY (employee_id) REFERENCES Employees(id),
-    FOREIGN KEY (scheduling_id) REFERENCES Scheduling(id)
 );

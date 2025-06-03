@@ -363,6 +363,7 @@ return [
         ],
         [
             'text'=>'Asistencia',
+            'route'=>'admin.attendances.index',
             'icon'=>'fas fa-fw fa-user-clock',
         ],
         [
@@ -371,6 +372,11 @@ return [
             'icon'=>'fas fa-fw fa-plane',
         ],
         ['header' => 'PROGRAMACIÓN'],
+        [
+            'text'=>'Grupo de Personal',
+            'route'=>'admin.employeegroups.index',
+            'icon'=>'fas fa-fw fa-user-group',
+        ],
         [
             'text' => 'Turnos',
             'route' => 'admin.shifts.index',

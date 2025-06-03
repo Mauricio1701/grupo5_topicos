@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\BrandmodelController;
+use App\Http\Controllers\admin\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,3 +44,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('employees', App\Http\Controllers\Admin\EmployeeController::class);
 });
+
+Route::post('attendances/store', [AttendanceController::class, 'storeAttendance'])->name('attendances.storeAttendance');
+Route::get('attendances', [AttendanceController::class, 'indexAttendance'])->name('attendances.indexAttendance');
