@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             VacationSeeder::class,
             ContractSeeder::class,
+            VehiclesTableSeeder::class,
         ]);
     }
 }
