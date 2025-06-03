@@ -92,7 +92,7 @@ class VehicleController extends Controller
             'people_capacity' => 'required|integer',
             'color_id' => 'required|exists:colors,id',
             'brand_id' => 'required|exists:brands,id',
-            'type_id' => 'required|exists:vehiclestypes,id',
+            'type_id' => 'required|exists:vehicletypes,id',
             'model_id' => 'required|exists:brandmodels,id',
             // description es opcional
         ]);
@@ -159,7 +159,7 @@ class VehicleController extends Controller
             'people_capacity' => 'required|integer',
             'color_id' => 'required|exists:colors,id',
             'brand_id' => 'required|exists:brands,id',
-            'type_id' => 'required|exists:vehiclestypes,id',
+            'type_id' => 'required|exists:vehicletypes,id',
             'model_id' => 'required|exists:brandmodels,id',
         ]);
 

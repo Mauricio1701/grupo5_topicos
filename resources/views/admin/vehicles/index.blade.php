@@ -1,6 +1,11 @@
 @extends('adminlte::page')
 
 @section('title', 'Vehículos')
+<style>
+    #datatableVehicles {
+        text-transform: uppercase;
+    }
+</style>
 
 @section('content')
 <div class="p-2"></div>
@@ -43,7 +48,6 @@
                     <th>AÑO</th>
                     <th>CAPACIDAD DE CARGA</th>
                     <th>ESTADO</th>
-                    <th>CREADO</th>
                     <th>ACTUALIZADO</th>
                     <th>ACCIÓN</th>
                 </tr>
@@ -75,23 +79,24 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         ajax: "{{ route('admin.vehicles.index') }}",
-        columns: [
-            { data: 'plate', name: 'plate' },
-            { data: 'name', name: 'name' },
-            { data: 'code', name: 'code' },
-            { data: 'brand_name', name: 'brand_name' },
-            { data: 'model_name', name: 'model_name' },
-            { data: 'color_name', name: 'color_name' },
-            { data: 'type_name', name: 'type_name' },
-            { data: 'year', name: 'year' },
-            { data: 'load_capacity', name: 'load_capacity' },
-            { data: 'status', name: 'status', render: function(data, type, row) {
-                return data ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
-            }},
-            { data: 'created_at', name: 'created_at' },
-            { data: 'updated_at', name: 'updated_at' },
-            { data: 'action', name: 'action', orderable: false, searchable: false }
-        ],
+            columns: [
+        { data: 'plate', name: 'plate' },
+        { data: 'name', name: 'name' },
+        { data: 'code', name: 'code' },
+        { data: 'brand_name', name: 'brand_name' },
+        { data: 'model_name', name: 'model_name' },
+        { data: 'color_name', name: 'color_name' },
+        { data: 'type_name', name: 'type_name' },
+        { data: 'year', name: 'year' },
+        { data: 'load_capacity', name: 'load_capacity' },
+        { data: 'status', name: 'status', render: function(data, type, row) {
+            return data ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>';
+        }},
+        // { data: 'created_at', name: 'created_at' }, // Eliminado
+        { data: 'updated_at', name: 'updated_at' },
+        { data: 'action', name: 'action', orderable: false, searchable: false }
+    ],
+
         order: [[10, 'desc']]
     });
 
