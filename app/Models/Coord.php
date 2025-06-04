@@ -5,17 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Zone extends Model
+class Coord extends Model
 {
     use HasFactory;
     
     protected $guarded = [];
     
-    /**
-     * Obtiene las coordenadas asociadas a esta zona.
-     */
-    public function coords()
+    
+    public function zone()
     {
-        return $this->hasMany(Coord::class);
+        return $this->belongsTo(Zone::class);
     }
 }

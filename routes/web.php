@@ -47,3 +47,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::post('attendances/store', [AttendanceController::class, 'storeAttendance'])->name('attendances.storeAttendance');
 Route::get('attendances', [AttendanceController::class, 'indexAttendance'])->name('attendances.indexAttendance');
+
+Route::get('admin/zones/{zone}/ajax', [App\Http\Controllers\Admin\ZoneController::class, 'getZoneAjax'])->name('admin.zones.ajax');

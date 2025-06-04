@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('type_coord');
             $table->integer('coord_index');
-            $table->double('latitudes');
-            $table->double('longitudes');
+            $table->double('latitude', 15, 8);  // Cambiado de latitudes a latitude
+            $table->double('longitude', 15, 8); // Cambiado de longitudes a longitude
             $table->unsignedBigInteger('zone_id');
             $table->foreign('zone_id')->references('id')->on('zones');
             $table->timestamps();

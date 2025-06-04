@@ -14,6 +14,7 @@ use App\Http\Controllers\admin\VacationController;
 use App\Http\Controllers\admin\ContractController;
 use App\Http\Controllers\admin\AttendanceController;
 use App\Http\Controllers\admin\EmployeegroupController;
+use App\Http\Controllers\admin\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -36,5 +37,8 @@ Route::post('vacations/{vacation}/change-status', [VacationController::class, 'c
 
 Route::resource('attendances', AttendanceController::class)->names('admin.attendances');
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
+Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
+Route::resource('zones', ZoneController::class)->names('admin.zones');
+
 
 Route::resource('/', AdminController::class)->names('admin');
