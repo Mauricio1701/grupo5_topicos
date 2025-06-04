@@ -15,16 +15,18 @@ class EmployeeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Obtenemos los IDs de los tipos de empleados
-        $employeeTypeIds = EmployeeType::pluck('id')->toArray();
+        $employeeTypes = EmployeeType::all();
         
-        // Si no hay tipos de empleados, no podemos crear empleados
-        if (empty($employeeTypeIds)) {
+        if ($employeeTypes->isEmpty()) {
             $this->command->info('No hay tipos de empleados registrados. No se pueden crear empleados.');
             return;
         }
+        
+        $conductor = $employeeTypes->where('name', 'Conductor')->first()?->id ?? $employeeTypes->first()->id;
+        $ayudante = $employeeTypes->where('name', 'Ayudante')->first()?->id ?? $employeeTypes->first()->id;
+        $supervisor = $employeeTypes->where('name', 'Supervisor')->first()?->id ?? $employeeTypes->first()->id;
+        $administrativo = $employeeTypes->where('name', 'Administrativo')->first()?->id ?? $employeeTypes->first()->id;
 
-        // Creamos ejemplos de empleados
 
         $E1 = new Employee();
         $E1->dni = '12345678';
@@ -38,7 +40,7 @@ class EmployeeSeeder extends Seeder
         $E1->phone = '987654321';
         $E1->status = true;
         $E1->password = Hash::make('password123');
-        $E1->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E1->type_id = $conductor; 
         $E1->save();
 
         $E2 = new Employee();
@@ -53,7 +55,7 @@ class EmployeeSeeder extends Seeder
         $E2->phone = '912345678';
         $E2->status = true;
         $E2->password = Hash::make('password123');
-        $E2->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E2->type_id = $administrativo; 
         $E2->save();
 
         $E3 = new Employee();
@@ -68,7 +70,7 @@ class EmployeeSeeder extends Seeder
         $E3->phone = '945678123';
         $E3->status = true;
         $E3->password = Hash::make('password123');
-        $E3->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E3->type_id = $supervisor; 
         $E3->save();
 
         $E4 = new Employee();
@@ -83,7 +85,7 @@ class EmployeeSeeder extends Seeder
         $E4->phone = '934567812';
         $E4->status = true;
         $E4->password = Hash::make('password123');
-        $E4->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E4->type_id = $ayudante;
         $E4->save();
 
         $E5 = new Employee();
@@ -98,7 +100,7 @@ class EmployeeSeeder extends Seeder
         $E5->phone = '923456789';
         $E5->status = true;
         $E5->password = Hash::make('password123');
-        $E5->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E5->type_id = $ayudante; 
         $E5->save();
 
         $E6 = new Employee();
@@ -111,9 +113,9 @@ class EmployeeSeeder extends Seeder
         $E6->email = 'carmen.diaz@empresa.com';
         $E6->photo = 'empleados/carmen.jpg';
         $E6->phone = '965432198';
-        $E6->status = false; // Empleado inactivo
+        $E6->status = false; 
         $E6->password = Hash::make('password123');
-        $E6->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E6->type_id = $administrativo; 
         $E6->save();
 
         $E7 = new Employee();
@@ -128,7 +130,7 @@ class EmployeeSeeder extends Seeder
         $E7->phone = '978912345';
         $E7->status = true;
         $E7->password = Hash::make('password123');
-        $E7->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E7->type_id = $ayudante; 
         $E7->save();
 
         $E8 = new Employee();
@@ -143,7 +145,37 @@ class EmployeeSeeder extends Seeder
         $E8->phone = '989123456';
         $E8->status = true;
         $E8->password = Hash::make('password123');
-        $E8->type_id = $employeeTypeIds[array_rand($employeeTypeIds)];
+        $E8->type_id = $supervisor; 
         $E8->save();
+
+        $E9 = new Employee();
+        $E9->dni = '91234567';
+        $E9->lastnames = 'Mendoza Rivera';
+        $E9->names = 'Jorge Enrique';
+        $E9->birthday = Carbon::createFromDate(1984, 6, 25);
+        $E9->license = 'L-91234567';
+        $E9->address = 'Av. El Sol 789, Lima';
+        $E9->email = 'jorge.mendoza@empresa.com';
+        $E9->photo = 'empleados/jorge.jpg';
+        $E9->phone = '991234567';
+        $E9->status = true;
+        $E9->password = Hash::make('password123');
+        $E9->type_id = $conductor; 
+        $E9->save();
+
+        $E10 = new Employee();
+        $E10->dni = '98765432';
+        $E10->lastnames = 'Silva Ortega';
+        $E10->names = 'Valentina Andrea';
+        $E10->birthday = Carbon::createFromDate(1991, 12, 15);
+        $E10->license = 'L-98765432';
+        $E10->address = 'Calle Principal 321, Lima';
+        $E10->email = 'valentina.silva@empresa.com';
+        $E10->photo = 'empleados/valentina.jpg';
+        $E10->phone = '998765432';
+        $E10->status = true;
+        $E10->password = Hash::make('password123');
+        $E10->type_id = $administrativo;
+        $E10->save();
     }
 }
