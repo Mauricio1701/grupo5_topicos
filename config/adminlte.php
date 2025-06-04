@@ -384,7 +384,9 @@ return [
         ],
         [
             'text'=>'Zonas',
-            'icon'=>'fas fa-fw fa-clock',
+            'route'=>'admin.zones.index',
+            'icon'=>'fas fa-fw fa-map-marker-alt',
+            
         ],
         [
             'text'=>'Programación',
