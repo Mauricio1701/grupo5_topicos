@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             ProvinceSeeder::class,
             DistrictSeeder::class,
+            ZoneSeeder::class,
             VehicleTypeSeeder::class,
             ShiftSeeder::class,
             ReasonsSeeder::class,
