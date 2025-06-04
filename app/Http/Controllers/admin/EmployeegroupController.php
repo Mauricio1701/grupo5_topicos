@@ -9,6 +9,7 @@ use App\Models\Zone;
 use App\Models\Shift;
 use App\Models\Vehicle;
 use App\Models\EmployeeGroup;
+use App\Models\EmployeeType;
 use Yajra\DataTables\Facades\DataTables;
 
 class EmployeegroupController extends Controller
@@ -56,8 +57,11 @@ class EmployeegroupController extends Controller
         $zones = Zone::all();
         $shifts = Shift::all();
         $vehicles = Vehicle::all();
-        $employees = Employee::all();   
-        return view('admin.employee-groups.create', compact('zones', 'shifts', 'vehicles', 'employees'));
+        $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
+        $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
+        $employeesConductor = Employee::where('type_id', $conductor)->get();
+        $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
+        return view('admin.employee-groups.create', compact('zones', 'shifts', 'vehicles', 'employeesConductor', 'employeesAyudantes'));
     }
 
     /**
@@ -84,9 +88,12 @@ class EmployeegroupController extends Controller
         $zones = Zone::all();
         $shifts = Shift::all();
         $vehicles = Vehicle::all();
-        $employees = Employee::all();   
+        $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
+        $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
+        $employeesConductor = Employee::where('type_id', $conductor)->get();
+        $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
         $employeeGroup = EmployeeGroup::findOrFail($id);
-        return view('admin.employee-groups.edit', compact('zones', 'shifts', 'vehicles', 'employees', 'employeeGroup'));
+        return view('admin.employee-groups.edit', compact('zones', 'shifts', 'vehicles', 'employeesConductor', 'employeesAyudantes', 'employeeGroup'));
     }
 
     /**

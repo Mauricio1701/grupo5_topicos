@@ -370,12 +370,13 @@ return [
             'text'=>'Vacaciones',
             'route'=>'admin.vacations.index',
             'icon'=>'fas fa-fw fa-plane',
+            
         ],
         ['header' => 'PROGRAMACIÓN'],
         [
             'text'=>'Grupo de Personal',
             'route'=>'admin.employeegroups.index',
-            'icon'=>'fas fa-fw fa-user-group',
+            'icon'=>'fas fa-fw fa-users',
         ],
         [
             'text' => 'Turnos',

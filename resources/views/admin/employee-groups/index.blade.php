@@ -93,6 +93,7 @@ $(document).ready(function() {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
+                    console.log(formData);
 
                     $.ajax({
                         url: form.attr('action'),

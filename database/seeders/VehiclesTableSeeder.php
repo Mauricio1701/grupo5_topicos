@@ -24,7 +24,7 @@ class VehiclesTableSeeder extends Seeder
                 'load_capacity' => rand(2000, 12000), // kg
                 'fuel_capacity' => rand(40, 150), // litros
                 'compactation_capacity' => rand(0, 500), // si aplica
-                'people_capacity' => rand(2, 8),
+                'people_capacity' => rand(1, 3),
                 'description' => 'Vehículo de tipo industrial modelo ' . $i,
                 'status' => rand(0, 1), // aleatorio
 
