@@ -39,6 +39,7 @@ Route::resource('attendances', AttendanceController::class)->names('admin.attend
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');
+Route::get('data', [EmployeegroupController::class, 'data'])->name('admin.data');
 
 
 Route::resource('/', AdminController::class)->names('admin');

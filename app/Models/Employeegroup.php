@@ -33,4 +33,9 @@ class Employeegroup extends Model
     {
         return $this->belongsTo(Vehicle::class);
     }
+
+    public function configgroup()
+    {
+        return $this->hasMany(Configgroup::class);
+    }
 }

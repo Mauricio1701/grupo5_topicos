@@ -34,12 +34,11 @@
         <table class="table table-striped" id="datatableEmployeeGroups" style="width:100%">
             <thead>
                 <tr>
-                    <th>DNI</th>
-                    <th>EMPLEADO</th>
-                    <th>FECHA</th>
-                    <th>ESTADO</th>
-                    <th>NOTAS</th>
-                    <th>CREADO</th>
+                    <th>GRUPO</th>
+                    <th>ZONA</th>
+                    <th>TURNO</th>
+                    <th>DÍAS</th>
+                    <th>VEHICULO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
@@ -64,17 +63,16 @@ $(document).ready(function() {
         },
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.attendances.index') }}",
+        ajax: "{{ route('admin.employeegroups.index') }}",
         columns: [
-            { data: 'employee_dni', name: 'employee_dni' },
-            { data: 'employee_name', name: 'employee_name', orderable: false, searchable: false },
-            { data: 'attendance_date', name: 'attendance_date' },
-            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
-            { data: 'notes', name: 'notes' },
-            { data: 'created_at', name: 'created_at' },
+            { data: 'name', name: 'name' },
+            { data: 'zone', name: 'zone' },
+            { data: 'shift', name: 'shift' },
+            { data: 'days', name: 'days' },
+            { data: 'vehicle', name: 'vehicle' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[6, 'desc']]
+        order: [[0, 'asc']]
     });
 
     // Nuevo empleado - abrir modal
@@ -86,21 +84,29 @@ $(document).ready(function() {
                 $('#ModalLongTitle').text('Nuevo Grupo de Personal');
                 $('#modalEmployeeGroup .modal-body').html(response);
                 $('#modalEmployeeGroup').modal('show');
+                inicializarFormularioEmployeeGroup();
 
                 // Enviar formulario AJAX para crear
                 $('#modalEmployeeGroup form').submit(function(e) {
-                    console.log('Formulario enviado');
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
-                    console.log(formData);
+
+                    const data = {
+                        _token: '{{ csrf_token() }}',
+                        name: formData.get('group_name'),
+                        zone_id: parseInt(formData.get('zone_id')),
+                        vehicle_id: parseInt(formData.get('vehicle_id')),
+                        shift_id: parseInt(formData.get('shift_id')),
+                        days:[...formData.getAll('days[]')],
+                        driver_id: parseInt(formData.get('driver_id')),
+                        helpers:[...formData.getAll('helpers[]').map(Number)]
+                    }
 
                     $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
+                        url: "{{ route('admin.employeegroups.store') }}",
+                        type: "POST",
+                        data: data,
                         success: function(response) {
                             $('#modalEmployeeGroup').modal('hide');
                             table.ajax.reload(null, false);
@@ -130,6 +136,7 @@ $(document).ready(function() {
                             });
                         }
                     });
+                    
                 });
             }
         });
@@ -146,17 +153,29 @@ $(document).ready(function() {
                 $('#modalEmployeeGroup .modal-body').html(response);
                 $('#modalEmployeeGroup').modal('show');
 
+                inicializarFormularioEmployeeGroup();
+
                 // Enviar formulario AJAX para actualizar
-                $('#modalEmployeeGroup form').submit(function(e) {
+                $('#modalEmployeeGroup form').off('submit').on('submit', function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
+
+                    const data = {
+                        _token: '{{ csrf_token() }}',
+                        name: formData.get('group_name'),
+                        zone_id: parseInt(formData.get('zone_id')),
+                        vehicle_id: parseInt(formData.get('vehicle_id')),
+                        shift_id: parseInt(formData.get('shift_id')),
+                        days:[...formData.getAll('days[]')],
+                        driver_id: parseInt(formData.get('driver_id')),
+                        helpers:[...formData.getAll('helpers[]').map(Number)]
+                    }
+
                     $.ajax({
                         url: form.attr('action'),
                         type: form.attr('method'),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
+                        data: data,
                         success: function(response) {
                             $('#modalEmployeeGroup').modal('hide');
                             table.ajax.reload(null, false);
@@ -237,6 +256,86 @@ $(document).ready(function() {
             }
         });
     });
+
+    function inicializarFormularioEmployeeGroup(){
+        const vehicleSelect = document.getElementById('vehicle_id');
+        const ayudantesContainer = document.getElementById('ayudantes-container');
+        const dataExtra = document.getElementById('dataExtra')
+        if (!vehicleSelect) return;
+        const ayudantesData = window.ayudantesData || [];
+
+
+        vehicleSelect.addEventListener('change', function () {
+
+            const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+            if (selectedOption.value > 0) {
+                dataExtra.classList.remove('d-none');
+            }else{
+                dataExtra.classList.add('d-none');
+            }
+
+            const capacidad = parseInt(selectedOption.getAttribute('data-capacidad')) || 1;
+            ayudantesContainer.innerHTML = ''; // limpiar antes de crear nuevos campos
+
+            const numAyudantes = capacidad - 1;
+
+            for (let i = 1; i <= numAyudantes; i++) {
+                const div = document.createElement('div');
+                div.classList.add('form-group');
+                div.classList.add('col-md-6');
+
+                const label = document.createElement('label');
+                label.textContent = `Ayudante ${i}`;
+
+                const select = document.createElement('select');
+                select.name = `helpers[]`;
+                select.classList.add('form-control');
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Seleccione un ayudante';
+                select.appendChild(defaultOption);
+                select.addEventListener('change', function() {
+                    actualizarOpcionesAyudantes();
+                });
+
+            ayudantesData.forEach(function(ayudante) {
+                const option = document.createElement('option');
+                option.value = ayudante.id;
+                option.textContent = ayudante.name;
+                select.appendChild(option);
+            });
+
+            div.appendChild(label);
+            div.appendChild(select);
+            ayudantesContainer.appendChild(div);
+        }
+    });
+
+    if (vehicleSelect.value > 0) {
+        vehicleSelect.dispatchEvent(new Event('change'));
+    }
+
+    }
+
+    function actualizarOpcionesAyudantes() {
+        const selects = document.querySelectorAll('select[name="helpers[]"]');
+        const selectedValues = [];
+        selects.forEach(function(select) {
+            const selectedValue = select.value;
+            if (selectedValue) {
+                selectedValues.push(selectedValue);
+            }
+            const options = select.options;
+            for (let i = 0; i < options.length; i++) {
+                if (selectedValues.includes(options[i].value)) {
+                    options[i].disabled = true;
+                } else {
+                    options[i].disabled = false;
+                }
+            }
+        });
+    }
 });
 </script>
 @stop
