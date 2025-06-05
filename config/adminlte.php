@@ -370,13 +370,10 @@ return [
             'text'=>'Vacaciones',
             'route'=>'admin.vacations.index',
             'icon'=>'fas fa-fw fa-plane',
+            
         ],
         ['header' => 'PROGRAMACIÓN'],
-        [
-            'text'=>'Grupo de Personal',
-            'route'=>'admin.employeegroups.index',
-            'icon'=>'fas fa-fw fa-user-group',
-        ],
+        
         [
             'text' => 'Turnos',
             'route' => 'admin.shifts.index',
@@ -389,7 +386,13 @@ return [
             
         ],
         [
+            'text'=>'Grupo de Personal',
+            'route'=>'admin.employeegroups.index',
+            'icon'=>'fas fa-fw fa-users',
+        ],
+        [
             'text'=>'Programación',
+            'route'=>'admin.schedulings.index',
             'icon'=>'fas fa-fw fa-clock',
         ],
         ['header' => 'GESTIÓN DE CAMBIOS'],

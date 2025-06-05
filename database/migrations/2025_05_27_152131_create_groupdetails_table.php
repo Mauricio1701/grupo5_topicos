@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('configgroups_talbe', function (Blueprint $table) {
+        Schema::create('groupdetails', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('group_id')->unsigned();
-            $table->bigInteger('employee_id')->unsigned();
+            $table->unsignedBigInteger('group_id');
             $table->foreign('group_id')->references('id')->on('employeegroups');
+            $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employees');
+            $table->unsignedBigInteger('sheduling_id');
+            $table->foreign('sheduling_id')->references('id')->on('schedulings');
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('configgroups_talbe');
+        Schema::dropIfExists('groupdetails');
     }
 };

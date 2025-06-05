@@ -15,6 +15,7 @@ class ZoneSeeder extends Seeder
     {
         $zone1 = new Zone();
         $zone1->name = 'Mercado Moshoqueque';
+        $zone1->department_id = 1;
         $zone1->description = 'Principal centro de abastos de José Leonardo Ortiz y uno de los mercados mayoristas más grandes del norte del país.';
         $zone1->save();
 
@@ -37,6 +38,7 @@ class ZoneSeeder extends Seeder
 
         $zone2 = new Zone();
         $zone2->name = 'Urbanización Latina';
+        $zone2->department_id = 1;
         $zone2->description = 'Zona residencial en José Leonardo Ortiz con comercios locales y servicios básicos.';
         $zone2->save();
 
@@ -59,6 +61,7 @@ class ZoneSeeder extends Seeder
 
         $zone3 = new Zone();
         $zone3->name = 'Urbanización San Carlos';
+        $zone3->department_id = 1;
         $zone3->description = 'Área urbana de JLO con viviendas familiares y pequeños negocios.';
         $zone3->save();
 
@@ -81,6 +84,7 @@ class ZoneSeeder extends Seeder
 
         $zone4 = new Zone();
         $zone4->name = 'Atusparia';
+        $zone4->department_id = 1;
         $zone4->description = 'Sector popular de JLO con alta densidad poblacional y comercio minorista.';
         $zone4->save();
 
@@ -103,6 +107,7 @@ class ZoneSeeder extends Seeder
 
         $zone5 = new Zone();
         $zone5->name = 'Urrunaga';
+        $zone5->department_id = 1;
         $zone5->description = 'Zona poblada de JLO con varios servicios públicos y actividad comercial local.';
         $zone5->save();
 
@@ -125,6 +130,7 @@ class ZoneSeeder extends Seeder
 
         $zone6 = new Zone();
         $zone6->name = 'Nuevo San Lorenzo';
+        $zone6->department_id = 1;
         $zone6->description = 'Asentamiento urbano en expansión con necesidades de infraestructura básica.';
         $zone6->save();
 
@@ -147,6 +153,7 @@ class ZoneSeeder extends Seeder
 
         $zone7 = new Zone();
         $zone7->name = 'Villa Hermosa';
+        $zone7->department_id = 1;
         $zone7->description = 'Sector residencial de JLO con mejores condiciones de urbanización.';
         $zone7->save();
 
@@ -169,6 +176,7 @@ class ZoneSeeder extends Seeder
 
         $zone8 = new Zone();
         $zone8->name = 'Santa Ana';
+        $zone8->department_id = 1;
         $zone8->description = 'Sector tradicional de JLO con establecimientos comerciales vecinales.';
         $zone8->save();
 

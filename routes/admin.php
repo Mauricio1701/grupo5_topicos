@@ -15,6 +15,7 @@ use App\Http\Controllers\admin\ContractController;
 use App\Http\Controllers\admin\AttendanceController;
 use App\Http\Controllers\admin\EmployeegroupController;
 use App\Http\Controllers\admin\ZoneController;
+use App\Http\Controllers\admin\SchedulingController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -39,6 +40,10 @@ Route::resource('attendances', AttendanceController::class)->names('admin.attend
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');
-
-
+Route::get('data', [EmployeegroupController::class, 'data'])->name('admin.data');
+Route::resource('schedulings', SchedulingController::class)->names('admin.schedulings');
+Route::get('schedulings/get-content/{shiftId}', [SchedulingController::class, 'getContent'])->name('admin.schedulings.get-content');
+Route::get('vehicles/by-type/{typeId}', [VehicleController::class, 'byType'])->name('admin.vehicles.bytype');
+Route::get('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechange'])->name('admin.employee-groups.vehiclechange');
+Route::put('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechangeUpdate'])->name('admin.employee-groups.vehiclechangeupdate');
 Route::resource('/', AdminController::class)->names('admin');

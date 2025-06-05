@@ -17,6 +17,8 @@ return new class extends Migration
             $table->double('average_waste')->nullable();
             $table->text('description')->nullable();
             $table->string('status',1)->default('A');
+            $table->unsignedBigInteger('department_id');
+            $table->foreign('department_id')->references('id')->on('departments');
             $table->timestamps();
         });
     }
