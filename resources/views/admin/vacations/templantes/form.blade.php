@@ -1,71 +1,99 @@
-
 <div class="row">
     <div class="col-md-6">
         <div class="form-group">
-            {!! Form::label('employee_id', 'Empleado') !!}
-            {!! Form::select('employee_id', $employees, null, ['class' => 'form-control', 'placeholder' => 'Seleccione un empleado', 'required']) !!}
-            @error('employee_id')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
+            <label for="employee_id">Empleado</label>
+            <select class="form-control" id="employee_id" name="employee_id" required>
+                <option value="">Seleccione un empleado</option>
+                @foreach($employees as $employee)
+                <option value="{{ $employee->id }}"
+                    {{ isset($vacation) && $vacation->employee_id == $employee->id ? 'selected' : '' }}
+                    data-available-days="{{ $employee->available_days }}">
+                    {{ $employee->name_with_last_name }} ({{ $employee->available_days }} días disponibles)
+                </option>
+                @endforeach
+            </select>
         </div>
     </div>
     <div class="col-md-6">
         <div class="form-group">
-            {!! Form::label('status', 'Estado') !!}
-            {!! Form::select('status', array_combine($statuses, $statuses), null, ['class' => 'form-control', 'required']) !!}
-            @error('status')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('request_date', 'Fecha de solicitud') !!}
-            {!! Form::date('request_date', null, ['class' => 'form-control', 'required']) !!}
-            @error('request_date')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('end_date', 'Fecha de finalización') !!}
-            {!! Form::date('end_date', null, ['class' => 'form-control', 'required']) !!}
-            @error('end_date')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
+            <label for="request_date">Fecha de Solicitud</label>
+            <?php
+            $minDate = \Carbon\Carbon::now()->addDays(11)->format('Y-m-d');
+            $defaultDate = isset($vacation) && $vacation->request_date > \Carbon\Carbon::now()->addDays(10)
+                ? $vacation->request_date->format('Y-m-d')
+                : $minDate;
+            ?>
+            <input type="date" class="form-control datepicker" id="request_date" name="request_date" required
+                min="{{ $minDate }}"
+                value="{{ $defaultDate }}">
+            <small class="text-muted">Las solicitudes deben hacerse con al menos 10 días de anticipación</small>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="form-group">
-            {!! Form::label('requested_days', 'Días solicitados') !!}
-            {!! Form::number('requested_days', null, ['class' => 'form-control', 'min' => '1', 'required', 'readonly']) !!}
-            @error('requested_days')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
+            <label for="requested_days">Días Solicitados</label>
+            <input type="number" class="form-control" id="requested_days" name="requested_days" min="1" required
+                value="{{ isset($vacation) ? $vacation->requested_days : '1' }}">
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="form-group">
-            {!! Form::label('available_days', 'Días disponibles') !!}
-            {!! Form::number('available_days', null, ['class' => 'form-control', 'min' => '0', 'required', 'readonly']) !!}
-            @error('available_days')
-                <span class="text-danger">{{ $message }}</span>
-            @enderror
+            <label for="end_date">Fecha Final</label>
+            <input type="date" class="form-control" id="end_date" name="end_date" readonly
+                value="{{ isset($vacation) ? $vacation->end_date->format('Y-m-d') : '' }}">
+            <small class="text-muted">Calculada automáticamente</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="available_days">Días Disponibles</label>
+            <input type="number" class="form-control" id="available_days" name="available_days" readonly
+                value="{{ isset($vacation) ? $vacation->available_days : '0' }}">
+            <small class="text-muted">Basado en contrato del empleado</small>
         </div>
     </div>
 </div>
 
-<div class="form-group">
-    {!! Form::label('notes', 'Notas') !!}
-    {!! Form::textarea('notes', null, ['class' => 'form-control', 'rows' => 3, 'placeholder' => 'Ingrese notas o comentarios sobre esta solicitud']) !!}
-    @error('notes')
-        <span class="text-danger">{{ $message }}</span>
-    @enderror
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="status">Estado</label>
+            <select class="form-control" id="status" name="status" required>
+                @foreach($statusOptions as $option)
+                <option value="{{ $option }}" {{ isset($vacation) && $vacation->status == $option ? 'selected' : '' }}>
+                    @switch($option)
+                    @case('Pending')
+                    Pendiente
+                    @break
+                    @case('Approved')
+                    Aprobado
+                    @break
+                    @case('Rejected')
+                    Rechazado
+                    @break
+                    @case('Cancelled')
+                    Cancelado
+                    @break
+                    @case('Completed')
+                    Completado
+                    @break
+                    @default
+                    {{ $option }}
+                    @endswitch
+                </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="notes">Notas</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ isset($vacation) ? $vacation->notes : '' }}</textarea>
+        </div>
+    </div>
 </div>
+
+<input type="hidden" name="original_requested_days" value="{{ isset($vacation) ? $vacation->requested_days : '0' }}">
