@@ -1,4 +1,3 @@
-
 {!! Form::open(['route' => 'admin.contracts.store', 'method' => 'POST']) !!}
     @include('admin.contracts.templantes.form')
     <div class="d-flex justify-content-end gap-2">
