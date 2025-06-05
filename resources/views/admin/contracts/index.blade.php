@@ -107,6 +107,7 @@
                 }
             ]
         });
+        var originalVacationDays;
 
         function initContractForm() {
             var contractTypeSelect = $('#contract_type');
@@ -114,19 +115,33 @@
             var endDateContainer = $('#end_date_container');
             var vacationDaysField = $('#vacation_days_per_year');
 
+            originalVacationDays = vacationDaysField.val();
+
             $('.vacation-days-notice').remove();
 
-            function updateEndDateField() {
-                if (contractTypeSelect.val() === 'Tiempo completo') {
-                    endDateField.prop('disabled', true);
-                    endDateField.val('');
-                    if (endDateContainer) {
-                        endDateContainer.addClass('d-none');
-                    }
+
+            function updateVacationDays() {
+                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+
+                $('.vacation-days-notice').remove();
+
+                if (specialContractTypes.includes(contractTypeSelect.val())) {
+                    vacationDaysField.val(0);
+                    vacationDaysField.prop('disabled', true);
+                    vacationDaysField.parent().append('<small class="text-info d-block vacation-days-notice">Los contratos de este tipo no tienen días de vacaciones.</small>');
                 } else {
-                    endDateField.prop('disabled', false);
-                    if (endDateContainer) {
-                        endDateContainer.removeClass('d-none');
+                    vacationDaysField.prop('disabled', false);
+
+                    var isEditing = $('input[name="_method"]').val() === 'PUT';
+
+                    if (isEditing) {
+                        if (originalVacationDays == 0) {
+                            vacationDaysField.val(15); 
+                        } else {
+                            vacationDaysField.val(originalVacationDays);
+                        }
+                    } else if (!vacationDaysField.val() || vacationDaysField.val() === '') {
+                        vacationDaysField.val(15);
                     }
                 }
             }
@@ -143,8 +158,10 @@
                 } else {
                     vacationDaysField.prop('disabled', false);
 
-                    if (!vacationDaysField.val() || vacationDaysField.val() == '0') {
-                        vacationDaysField.val(15); 
+                    var isNewRecord = !$('input[name="_method"]').val();
+
+                    if (isNewRecord && (!vacationDaysField.val() || vacationDaysField.val() === '')) {
+                        vacationDaysField.val(15);
                     }
                 }
             }

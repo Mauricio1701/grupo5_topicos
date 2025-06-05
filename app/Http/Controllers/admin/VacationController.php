@@ -1,13 +1,12 @@
 <?php
 
-
-namespace App\Http\Controllers\admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Vacation;
 use App\Models\Employee;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Models\Contract;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 
@@ -16,209 +15,268 @@ class VacationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $vacations = Vacation::with('employee')->get();
+            $vacations = Vacation::with(['employee'])
+                ->select(
+                    'id',
+                    'employee_id',
+                    'request_date',
+                    'requested_days',
+                    'end_date',
+                    'available_days',
+                    'status',
+                    'notes'
+                )->get()
+                ->map(function ($vacation) {
+                    $contract = Contract::where('employee_id', $vacation->employee_id)
+                        ->where('is_active', true)
+                        ->first();
+
+                    $vacation->current_available_days = $contract ? $contract->vacation_days_per_year : 0;
+
+                    return $vacation;
+                });
 
             return DataTables::of($vacations)
                 ->addColumn('employee_name', function ($vacation) {
-                    return $vacation->employee ? $vacation->employee->full_name : 'N/A';
+                    return $vacation->employee->names . ' ' . $vacation->employee->lastnames ?? 'N/A';
+                })
+                ->addColumn('request_date_formatted', function ($vacation) {
+                    return Carbon::parse($vacation->request_date)->format('d/m/Y');
+                })
+                ->addColumn('current_available_days', function ($vacation) {
+                    return $vacation->current_available_days;
+                })
+                ->addColumn('end_date_formatted', function ($vacation) {
+                    return Carbon::parse($vacation->end_date)->format('d/m/Y');
+                })
+                ->addColumn('status_badge', function ($vacation) {
+                    $badgeClass = '';
+                    switch ($vacation->status) {
+                        case 'Approved':
+                            $badgeClass = 'bg-success';
+                            $statusText = 'Aprobado';
+                            break;
+                        case 'Pending':
+                            $badgeClass = 'bg-warning';
+                            $statusText = 'Pendiente';
+                            break;
+                        case 'Rejected':
+                            $badgeClass = 'bg-danger';
+                            $statusText = 'Rechazado';
+                            break;
+                        case 'Cancelled':
+                            $badgeClass = 'bg-secondary';
+                            $statusText = 'Cancelado';
+                            break;
+                        case 'Completed':
+                            $badgeClass = 'bg-info';
+                            $statusText = 'Completado';
+                            break;
+                        default:
+                            $badgeClass = 'bg-primary';
+                            $statusText = $vacation->status;
+                    }
+                    return '<span class="badge ' . $badgeClass . '">' . $statusText . '</span>';
                 })
                 ->addColumn('action', function ($vacation) {
                     return "
                 <button class='btn btn-warning btnEditar' id='" . $vacation->id . "'><i class='fas fa-edit'></i></button>
-                <form action=" . route('admin.vacations.destroy', $vacation->id) . " id='delete-form-" . $vacation->id . "' method='POST' class='d-inline formDelete'>
+                <form action=" . route('admin.vacations.destroy', $vacation->id) . " id='delete-form-" . $vacation->id . "' method='POST' class='d-inline'>
                     " . csrf_field() . "
                     " . method_field('DELETE') . "
-                    <button type='submit' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                    <button type='button' onclick='confirmDelete(" . $vacation->id . ")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
                 </form>
                 ";
                 })
-                ->editColumn('status', function ($vacation) {
-                    $statusClasses = [
-                        'Pending' => 'badge badge-warning',
-                        'Approved' => 'badge badge-success',
-                        'Rejected' => 'badge badge-danger',
-                        'Cancelled' => 'badge badge-secondary'
-                    ];
-
-                    $class = isset($statusClasses[$vacation->status]) ? $statusClasses[$vacation->status] : 'badge badge-info';
-
-                    return "<span class='{$class}'>{$vacation->status}</span>";
-                })
-                ->editColumn('request_date', function ($vacation) {
-                    return Carbon::parse($vacation->request_date)->format('d/m/Y');
-                })
-                ->editColumn('end_date', function ($vacation) {
-                    return Carbon::parse($vacation->end_date)->format('d/m/Y');
-                })
-                ->rawColumns(['action', 'status'])
+                ->rawColumns(['action', 'status_badge'])
                 ->make(true);
+        } else {
+            return view('admin.vacations.index');
         }
-
-        return view('admin.vacations.index');
     }
 
     public function create()
     {
-        try {
-            \Log::info('Cargando empleados para el formulario de vacaciones');
+        $employeesWithContract = Contract::where('is_active', true)
+            ->pluck('employee_id')
+            ->toArray();
 
-            $employees = Employee::where('status', true)
-                ->get();
+        $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
+            ->whereIn('id', $employeesWithContract)
+            ->where('status', true)
+            ->get()
+            ->map(function ($employee) {
+                $employee->name_with_last_name = $employee->name . ' ' . $employee->last_name;
 
-            \Log::info('Empleados encontrados: ' . $employees->count());
+                $contract = Contract::where('employee_id', $employee->id)
+                    ->where('is_active', true)
+                    ->first();
 
-            $employeesForSelect = [];
-            foreach ($employees as $employee) {
-                $employeesForSelect[$employee->id] = $employee->names . ' ' . $employee->lastnames;
-            }
+                $employee->available_days = $contract ? $contract->vacation_days_per_year : 0;
 
-            \Log::info('Empleados para select: ' . count($employeesForSelect));
+                return $employee;
+            });
 
-            $statuses = [
-                'Pending' => 'Pendiente',
-                'Approved' => 'Aprobado',
-                'Rejected' => 'Rechazado',
-                'Cancelled' => 'Cancelado'
-            ];
+        $statusOptions = ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'];
 
-            return view('admin.vacations.create', compact('employeesForSelect', 'statuses'));
-        } catch (\Exception $e) {
-            \Log::error('Error en VacationController@create: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-
-            return response()->json([
-                'error' => true,
-                'message' => 'Error al cargar el formulario: ' . $e->getMessage()
-            ], 500);
-        }
+        return view('admin.vacations.create', compact('employees', 'statusOptions'));
     }
 
     public function store(Request $request)
     {
         try {
-            $validated = $request->validate([
+            $rules = [
                 'employee_id' => 'required|exists:employees,id',
-                'request_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:request_date',
+                'request_date' => 'required|date|after:' . Carbon::now()->addDays(10)->format('Y-m-d'),
                 'requested_days' => 'required|integer|min:1',
-                'available_days' => 'required|integer|min:0',
-                'status' => 'required|string|max:50',
-                'notes' => 'nullable|string',
-            ], [
-                'employee_id.required' => 'El empleado es obligatorio',
-                'employee_id.exists' => 'El empleado seleccionado no existe',
-                'request_date.required' => 'La fecha de solicitud es obligatoria',
-                'request_date.date' => 'La fecha de solicitud debe ser una fecha válida',
-                'end_date.required' => 'La fecha de finalización es obligatoria',
-                'end_date.date' => 'La fecha de finalización debe ser una fecha válida',
-                'end_date.after_or_equal' => 'La fecha de finalización debe ser igual o posterior a la fecha de solicitud',
-                'requested_days.required' => 'Los días solicitados son obligatorios',
-                'requested_days.integer' => 'Los días solicitados deben ser un número entero',
-                'requested_days.min' => 'Los días solicitados deben ser al menos 1',
-                'available_days.required' => 'Los días disponibles son obligatorios',
-                'available_days.integer' => 'Los días disponibles deben ser un número entero',
-                'available_days.min' => 'Los días disponibles no pueden ser negativos',
-                'status.required' => 'El estado es obligatorio',
-                'status.max' => 'El estado no puede tener más de 50 caracteres',
-            ]);
-
-            $startDate = Carbon::parse($request->request_date);
-            $endDate = Carbon::parse($request->end_date);
-
-            if ($endDate->lt($startDate)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'La fecha de finalización debe ser igual o posterior a la fecha de solicitud'
-                ], 422);
-            }
-
-            Vacation::create($validated);
-            return response()->json([
-                'success' => true,
-                'message' => 'Solicitud de vacaciones creada exitosamente'
-            ], 200);
-        } catch (\Throwable $th) {
-            \Log::error('Error al crear vacación: ' . $th->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear la solicitud de vacaciones: ' . $th->getMessage()
-            ], 422);
-        }
-    }
-
-    public function show(string $id)
-    {
-        $vacation = Vacation::with('employee')->findOrFail($id);
-        return view('admin.vacations.show', compact('vacation'));
-    }
-
-    public function edit($id)
-    {
-        try {
-            $vacation = Vacation::findOrFail($id);
-
-            $employees = Employee::where('status', true)
-                ->get();
-
-            $employeesForSelect = [];
-            foreach ($employees as $employee) {
-                $employeesForSelect[$employee->id] = $employee->names . ' ' . $employee->lastnames;
-            }
-
-            $statuses = [
-                'Pending' => 'Pendiente',
-                'Approved' => 'Aprobado',
-                'Rejected' => 'Rechazado',
-                'Cancelled' => 'Cancelado'
+                'status' => 'required|string|in:Pending,Approved,Rejected,Cancelled,Completed',
+                'notes' => 'nullable|string|max:255',
             ];
 
-            return view('admin.vacations.edit', compact('vacation', 'employeesForSelect', 'statuses'));
-        } catch (\Exception $e) {
-            \Log::error('Error en VacationController@edit: ' . $e->getMessage());
+            $request->validate($rules);
 
-            return response()->json([
-                'error' => true,
-                'message' => 'Error al cargar el formulario de edición: ' . $e->getMessage()
-            ], 500);
+            $contract = Contract::where('employee_id', $request->employee_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$contract) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene un contrato activo'
+                ], 400);
+            }
+
+            $availableDays = $contract->vacation_days_per_year;
+
+            if ($request->requested_days > $availableDays) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene suficientes días de vacaciones disponibles'
+                ], 400);
+            }
+
+            $vacation = new Vacation();
+            $vacation->employee_id = $request->employee_id;
+            $vacation->request_date = $request->request_date;
+            $vacation->requested_days = $request->requested_days;
+            $vacation->end_date = Carbon::parse($request->request_date)->addDays($request->requested_days);
+
+            $vacation->available_days = $availableDays;
+            $vacation->status = $request->status;
+            $vacation->notes = $request->notes;
+            $vacation->save();
+
+            if ($request->status === 'Approved') {
+                $contract->vacation_days_per_year = $availableDays - $request->requested_days;
+                $contract->save();
+            }
+
+            return response()->json(['success' => true, 'message' => 'Solicitud de vacaciones creada exitosamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['success' => false, 'message' => 'Error al crear la solicitud de vacaciones: ' . $th->getMessage()], 500);
         }
+    }
+
+    public function edit(string $id)
+    {
+        $vacation = Vacation::findOrFail($id);
+
+        $employeesWithContract = Contract::where('is_active', true)
+            ->pluck('employee_id')
+            ->toArray();
+
+        $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
+            ->whereIn('id', $employeesWithContract)
+            ->where('status', true)
+            ->get()
+            ->map(function ($employee) {
+                $employee->name_with_last_name = $employee->name . ' ' . $employee->last_name;
+
+                $contract = Contract::where('employee_id', $employee->id)
+                    ->where('is_active', true)
+                    ->first();
+
+                $employee->available_days = $contract ? $contract->vacation_days_per_year : 0;
+
+                return $employee;
+            });
+
+        $statusOptions = ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'];
+
+        return view('admin.vacations.edit', compact('vacation', 'employees', 'statusOptions'));
     }
 
     public function update(Request $request, string $id)
     {
         try {
-            $request->validate([
-                'employee_id' => 'required|exists:employees,id',
-                'request_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:request_date',
-                'requested_days' => 'required|integer|min:1',
-                'available_days' => 'required|integer|min:0',
-                'status' => 'required|string|max:50',
-                'notes' => 'nullable|string',
-            ], [
-                'employee_id.required' => 'El empleado es obligatorio',
-                'employee_id.exists' => 'El empleado seleccionado no existe',
-                'request_date.required' => 'La fecha de solicitud es obligatoria',
-                'request_date.date' => 'La fecha de solicitud debe ser una fecha válida',
-                'end_date.required' => 'La fecha de finalización es obligatoria',
-                'end_date.date' => 'La fecha de finalización debe ser una fecha válida',
-                'end_date.after_or_equal' => 'La fecha de finalización debe ser igual o posterior a la fecha de solicitud',
-                'requested_days.required' => 'Los días solicitados son obligatorios',
-                'requested_days.integer' => 'Los días solicitados deben ser un número entero',
-                'requested_days.min' => 'Los días solicitados deben ser al menos 1',
-                'available_days.required' => 'Los días disponibles son obligatorios',
-                'available_days.integer' => 'Los días disponibles deben ser un número entero',
-                'available_days.min' => 'Los días disponibles no pueden ser negativos',
-                'status.required' => 'El estado es obligatorio',
-                'status.max' => 'El estado no puede tener más de 50 caracteres',
-            ]);
-
             $vacation = Vacation::findOrFail($id);
-            $vacation->update($request->all());
+            $oldStatus = $vacation->status;
+
+            if ($vacation->status != 'Pending') {
+                $rules = [
+                    'employee_id' => 'required|exists:employees,id',
+                    'request_date' => 'required|date',
+                    'requested_days' => 'required|integer|min:1',
+                    'status' => 'required|string|in:Pending,Approved,Rejected,Cancelled,Completed',
+                    'notes' => 'nullable|string|max:255',
+                ];
+            } else {
+                $rules = [
+                    'employee_id' => 'required|exists:employees,id',
+                    'request_date' => 'required|date|after:' . Carbon::now()->addDays(10)->format('Y-m-d'),
+                    'requested_days' => 'required|integer|min:1',
+                    'status' => 'required|string|in:Pending,Approved,Rejected,Cancelled,Completed',
+                    'notes' => 'nullable|string|max:255',
+                ];
+            }
+
+            $request->validate($rules);
+
+            $oldRequestedDays = $vacation->requested_days;
+            $oldEmployeeId = $vacation->employee_id;
+
+            $contract = Contract::where('employee_id', $request->employee_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$contract) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene un contrato activo'
+                ], 400);
+            }
+
+            $contractDays = $contract->vacation_days_per_year;
+
+            if ($oldStatus === 'Approved' && $oldEmployeeId == $request->employee_id) {
+                $contractDays += $oldRequestedDays;
+            }
+
+            if ($request->status === 'Approved' && $request->requested_days > $contractDays) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene suficientes días de vacaciones disponibles'
+                ], 400);
+            }
+
+            $vacation->employee_id = $request->employee_id;
+            $vacation->request_date = $request->request_date;
+            $vacation->requested_days = $request->requested_days;
+            $vacation->end_date = Carbon::parse($request->request_date)->addDays($request->requested_days);
+
+            $vacation->available_days = $contractDays;
+            $vacation->status = $request->status;
+            $vacation->notes = $request->notes;
+            $vacation->save();
+
+            if ($request->status === 'Approved') {
+                $contract->vacation_days_per_year = $contractDays - $request->requested_days;
+                $contract->save();
+            }
 
             return response()->json(['success' => true, 'message' => 'Solicitud de vacaciones actualizada exitosamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al actualizar la solicitud de vacaciones: ' . $th->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Error al actualizar la solicitud de vacaciones: ' . $th->getMessage()], 500);
         }
     }
 
@@ -227,75 +285,163 @@ class VacationController extends Controller
         try {
             $vacation = Vacation::findOrFail($id);
             $vacation->delete();
-
             return response()->json(['success' => true, 'message' => 'Solicitud de vacaciones eliminada exitosamente'], 200);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar la solicitud de vacaciones: ' . $th->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Error al eliminar la solicitud de vacaciones: ' . $th->getMessage()], 500);
+        }
+    }
+
+    public function getEmployeeAvailableDays($employeeId)
+    {
+        try {
+            $contract = Contract::where('employee_id', $employeeId)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$contract) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene un contrato activo'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'available_days' => $contract->vacation_days_per_year
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener días disponibles: ' . $th->getMessage()
+            ], 500);
         }
     }
 
     public function calculateDays(Request $request)
     {
         try {
-            $startDate = Carbon::parse($request->start_date);
-            $endDate = Carbon::parse($request->end_date);
+            $requestDate = $request->request_date;
+            $requestedDays = $request->requested_days;
 
-            if ($endDate->lt($startDate)) {
+            if (!$requestDate || !$requestedDays) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'La fecha final no puede ser anterior a la fecha inicial'
-                ], 422);
+                    'message' => 'Datos incompletos para el cálculo'
+                ], 400);
             }
 
-            $days = $endDate->diffInDays($startDate) + 1;
+            $endDate = Carbon::parse($requestDate)->addDays($requestedDays)->format('Y-m-d');
 
-            return response()->json(['success' => true, 'days' => $days]);
+            return response()->json([
+                'success' => true,
+                'end_date' => $endDate
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al calcular los días: ' . $th->getMessage()
+                'message' => 'Error al calcular fecha: ' . $th->getMessage()
             ], 500);
         }
     }
 
+
+
+    public function changeStatus(Request $request, Vacation $vacation)
+    {
+        try {
+            $oldStatus = $vacation->status;
+            $newStatus = $request->status;
+
+            if (!in_array($newStatus, ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Estado no válido'
+                ], 400);
+            }
+
+            $contract = Contract::where('employee_id', $vacation->employee_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$contract) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El empleado no tiene un contrato activo'
+                ], 400);
+            }
+
+            if ($oldStatus !== 'Approved' && $newStatus === 'Approved') {
+                if ($vacation->requested_days > $contract->vacation_days_per_year) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El empleado no tiene suficientes días de vacaciones disponibles'
+                    ], 400);
+                }
+
+                $contract->vacation_days_per_year -= $vacation->requested_days;
+                $contract->save();
+            } else if ($oldStatus === 'Approved' && $newStatus !== 'Approved') {
+                $contract->vacation_days_per_year += $vacation->requested_days;
+                $contract->save();
+            }
+
+            $vacation->status = $newStatus;
+            $vacation->available_days = $contract->vacation_days_per_year;
+            $vacation->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado de vacaciones actualizado exitosamente'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado: ' . $th->getMessage()
+            ], 500);
+        }
+    }
     public function checkAvailableDays(Request $request)
     {
         try {
             $employeeId = $request->employee_id;
+            $isEdit = $request->is_edit == "true";
+            $vacationId = $request->vacation_id;
 
             if (!$employeeId) {
                 return response()->json([
-                    'success' => true,
-                    'available_days' => 0,
-                    'message' => 'Seleccione un empleado válido'
-                ]);
+                    'success' => false,
+                    'message' => 'ID de empleado no proporcionado'
+                ], 400);
             }
 
-            $employee = Employee::find($employeeId);
+            $contract = Contract::where('employee_id', $employeeId)
+                ->where('is_active', true)
+                ->first();
 
-            if (!$employee) {
+            if (!$contract) {
                 return response()->json([
-                    'success' => true,
-                    'available_days' => 0,
-                    'message' => 'Empleado no encontrado'
-                ]);
+                    'success' => false,
+                    'message' => 'El empleado no tiene un contrato activo'
+                ], 400);
             }
 
-            $usedDays = Vacation::where('employee_id', $employeeId)
-                ->where('status', 'Approved')
-                ->sum('requested_days');
+            $availableDays = $contract->vacation_days_per_year;
 
-            $totalDays = 30;
-            $availableDays = max(0, $totalDays - $usedDays);
-
-            return response()->json(['success' => true, 'available_days' => $availableDays]);
-        } catch (\Throwable $th) {
-            \Log::error('Error al verificar días disponibles: ' . $th->getMessage());
+            if ($isEdit && $vacationId) {
+                $vacation = Vacation::find($vacationId);
+                if ($vacation && $vacation->employee_id == $employeeId) {
+                    $availableDays = $vacation->available_days + $vacation->requested_days;
+                }
+            }
 
             return response()->json([
+                'success' => true,
+                'available_days' => $availableDays
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
                 'success' => false,
-                'available_days' => 0,
-                'message' => 'Error al verificar días disponibles: ' . $th->getMessage()
+                'message' => 'Error al obtener días disponibles: ' . $th->getMessage()
             ], 500);
         }
     }
