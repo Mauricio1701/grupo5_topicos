@@ -98,7 +98,6 @@
             <div class="custom-control custom-switch">
                 {!! Form::checkbox('is_active', 1, null, ['class' => 'custom-control-input', 'id' => 'is_active']) !!}
                 {!! Form::label('is_active', '¿Contrato Activo?', ['class' => 'custom-control-label']) !!}
-                <!-- Add hidden field to ensure is_active is always submitted -->
                 <input type="hidden" name="is_active_submitted" value="1">
             </div>
             @error('is_active')
