@@ -15,66 +15,83 @@ class ContractSeeder extends Seeder
     {
         $now = Carbon::now();
         
-        $employees = DB::table('employees')->get();
-        
-        if ($employees->isEmpty()) {
-            $this->command->info('No hay empleados en la base de datos. Ejecuta el seeder de empleados primero.');
-            return;
-        }
-        
-        $employeeTypes = DB::table('employeetype')->get();
-        
-        if ($employeeTypes->isEmpty()) {
-            $this->command->info('No hay tipos de empleados en la base de datos. Ejecuta el seeder de tipos de empleados primero.');
-            return;
-        }
-        
-        $departments = DB::table('departments')->get();
-        
-        if ($departments->isEmpty()) {
-            $this->command->info('No hay departamentos en la base de datos. Ejecuta el seeder de departamentos primero.');
-            return;
-        }
-        
-        $contracts = [];
-        
-        $contractTypes = ['Tiempo completo', 'Medio tiempo', 'Temporal', 'Por proyecto', 'Prácticas'];
-        
-        $positionIds = $employeeTypes->pluck('id')->toArray();
-        $departmentIds = $departments->pluck('id')->toArray();
-        
-        foreach ($employees as $employee) {
-            $startDate = Carbon::now()->subYears(rand(1, 5))->subMonths(rand(0, 11));
-            
-            $hasEndDate = rand(0, 1) == 1;
-            $endDate = null;
-            
-            if ($hasEndDate) {
-                
-                $endDate = (clone $startDate)->addMonths(rand(6, 24));
-                
-                
-                $isActive = $endDate->gt(Carbon::now());
-            } else {
-                $isActive = true; 
-            }
-            
-            $contracts[] = [
-                'employee_id' => $employee->id,
-                'contract_type' => $contractTypes[array_rand($contractTypes)],
-                'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $endDate ? $endDate->format('Y-m-d') : null,
-                'salary' => rand(1500, 5000) + (rand(0, 99) / 100), 
-                'position_id' => $positionIds[array_rand($positionIds)],
-                'department_id' => $departmentIds[array_rand($departmentIds)], 
-                'vacation_days_per_year' => rand(15, 30),
-                'probation_period_months' => rand(1, 6),
-                'is_active' => $isActive,
-                'termination_reason' => (!$isActive && $hasEndDate) ? 'Finalización de contrato' : null,
+        $contracts = [
+            [
+                'employee_id' => 1,
+                'contract_type' => 'Tiempo completo',
+                'start_date' => '2025-01-15',
+                'end_date' => '2026-01-14',
+                'salary' => 3500.00,
+                'position_id' => 1, // Asumiendo que existe un position_id 1 en tabla employeetype
+                'department_id' => 1, // Asumiendo que existe un department_id 2
+                'vacation_days_per_year' => 15,
+                'probation_period_months' => 3,
+                'is_active' => true,
+                'termination_reason' => null,
                 'created_at' => $now,
                 'updated_at' => $now
-            ];
-        }
+            ],
+            [
+                'employee_id' => 2,
+                'contract_type' => 'Temporal',
+                'start_date' => '2025-02-01',
+                'end_date' => '2025-08-01',
+                'salary' => 2800.00,
+                'position_id' => 2,
+                'department_id' => 1,
+                'vacation_days_per_year' => 10,
+                'probation_period_months' => 2,
+                'is_active' => true,
+                'termination_reason' => null,
+                'created_at' => $now,
+                'updated_at' => $now
+            ],
+            [
+                'employee_id' => 3,
+                'contract_type' => 'Tiempo completo',
+                'start_date' => '2024-11-01',
+                'end_date' => null,
+                'salary' => 4200.00,
+                'position_id' => 3,
+                'department_id' => 1,
+                'vacation_days_per_year' => 20,
+                'probation_period_months' => 3,
+                'is_active' => true,
+                'termination_reason' => null,
+                'created_at' => $now,
+                'updated_at' => $now
+            ],
+            [
+                'employee_id' => 4,
+                'contract_type' => 'Medio tiempo',
+                'start_date' => '2025-03-15',
+                'end_date' => '2025-09-15',
+                'salary' => 1800.00,
+                'position_id' => 2,
+                'department_id' => 1,
+                'vacation_days_per_year' => 7,
+                'probation_period_months' => 1,
+                'is_active' => true,
+                'termination_reason' => null,
+                'created_at' => $now,
+                'updated_at' => $now
+            ],
+            [
+                'employee_id' => 5,
+                'contract_type' => 'Tiempo completo',
+                'start_date' => '2024-08-01',
+                'end_date' => '2025-01-31',
+                'salary' => 3800.00,
+                'position_id' => 4,
+                'department_id' => 1,
+                'vacation_days_per_year' => 15,
+                'probation_period_months' => 3,
+                'is_active' => false,
+                'termination_reason' => 'Renuncia voluntaria',
+                'created_at' => $now,
+                'updated_at' => $now
+            ],
+        ];
         
         DB::table('contracts')->insert($contracts);
     }
