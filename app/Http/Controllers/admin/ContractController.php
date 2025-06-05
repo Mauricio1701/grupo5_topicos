@@ -76,54 +76,52 @@ class ContractController extends Controller
         return view('admin.contracts.create', compact('employees', 'positions', 'departments'));
     }
 
-public function store(Request $request)
-{
-    try {
-        $rules = [
-            'employee_id' => 'required|exists:employees,id',
-            'contract_type' => 'required|string|max:100',
-            'start_date' => 'required|date',
-            'salary' => 'required|numeric|min:0',
-            'position_id' => 'required|exists:employeetype,id',
-            'department_id' => 'required|exists:departments,id',
-            'vacation_days_per_year' => 'sometimes|integer|min:0',
-            'probation_period_months' => 'sometimes|integer|min:0',
-            'is_active' => 'sometimes|boolean',
-            'termination_reason' => 'nullable|string',
-        ];
+    public function store(Request $request)
+    {
+        try {
+            $rules = [
+                'employee_id' => 'required|exists:employees,id',
+                'contract_type' => 'required|string|max:100',
+                'start_date' => 'required|date',
+                'salary' => 'required|numeric|min:0',
+                'position_id' => 'required|exists:employeetype,id',
+                'department_id' => 'required|exists:departments,id',
+                'vacation_days_per_year' => 'sometimes|integer|min:0',
+                'probation_period_months' => 'sometimes|integer|min:0',
+                'is_active' => 'sometimes|boolean',
+                'termination_reason' => 'nullable|string',
+            ];
 
-        if ($request->contract_type != 'Tiempo completo') {
-            $rules['end_date'] = 'required|date|after_or_equal:start_date';
-        } else {
-            $rules['end_date'] = 'nullable|date|after_or_equal:start_date';
+            if ($request->contract_type != 'Tiempo completo') {
+                $rules['end_date'] = 'required|date|after_or_equal:start_date';
+            } else {
+                $rules['end_date'] = 'nullable|date|after_or_equal:start_date';
+            }
+
+            $request->validate($rules);
+
+            $data = $request->all();
+
+            $specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+            if (in_array($request->contract_type, $specialContractTypes)) {
+                $data['vacation_days_per_year'] = 0;
+            } else {
+                $data['vacation_days_per_year'] = $request->filled('vacation_days_per_year') ? $request->vacation_days_per_year : 15;
+            }
+
+            $data['probation_period_months'] = $request->filled('probation_period_months') ? $request->probation_period_months : 3;
+            $data['is_active'] = $request->has('is_active') ? 1 : 0;
+
+            if ($request->contract_type === 'Tiempo completo') {
+                $data['end_date'] = null;
+            }
+
+            Contract::create($data);
+            return response()->json(['success' => true, 'message' => 'Contrato creado exitosamente'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Error al crear el contrato: ' . $th->getMessage()]);
         }
-
-        $request->validate($rules);
-
-        $data = $request->all();
-        
-        // Special contract types get 0 vacation days
-        $specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
-        if (in_array($request->contract_type, $specialContractTypes)) {
-            $data['vacation_days_per_year'] = 0;
-        } else {
-            // Only regular contracts get default vacation days
-            $data['vacation_days_per_year'] = $request->filled('vacation_days_per_year') ? $request->vacation_days_per_year : 15;
-        }
-        
-        $data['probation_period_months'] = $request->filled('probation_period_months') ? $request->probation_period_months : 3;
-        $data['is_active'] = $request->has('is_active') ? 1 : 0;
-
-        if ($request->contract_type === 'Tiempo completo') {
-            $data['end_date'] = null;
-        }
-
-        Contract::create($data);
-        return response()->json(['success' => true, 'message' => 'Contrato creado exitosamente'], 200);
-    } catch (\Throwable $th) {
-        return response()->json(['message' => 'Error al crear el contrato: ' . $th->getMessage()]);
     }
-}
 
     public function edit(string $id)
     {
@@ -166,7 +164,14 @@ public function store(Request $request)
             $request->validate($rules);
 
             $data = $request->all();
-            $data['vacation_days_per_year'] = $request->filled('vacation_days_per_year') ? $request->vacation_days_per_year : 15;
+
+            $specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+            if (in_array($request->contract_type, $specialContractTypes)) {
+                $data['vacation_days_per_year'] = 0;
+            } else {
+                $data['vacation_days_per_year'] = $request->filled('vacation_days_per_year') ? $request->vacation_days_per_year : 15;
+            }
+
             $data['probation_period_months'] = $request->filled('probation_period_months') ? $request->probation_period_months : 3;
             $data['is_active'] = $request->has('is_active') && $request->is_active == 1 ? 1 : 0;
 

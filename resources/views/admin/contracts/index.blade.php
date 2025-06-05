@@ -66,7 +66,6 @@
     let table;
 
     $(document).ready(function() {
-        // Initialize DataTable
         table = $('#datatable').DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
@@ -77,15 +76,30 @@
                 "url": "{{ route('admin.contracts.index') }}",
                 "cache": false
             },
-            "columns": [
-                {"data": "employee_name"},
-                {"data": "contract_type"},
-                {"data": "start_date"},
-                {"data": "end_date"},
-                {"data": "salary"},
-                {"data": "position"},
-                {"data": "department"},
-                {"data": "status"},
+            "columns": [{
+                    "data": "employee_name"
+                },
+                {
+                    "data": "contract_type"
+                },
+                {
+                    "data": "start_date"
+                },
+                {
+                    "data": "end_date"
+                },
+                {
+                    "data": "salary"
+                },
+                {
+                    "data": "position"
+                },
+                {
+                    "data": "department"
+                },
+                {
+                    "data": "status"
+                },
                 {
                     "data": "action",
                     "orderable": false,
@@ -94,13 +108,14 @@
             ]
         });
 
-        // Common form handlers
         function initContractForm() {
             var contractTypeSelect = $('#contract_type');
             var endDateField = $('#end_date');
             var endDateContainer = $('#end_date_container');
+            var vacationDaysField = $('#vacation_days_per_year');
 
-            // Toggle end date field based on contract type
+            $('.vacation-days-notice').remove();
+
             function updateEndDateField() {
                 if (contractTypeSelect.val() === 'Tiempo completo') {
                     endDateField.prop('disabled', true);
@@ -116,7 +131,24 @@
                 }
             }
 
-            // Toggle termination reason field based on active status
+            function updateVacationDays() {
+                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+
+                $('.vacation-days-notice').remove();
+
+                if (specialContractTypes.includes(contractTypeSelect.val())) {
+                    vacationDaysField.val(0);
+                    vacationDaysField.prop('disabled', true);
+                    vacationDaysField.parent().append('<small class="text-info d-block vacation-days-notice">Los contratos de este tipo no tienen días de vacaciones.</small>');
+                } else {
+                    vacationDaysField.prop('disabled', false);
+
+                    if (!vacationDaysField.val() || vacationDaysField.val() == '0') {
+                        vacationDaysField.val(15); 
+                    }
+                }
+            }
+
             function toggleTerminationReason() {
                 if ($('#is_active').length && $('#termination_reason_container').length) {
                     if ($('#is_active').prop('checked')) {
@@ -128,25 +160,43 @@
                 }
             }
 
-            // Initialize field states
             updateEndDateField();
+            if (vacationDaysField.length) {
+                updateVacationDays();
+            }
             toggleTerminationReason();
 
-            // Add event listeners
-            contractTypeSelect.on('change', updateEndDateField);
+            contractTypeSelect.on('change', function() {
+                updateEndDateField();
+                if (vacationDaysField.length) {
+                    updateVacationDays();
+                }
+            });
+
             $('#is_active').on('change', toggleTerminationReason);
         }
 
-        // Handle form submission
         function setupFormSubmit(form) {
             form.off('submit').on('submit', function(e) {
                 e.preventDefault();
+
+                var disabledFields = form.find(':disabled').prop('disabled', false);
+
                 var formData = form.serialize();
 
-                // Handle is_active checkbox properly
+                disabledFields.prop('disabled', true);
+
                 if ($('#is_active').length) {
                     formData = formData.replace(/&is_active=1/, '');
                     formData += '&is_active=' + ($('#is_active').prop('checked') ? 1 : 0);
+                }
+
+                var contractType = $('#contract_type').val();
+                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+
+                if (specialContractTypes.includes(contractType)) {
+                    formData = formData.replace(/&vacation_days_per_year=\d+/, '');
+                    formData += '&vacation_days_per_year=0';
                 }
 
                 $.ajax({
@@ -167,11 +217,17 @@
                         }
                     },
                     error: function(xhr) {
-                        var errors = xhr.responseJSON.errors;
+                        var errors = xhr.responseJSON?.errors;
                         var errorMessage = '';
-                        $.each(errors, function(key, value) {
-                            errorMessage += value + '<br>';
-                        });
+
+                        if (errors) {
+                            $.each(errors, function(key, value) {
+                                errorMessage += value + '<br>';
+                            });
+                        } else {
+                            errorMessage = 'Ha ocurrido un error al guardar el contrato.';
+                        }
+
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
@@ -184,10 +240,9 @@
             });
         }
 
-        // Add New Contract
         $('#btnNewContract').click(function() {
             $('#modalContract .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">Cargando...</p></div>');
-            
+
             $.ajax({
                 url: "{{ route('admin.contracts.create') }}",
                 type: "GET",
@@ -196,7 +251,7 @@
                     $('#ModalLongTitle').text('Nuevo Contrato');
                     $('#modalContract .modal-body').html(response);
                     $('#modalContract').modal('show');
-                    
+
                     initContractForm();
                     setupFormSubmit($('#modalContract form'));
                 },
@@ -212,21 +267,22 @@
             });
         });
 
-        // Edit Contract
         $(document).on('click', '.btnEditar', function() {
             var contractId = $(this).attr('id');
             $('#modalContract .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">Cargando...</p></div>');
-            
+
             $.ajax({
                 url: "{{ route('admin.contracts.edit', 'id') }}".replace('id', contractId),
                 type: "GET",
                 cache: false,
-                data: { _t: Date.now() },
+                data: {
+                    _t: Date.now()
+                },
                 success: function(response) {
                     $('#ModalLongTitle').text('Editar Contrato');
                     $('#modalContract .modal-body').html(response);
                     $('#modalContract').modal('show');
-                    
+
                     initContractForm();
                     setupFormSubmit($('#modalContract form'));
                 },
@@ -242,13 +298,11 @@
             });
         });
 
-        // Refresh Table
         $('#btnRefresh').click(function() {
             table.ajax.reload(null, false);
         });
     });
 
-    // Delete Contract
     function confirmDelete(id) {
         Swal.fire({
             title: '¿Estás seguro?',
