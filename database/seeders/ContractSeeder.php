@@ -22,8 +22,8 @@ class ContractSeeder extends Seeder
                 'start_date' => '2025-01-15',
                 'end_date' => '2026-01-14',
                 'salary' => 3500.00,
-                'position_id' => 1, // Asumiendo que existe un position_id 1 en tabla employeetype
-                'department_id' => 1, // Asumiendo que existe un department_id 2
+                'position_id' => 1, 
+                'department_id' => 1, 
                 'vacation_days_per_year' => 15,
                 'probation_period_months' => 3,
                 'is_active' => true,
