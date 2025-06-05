@@ -8,6 +8,8 @@ use App\Models\Coord;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ZoneController extends Controller
 {
@@ -55,16 +57,27 @@ class ZoneController extends Controller
         return view('admin.zones.create');
     }
 
+
     public function store(Request $request)
     {
-
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
             'coords' => 'required|array|min:3',
             'coords.*.latitude' => 'required|numeric',
             'coords.*.longitude' => 'required|numeric',
+        ], [
+            'name.required' => 'El nombre de la zona es obligatorio',
+            'coords.required' => 'Debe definir las coordenadas de la zona',
+            'coords.min' => 'Debe dibujar al menos 3 puntos para formar una zona válida',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -78,7 +91,7 @@ class ZoneController extends Controller
                 Coord::create([
                     'zone_id' => $zone->id,
                     'coord_index' => $index,
-                    'type_coord' => 3, 
+                    'type_coord' => 3,
                     'latitude' => $coord['latitude'],
                     'longitude' => $coord['longitude'],
                 ]);
@@ -98,7 +111,6 @@ class ZoneController extends Controller
             ], 500);
         }
     }
-
     public function show(Zone $zone)
     {
         $zone->load('coords');

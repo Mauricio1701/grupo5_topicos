@@ -2,7 +2,7 @@
     <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('employee_id', 'Empleado:') !!}
-            {!! Form::select('employee_id', $employees->pluck('lastnames', 'id'), null, ['class' => 'form-control select2', 'placeholder' => 'Seleccione un empleado', 'required']) !!}
+            {!! Form::select('employee_id', $employees, null, ['class' => 'form-control select2', 'placeholder' => 'Seleccione un empleado', 'required', 'style' => 'width: 100%']) !!}
             @error('employee_id')
             <span class="text-danger">{{ $message }}</span>
             @enderror
@@ -104,11 +104,11 @@
                 {!! Form::checkbox('is_active', 1, null, ['class' => 'custom-control-input', 'id' => 'is_active']) !!}
                 {!! Form::label('is_active', 'Contrato Activo', ['class' => 'custom-control-label']) !!}
             </div>
-        @error('is_active')
-        <span class="text-danger">{{ $message }}</span>
-        @enderror
+            @error('is_active')
+            <span class="text-danger">{{ $message }}</span>
+            @enderror
+        </div>
     </div>
-</div>
 </div>
 
 <div class="form-group">
@@ -124,7 +124,15 @@
     $(document).ready(function() {
         $('.select2').select2({
             theme: 'bootstrap4',
-            width: '100%'
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "No se encontraron resultados";
+                },
+                searching: function() {
+                    return "Buscando...";
+                }
+            }
         });
 
         $('#end_date').on('change', function() {

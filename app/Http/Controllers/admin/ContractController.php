@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class ContractController extends Controller
 {
-    
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -79,7 +79,12 @@ class ContractController extends Controller
 
     public function create()
     {
-        $employees = Employee::where('status', true)->orderBy('lastnames')->get();
+        $employees = Employee::where('status', true)
+            ->orderBy('lastnames')
+            ->get()
+            ->mapWithKeys(function ($employee) {
+                return [$employee->id => $employee->lastnames . ', ' . $employee->names];
+            });
         $positions = EmployeeType::orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
         $contractTypes = [
@@ -122,7 +127,7 @@ class ContractController extends Controller
         ]);
     }
 
-    
+
     public function show(Contract $contract)
     {
         $contract->load(['employee', 'position', 'department']);
@@ -130,16 +135,22 @@ class ContractController extends Controller
         return view('admin.contracts.show', compact('contract'));
     }
 
-    
+
     public function edit(Contract $contract)
     {
-        $employees = Employee::where('status', true)->orderBy('lastnames')->get();
+        $employees = Employee::where('status', true)
+            ->orderBy('lastnames')
+            ->get()
+            ->mapWithKeys(function ($employee) {
+                return [$employee->id => $employee->lastnames . ', ' . $employee->names];
+            });
         $positions = EmployeeType::orderBy('name')->get();
         $departments = Department::orderBy('name')->get();
         $contractTypes = ['Tiempo completo', 'Medio tiempo', 'Temporal', 'Por proyecto', 'Prácticas'];
 
         return view('admin.contracts.edit', compact('contract', 'employees', 'positions', 'departments', 'contractTypes'));
     }
+
 
     public function update(Request $request, Contract $contract)
     {
