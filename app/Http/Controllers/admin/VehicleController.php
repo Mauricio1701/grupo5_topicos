@@ -201,13 +201,16 @@ class VehicleController extends Controller
         }
     }
 
+    public function byType($typeId)
+    {
+        $vehicles = Vehicle::where('type_id', $typeId)->get();
+        return response()->json($vehicles);
+    }
 
-
-
-public function getModels($brand_id)
-{
-    $models = Brand::where('brand_id', $brand_id)->get(['id', 'name']);
-    return response()->json($models);
-}
+    public function getModels($brand_id)
+    {
+        $models = Brand::where('brand_id', $brand_id)->get(['id', 'name']);
+        return response()->json($models);
+    }
 
 }

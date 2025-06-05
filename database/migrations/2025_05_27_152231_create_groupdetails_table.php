@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreign('group_id')->references('id')->on('employeegroups');
             $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employees');
+            $table->unsignedBigInteger('sheduling_id');
+            $table->foreign('sheduling_id')->references('id')->on('schedulings');
             $table->timestamps();
         });
     }

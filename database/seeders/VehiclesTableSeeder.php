@@ -15,7 +15,7 @@ class VehiclesTableSeeder extends Seeder
 
         $vehicles = [];
 
-        for ($i = 1; $i <= 50; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             $vehicles[] = [
                 'name' => 'Vehículo ' . $i,
                 'code' => 'VEH-' . strtoupper(Str::random(5)),

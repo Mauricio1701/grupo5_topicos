@@ -11,6 +11,7 @@ use App\Models\Shift;
 use App\Models\Vehicle;
 use App\Models\EmployeeGroup;
 use App\Models\EmployeeType;
+use App\Models\Vehicletype;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -100,29 +101,31 @@ class EmployeegroupController extends Controller
 
                 $days = substr($days, 0, -1);
 
+                $employeegroup = EmployeeGroup::create([
+                    'zone_id' => $request->zone_id,
+                    'shift_id' => $request->shift_id,
+                    'vehicle_id' => $request->vehicle_id,
+                    'name'=>$request->name,
+                    'days'=>$days,
+                    'status'=>1,
+                ]);
+
                 if($request->driver_id){
-                    EmployeeGroup::create([
-                        'zone_id' => $request->zone_id,
-                        'shift_id' => $request->shift_id,
-                        'vehicle_id' => $request->vehicle_id,
-                        'name'=>$request->name,
-                        'days'=>$days,
-                        'status'=>1,
+                    Configgroup::create([
+                        'employeegroup_id' => $employeegroup->id,
+                        'employee_id' => $request->driver_id,
                     ]);
                 }
 
-                if($request->helpers){
-                    EmployeeGroup::create([
-                        'zone_id' => $request->zone_id,
-                        'shift_id' => $request->shift_id,
-                        'vehicle_id' => $request->vehicle_id,
-                        'name'=>$request->name,
-                        'days'=>$days,
-                        'status'=>1,
-                    ]);
+                if($request->helpers && count($request->helpers) > 0){
+                    foreach ($request->helpers as $helper) {
+                        Configgroup::create([
+                            'employeegroup_id' => $employeegroup->id,
+                            'employee_id' => $helper,
+                        ]);
+                    }
                 }
              
-
                
                 return response()->json([
                     'message' => 'Grupo de personal creado exitosamente'
@@ -140,7 +143,8 @@ class EmployeegroupController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $employeeGroup = EmployeeGroup::with(['conductors', 'helpers'])->findOrFail($id);
+        return view('admin.employee-groups.show', compact('employeeGroup'));
     }
 
     /**
@@ -151,14 +155,30 @@ class EmployeegroupController extends Controller
         $zones = Zone::all();
         $shifts = Shift::all();
         $vehicles = Vehicle::all();
-        $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
-        $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
-        $employeesConductor = Employee::where('type_id', $conductor)->get();
-        $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
-        $employeeGroup = EmployeeGroup::findOrFail($id);
-        $configgroups = Configgroup::where('employeegroup_id', $id)->get();
-        return view('admin.employee-groups.edit', compact('zones', 'shifts', 'vehicles', 'employeesConductor', 'employeesAyudantes', 'employeeGroup', 'configgroups'));
+    
+        // Obtén los tipos de empleado para conductor y ayudante
+        $conductorType = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first();
+        $helperType = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first();
+    
+        // Todos los conductores y ayudantes disponibles (para el select)
+        $employeesConductor = $conductorType ? Employee::where('type_id', $conductorType->id)->get() : collect();
+        $employeesAyudantes = $helperType ? Employee::where('type_id', $helperType->id)->get() : collect();
+    
+        // El grupo con sus empleados asociados filtrados por tipo
+        $employeeGroup = EmployeeGroup::with(['conductors', 'helpers'])->findOrFail($id);
+        $driverId = optional($employeeGroup->conductors->first())->id;
+
+        return view('admin.employee-groups.edit', compact(
+            'zones',
+            'shifts',
+            'vehicles',
+            'employeesConductor',
+            'employeesAyudantes',
+            'employeeGroup',
+            'driverId'
+        ));
     }
+    
 
     public function data(){
         $employeeGroups = EmployeeGroup::with('shift', 'vehicle', 'zone')
@@ -176,12 +196,21 @@ class EmployeegroupController extends Controller
         try {
             DB::transaction(function() use($request, $id){
                 $employeeGroup = EmployeeGroup::findOrFail($id);
+                $days = '';
+
+                foreach ($request->days as $day) {
+                    $days .= $day.',';
+                }
+
+                $days = substr($days, 0, -1);
+
                 $employeeGroup->update([
                     'zone_id' => $request->zone_id,
                     'shift_id' => $request->shift_id,
                     'vehicle_id' => $request->vehicle_id,
                     'name'=>$request->name,
-                    'days'=>$request->days,
+                    'days'=>$days,
+                    'status'=>1,
                 ]);
                 
                 if($request->driver_id){
@@ -191,7 +220,7 @@ class EmployeegroupController extends Controller
                         'employee_id'=>$request->driver_id,
                     ]);
 
-                    if($request->helpers){
+                    if($request->helpers && count($request->helpers) > 0){
                         foreach ($request->helpers as $ayudante) {
                             Configgroup::create([
                                 'employeegroup_id'=>$employeeGroup->id,
@@ -220,10 +249,41 @@ class EmployeegroupController extends Controller
     public function destroy(string $id)
     {
         try {
-            
+            $employeeGroup = EmployeeGroup::findOrFail($id);
+            DB::beginTransaction();
+            Configgroup::where('employeegroup_id', $id)->delete();
+            $employeeGroup->delete();
+            DB::commit();
+            return response()->json([
+                'message' => 'Grupo de personal eliminado exitosamente'
+            ], 200);
         } catch (\Throwable $th) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Error al eliminar el grupo de personal: '.$th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function vehiclechange(string $id){
+        $vehicletypes = Vehicletype::all();
+        $vehicles = Vehicle::all();
+        $employeeGroup = EmployeeGroup::findOrFail($id);        
+        return view('admin.employee-groups.vehiclechange', compact('vehicletypes', 'employeeGroup', 'vehicles'));
+    }
+
+    public function vehiclechangeupdate(Request $request, string $id){
+        try {
+            $employeeGroup = EmployeeGroup::findOrFail($id);
+            $employeeGroup->update([
+                'vehicle_id' => $request->vehicle_id,
+            ]);
+            return response()->json([
+                'message' => 'Vehículo actualizado exitosamente'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al actualizar el vehículo: '.$th->getMessage()
             ], 500);
         }
     }

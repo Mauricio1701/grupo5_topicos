@@ -58,14 +58,41 @@
 {{-- Selección de conductor --}}
 <div id="dataExtra" class="form-group d-none">
     <hr>
- <p>Estos datos son para pre configuración no son obligatorios</p>
- <div class="form-group">
-    {!! Form::label('driver_id', 'Conductor') !!}
-    {!! Form::select('driver_id', $employeesConductor->pluck('full_name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un conductor']) !!}
-</div>
+    <p>Estos datos son para pre configuración no son obligatorios</p>
+    <div class="form-group">
+        {!! Form::label('driver_id', 'Conductor') !!}
+        {!! Form::select('driver_id', $employeesConductor->pluck('full_name', 'id'), old('driver_id') ?? ($driverId ?? null), ['class' => 'form-control', 'placeholder' => 'Seleccione un conductor']) !!}
+    </div>
 
-{{-- Contenedor de ayudantes dinámicos --}}
-<div id="ayudantes-container" class="row "></div>
+    {{-- Contenedor de ayudantes dinámicos --}}
+    <div id="ayudantes-container" class="row ">
+        @if (isset($employeeGroup))
+            @php
+                $selectedHelpers = $employeeGroup->helpers->pluck('id')->toArray() ?? [];
+                $capacity = optional($employeeGroup->vehicle)->people_capacity ?? 1;
+                $numHelpers = max(0, $capacity - 1);
+            @endphp
+    
+            @if (!empty($selectedHelpers) && count($selectedHelpers) > 0)
+                @for ($i = 0; $i < $numHelpers; $i++)
+                    <div class="form-group col-md-6">
+                        <label>Ayudante {{ $i + 1 }}</label>
+                        <select name="helpers[]" class="form-control">
+                            <option value="">Seleccione un ayudante</option>
+                            @foreach ($employeesAyudantes as $ayudante)
+                                <option value="{{ $ayudante->id }}"
+                                    {{ isset($selectedHelpers[$i]) && $selectedHelpers[$i] == $ayudante->id ? 'selected' : '' }}>
+                                    {{ $ayudante->full_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endfor
+            @endif
+        @endif
+    </div>
+    
+        
 </div>
 
 

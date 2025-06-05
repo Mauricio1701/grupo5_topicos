@@ -99,9 +99,10 @@ $(document).ready(function() {
                         vehicle_id: parseInt(formData.get('vehicle_id')),
                         shift_id: parseInt(formData.get('shift_id')),
                         days:[...formData.getAll('days[]')],
-                        driver_id: parseInt(formData.get('driver_id')),
-                        helpers:[...formData.getAll('helpers[]').map(Number)]
+                        driver_id: parseInt(formData.get('driver_id'))|| null,
+                        helpers:[...formData.getAll('helpers[]').map(Number).filter(n => n > 0)]
                     }
+                    console.log(data)
 
                     $.ajax({
                         url: "{{ route('admin.employeegroups.store') }}",
@@ -146,7 +147,7 @@ $(document).ready(function() {
     $(document).on('click', '.btnEditar', function() {
         var employeeGroupId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.employeegroups.edit', ':id') }}".replace(':id', employeeGroupId),
+            url: '{{ route('admin.employeegroups.edit', 'id') }}'.replace('id', employeeGroupId),
             type: "GET",
             success: function(response) {
                 $('#ModalLongTitle').text('Editar Grupo de Personal');
@@ -156,7 +157,7 @@ $(document).ready(function() {
                 inicializarFormularioEmployeeGroup();
 
                 // Enviar formulario AJAX para actualizar
-                $('#modalEmployeeGroup form').off('submit').on('submit', function(e) {
+                $('#modalEmployeeGroup form').submit(function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
@@ -168,13 +169,13 @@ $(document).ready(function() {
                         vehicle_id: parseInt(formData.get('vehicle_id')),
                         shift_id: parseInt(formData.get('shift_id')),
                         days:[...formData.getAll('days[]')],
-                        driver_id: parseInt(formData.get('driver_id')),
-                        helpers:[...formData.getAll('helpers[]').map(Number)]
+                        driver_id: parseInt(formData.get('driver_id'))|| null,
+                        helpers:[...formData.getAll('helpers[]').map(Number).filter(n => n > 0)]
                     }
-
+                    console.log(form.attr('method'))
                     $.ajax({
                         url: form.attr('action'),
-                        type: form.attr('method'),
+                        type: 'PUT',
                         data: data,
                         success: function(response) {
                             $('#modalEmployeeGroup').modal('hide');
@@ -257,6 +258,19 @@ $(document).ready(function() {
         });
     });
 
+    $(document).on('click', '.btnVer', function() {
+        var employeeGroupId = $(this).attr('id');
+        $.ajax({
+            url: '{{ route('admin.employeegroups.show', 'id') }}'.replace('id', employeeGroupId),
+            type: "GET",
+            success: function(response) {
+                $('#ModalLongTitle').text('Ver Grupo de Personal');
+                $('#modalEmployeeGroup .modal-body').html(response);
+                $('#modalEmployeeGroup').modal('show');
+            }
+        });
+    });
+
     function inicializarFormularioEmployeeGroup(){
         const vehicleSelect = document.getElementById('vehicle_id');
         const ayudantesContainer = document.getElementById('ayudantes-container');
@@ -313,7 +327,7 @@ $(document).ready(function() {
     });
 
     if (vehicleSelect.value > 0) {
-        vehicleSelect.dispatchEvent(new Event('change'));
+        dataExtra.classList.remove('d-none');
     }
 
     }
@@ -321,21 +335,28 @@ $(document).ready(function() {
     function actualizarOpcionesAyudantes() {
         const selects = document.querySelectorAll('select[name="helpers[]"]');
         const selectedValues = [];
+
+        // Primero recopilar los valores seleccionados
         selects.forEach(function(select) {
             const selectedValue = select.value;
             if (selectedValue) {
                 selectedValues.push(selectedValue);
             }
+        });
+
+        selects.forEach(function(select) {
             const options = select.options;
             for (let i = 0; i < options.length; i++) {
-                if (selectedValues.includes(options[i].value)) {
-                    options[i].disabled = true;
+                const option = options[i];
+                if (selectedValues.includes(option.value) && option.value !== select.value) {
+                    option.disabled = true;  // Deshabilitar solo si está seleccionado en otro select
                 } else {
-                    options[i].disabled = false;
+                    option.disabled = false;
                 }
             }
         });
     }
+
 });
 </script>
 @stop
