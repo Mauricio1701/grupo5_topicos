@@ -6,6 +6,22 @@
 @section('content')
 <div class="p-2"></div>
 
+<!-- Modal -->
+<div class="modal fade" id="modalEmployeeGroup" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ModalLongTitle"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {{-- Contenido del formulario cargado por AJAX --}}
+        </div>
+      </div>
+    </div>
+</div>
 
 
 <div class="card">
@@ -19,12 +35,12 @@
         <table class="table table-striped" id="datatableSchedulings" style="width:100%">
             <thead>
                 <tr>
-                    <th>DNI</th>
-                    <th>EMPLEADO</th>
                     <th>FECHA</th>
                     <th>ESTADO</th>
-                    <th>NOTAS</th>
-                    <th>CREADO</th>
+                    <th>ZONA</th>
+                    <th>TURNOS</th>
+                    <th>VEHICULO</th>
+                    <th>GRUPO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
@@ -49,17 +65,17 @@ $(document).ready(function() {
         },
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.attendances.index') }}",
+        ajax: "{{ route('admin.schedulings.index') }}",
         columns: [
-            { data: 'employee_dni', name: 'employee_dni' },
-            { data: 'employee_name', name: 'employee_name', orderable: false, searchable: false },
-            { data: 'attendance_date', name: 'attendance_date' },
-            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
-            { data: 'notes', name: 'notes' },
-            { data: 'created_at', name: 'created_at' },
+            { data: 'date', name: 'date' },
+            { data: 'status_badge', name: 'status_badge' },
+            { data: 'zone', name: 'zone' },
+            { data: 'shift', name: 'shift' },
+            { data: 'vehicle', name: 'vehicle' },
+            { data: 'group', name: 'group' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[6, 'desc']]
+        order: [[0, 'desc']]
     });
 
     
@@ -106,6 +122,19 @@ $(document).ready(function() {
                         });
                     }
                 });
+            }
+        });
+    });
+
+    $(document).on('click', '.btnVer', function() {
+        var schedulingId = $(this).attr('id');
+        $.ajax({
+            url: '{{ route('admin.schedulings.show', 'id') }}'.replace('id', schedulingId),
+            type: "GET",
+            success: function(response) {
+                $('#ModalLongTitle').text('Ver Grupo Programación');
+                $('#modalEmployeeGroup .modal-body').html(response);
+                $('#modalEmployeeGroup').modal('show');
             }
         });
     });

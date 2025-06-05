@@ -14,6 +14,8 @@ use App\Models\Zone;
 use App\Models\EmployeeType;
 use Carbon\Carbon;
 use App\Models\Groupdetail;
+use Illuminate\Support\Facades\DB;
+
 
 class SchedulingController extends Controller
 {
@@ -22,39 +24,47 @@ class SchedulingController extends Controller
      */
     public function index(Request $request)
     {
+        $schedulings = Scheduling::with('employeegroup')
+        ->get();
+
         if ($request->ajax()) {
-            $employeeGroups = EmployeeGroup::with('shift', 'vehicle', 'zone')
-            ->withCount('configgroup')
-            ->get();
-            
-            return DataTables::of($employeeGroups)
-            
-                ->addColumn('days', function ($employeeGroup) {
-                    return $employeeGroup->days;
+           
+
+            return DataTables::of($schedulings)
+                ->addColumn('date', function ($scheduling) {
+                    return $scheduling->date;
                 })
-                ->addColumn('shift', function ($employeeGroup) {
-                    return $employeeGroup->shift->name;
+                ->addColumn('status_badge', function ($scheduling) {
+                    if($scheduling->status == 1){
+                        return '<span class="badge badge-secondary">Programado</span>';
+                    }elseif($scheduling->status == 2){
+                        return '<span class="badge badge-success">Completado</span>';
+                    }else{
+                        return '<span class="badge badge-danger">Reprogramado</span>';
+                    }
                 })
-                ->addColumn('vehicle', function ($employeeGroup) {
-                    return $employeeGroup->vehicle->code;
+                ->addColumn('shift', function ($scheduling) {
+                    return $scheduling->employeegroup->shift->name;
                 })
-                ->addColumn('zone', function ($employeeGroup) {
-                    return $employeeGroup->zone->name;
+                ->addColumn('vehicle', function ($scheduling) {
+                    return $scheduling->employeegroup->vehicle->code;
                 })
-                ->addColumn('action', function ($employeeGroup) {
-                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employeeGroup->id . '">
+                ->addColumn('zone', function ($scheduling) {
+                    return $scheduling->employeegroup->zone->name;
+                })
+                ->addColumn('group', function ($scheduling) {
+                    return $scheduling->employeegroup->name;
+                })                
+                ->addColumn('action', function ($scheduling) {
+                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $scheduling->id . '">
                                     <i class="fas fa-edit"></i>
                                 </button>';
 
-                    if($employeeGroup->configgroup_count > 0){
-                        $viewBtn = '<button class="btn btn-info btn-sm btnVer" id="' . $employeeGroup->id . '">
-                                    <i class="fas fa-users"></i>
-                                </button>';
-                    }else{
-                        $viewBtn = '';
-                    }
+                    $viewBtn = '<button class="btn btn-info btn-sm btnVer" id="' . $scheduling->id . '">
+                                <i class="fas fa-users"></i>
+                            </button>';
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employeegroups.destroy', $employeeGroup->id) . '" method="POST">
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.schedulings.destroy', $scheduling->id) . '" method="POST">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
                                     <button type="submit" class="btn btn-danger btn-sm">
@@ -64,10 +74,9 @@ class SchedulingController extends Controller
                     
                     return $editBtn . ' ' . $viewBtn . ' ' . $deleteBtn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'status_badge'])
                 ->make(true);
         }
-
         return view('admin.schedulings.index');
     }
 
@@ -86,7 +95,7 @@ class SchedulingController extends Controller
         // Verificamos si start_date y end_date están presentes
         try {
             if ($request->start_date) {
-                
+                DB::beginTransaction();
                 // Si no se pasa end_date, significa que es solo un día
                 if ($request->end_date) {
                     // Si hay un rango de fechas
@@ -127,13 +136,13 @@ class SchedulingController extends Controller
 
                                 Groupdetail::create([
                                     'employee_id' => $group['driver_id'],
-                                    'sheduling_id' => $scheduling->id,
+                                    'scheduling_id' => $scheduling->id,
                                 ]);
 
                                 foreach ($group['helpers'] as $helper) {
                                     Groupdetail::create([
                                         'employee_id' => $helper,
-                                        'sheduling_id' => $scheduling->id,
+                                        'scheduling_id' => $scheduling->id,
                                     ]);
                                 }
                             }
@@ -155,18 +164,18 @@ class SchedulingController extends Controller
                         ]);
                         Groupdetail::create([
                             'employee_id' => $group['driver_id'],
-                            'sheduling_id' => $scheduling->id,
+                            'scheduling_id' => $scheduling->id,
                         ]);
 
                         foreach ($group['helpers'] as $helper) {
                             Groupdetail::create([
                                 'employee_id' => $helper,
-                                'sheduling_id' => $scheduling->id,
+                                'scheduling_id' => $scheduling->id,
                             ]);
                         }
                     }
                 }
-    
+                DB::commit();
                 return response()->json([
                     'success' => 'Programación creada correctamente.'
                 ], 200);
@@ -177,6 +186,7 @@ class SchedulingController extends Controller
                 ], 400);
             }
         } catch (\Throwable $th) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'Error al crear la programación.' . $th->getMessage()
             ], 500);
@@ -188,7 +198,19 @@ class SchedulingController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // Obtener la programación con sus detalles de grupo, empleados y tipos
+        $scheduling = Scheduling::with([
+            'groupdetail',
+            'groupdetail.employee',
+            'groupdetail.employee.employeeType',
+            'employeegroup',
+            'employeegroup.shift',
+            'employeegroup.vehicle',
+            'employeegroup.zone',
+        ])->findOrFail($id);
+    
+        // Pasar los datos a la vista
+        return view('admin.schedulings.show', compact('scheduling'));
     }
 
     /**

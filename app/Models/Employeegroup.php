@@ -15,11 +15,6 @@ class Employeegroup extends Model
     use HasFactory;
     protected $guarded = [];
 
-    public function employee()
-    {
-        return $this->belongsTo(Employee::class);
-    }
-
     public function zone()
     {
         return $this->belongsTo(Zone::class);

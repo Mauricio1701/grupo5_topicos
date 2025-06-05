@@ -19,4 +19,5 @@ class Groupdetail extends Model
     {
         return $this->belongsTo(Employeegroup::class);
     }
+
 }

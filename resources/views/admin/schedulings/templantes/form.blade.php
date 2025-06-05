@@ -139,8 +139,18 @@
             data: data,
             success: function(response) {
                 console.log('Datos enviados correctamente');
-                console.log(response);
-               
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: 'Programación registrada correctamente',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route('admin.schedulings.index') }}';
+                    }
+                });
+
             },
             error: function(xhr) {
                 let res = xhr.responseJSON;

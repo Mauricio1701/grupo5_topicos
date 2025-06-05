@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Hash;
 
 class Employee extends Model
 {
@@ -52,6 +51,6 @@ class Employee extends Model
     
     public function groupDetails()
     {
-        return $this->hasMany(GroupDetail::class);
+        return $this->hasMany(Groupdetail::class);
     }
 }
