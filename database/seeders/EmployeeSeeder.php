@@ -55,7 +55,7 @@ class EmployeeSeeder extends Seeder
         $E2->phone = '912345678';
         $E2->status = true;
         $E2->password = Hash::make('password123');
-        $E2->type_id = $administrativo; 
+        $E2->type_id = $conductor; 
         $E2->save();
 
         $E3 = new Employee();
@@ -70,7 +70,7 @@ class EmployeeSeeder extends Seeder
         $E3->phone = '945678123';
         $E3->status = true;
         $E3->password = Hash::make('password123');
-        $E3->type_id = $supervisor; 
+        $E3->type_id = $conductor; 
         $E3->save();
 
         $E4 = new Employee();
@@ -115,7 +115,7 @@ class EmployeeSeeder extends Seeder
         $E6->phone = '965432198';
         $E6->status = false; 
         $E6->password = Hash::make('password123');
-        $E6->type_id = $administrativo; 
+        $E6->type_id = $ayudante; 
         $E6->save();
 
         $E7 = new Employee();
@@ -145,7 +145,7 @@ class EmployeeSeeder extends Seeder
         $E8->phone = '989123456';
         $E8->status = true;
         $E8->password = Hash::make('password123');
-        $E8->type_id = $supervisor; 
+        $E8->type_id = $ayudante; 
         $E8->save();
 
         $E9 = new Employee();
@@ -160,7 +160,7 @@ class EmployeeSeeder extends Seeder
         $E9->phone = '991234567';
         $E9->status = true;
         $E9->password = Hash::make('password123');
-        $E9->type_id = $conductor; 
+        $E9->type_id = $ayudante; 
         $E9->save();
 
         $E10 = new Employee();
@@ -175,7 +175,7 @@ class EmployeeSeeder extends Seeder
         $E10->phone = '998765432';
         $E10->status = true;
         $E10->password = Hash::make('password123');
-        $E10->type_id = $administrativo;
+        $E10->type_id = $ayudante;
         $E10->save();
     }
 }

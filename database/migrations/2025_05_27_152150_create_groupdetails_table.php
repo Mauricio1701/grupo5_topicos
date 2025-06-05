@@ -13,8 +13,6 @@ return new class extends Migration
     {
         Schema::create('groupdetails', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('group_id');
-            $table->foreign('group_id')->references('id')->on('employeegroups');
             $table->unsignedBigInteger('employee_id');
             $table->foreign('employee_id')->references('id')->on('employees');
             $table->unsignedBigInteger('sheduling_id');

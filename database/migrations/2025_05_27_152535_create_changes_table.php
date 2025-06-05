@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('changes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('scheduling_id');
-            $table->foreign('scheduling_id')->references('id')->on('scheduling');
+            $table->foreign('scheduling_id')->references('id')->on('schedulings');
             $table->unsignedBigInteger('new_employee_id')->nullable();
             $table->foreign('new_employee_id')->references('id')->on('employees');
             $table->unsignedBigInteger('old_employee_id')->nullable();

@@ -16,6 +16,19 @@
 </div>
 
 <div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
+        <input type="date" name="start_date" id="start_date" class="form-control">
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="end_date" class="form-label">Fecha de fin: </label>
+        <input type="date" name="end_date" id="end_date" class="form-control">
+    </div>
+</div>
+
+
+
+<div class="row">
     @foreach ($employeeGroups as $group)
         @php
             $vehicle = $vehicles->firstWhere('id', $group->vehicle_id);
@@ -35,6 +48,7 @@
                 <div class="card-body">
                     <p><strong>Zona:</strong> {{ $zone->name ?? 'Sin asignar' }}</p>
                     <p><strong>Turno:</strong> {{ $shift->name }}</p>
+                    <p><strong>Dias:</strong> {{ $group->days }}</p>
                     <p><strong>Vehículo:</strong> {{ $vehicle->code ?? 'Sin asignar' }} (Capacidad: {{ $capacity }})
                     <button class="btn btn-sm btn-warning"><i class="fas fa-recycle"></i></button></p>
                     
@@ -68,12 +82,80 @@
             </div>
         </div>
     @endforeach
-</div>
 
+
+</div>
+<div class="row justify-content-end">
+    <button type="button" class="btn btn-success" id="submitAll">Registrar Programación</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    function getGroupData() {
+        const groupData = {
+            groups: [] // Creamos un array de grupos
+        };
+        
+        // Recorremos todos los grupos
+        $('.group-card').each(function () {
+            const groupId = $(this).data('group-id');
+            const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
+            const helpers = $(this).find(`select[name="helpers[${groupId}][]"]`).map(function () {
+                return $(this).val();
+            }).get();
+            
+            // Almacenamos los datos de cada grupo en el array 'groups'
+            groupData.groups.push({
+                employee_group_id: groupId, // Aquí almacenamos el employee_group_id
+                driver_id: driverId,
+                helpers: helpers
+            });
+        });
+
+        // Añadimos las fechas al objeto de datos
+        groupData.start_date = $('#start_date').val();
+        groupData.end_date = $('#end_date').val() || null;  // Si no hay end_date, lo ponemos como vacío
+
+        // Imprimimos el JSON en consola para verificar
+        console.log(JSON.stringify(groupData));
+
+        return groupData;
+    }
+
+
+
     $(document).on('click', '.remove-card', function () {
         $(this).closest('.group-card').remove();
     });
+
+    $('#submitAll').on('click', function () {
+        const data = getGroupData();
+        data._token = '{{ csrf_token() }}';
+
+        console.log(data);
+
+        $.ajax({
+            url: '{{ route('admin.schedulings.store') }}',
+            type: 'POST',
+            data: data,
+            success: function(response) {
+                console.log('Datos enviados correctamente');
+                console.log(response);
+               
+            },
+            error: function(xhr) {
+                let res = xhr.responseJSON;
+                console.log(res);
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: res.message || 'Ocurrió un error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    });
+
 
     $(document).on('click', '.btn-warning', function () {
         const groupId = $(this).closest('.group-card').data('group-id');
