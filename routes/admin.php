@@ -46,4 +46,5 @@ Route::get('schedulings/get-content/{shiftId}', [SchedulingController::class, 'g
 Route::get('vehicles/by-type/{typeId}', [VehicleController::class, 'byType'])->name('admin.vehicles.bytype');
 Route::get('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechange'])->name('admin.employee-groups.vehiclechange');
 Route::put('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechangeUpdate'])->name('admin.employee-groups.vehiclechangeupdate');
+Route::post('schedulings/add-change', [SchedulingController::class, 'AddChangeScheduling'])->name('admin.schedulings.add-change');
 Route::resource('/', AdminController::class)->names('admin');

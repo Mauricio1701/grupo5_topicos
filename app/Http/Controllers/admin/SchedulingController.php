@@ -14,8 +14,10 @@ use App\Models\Zone;
 use App\Models\EmployeeType;
 use Carbon\Carbon;
 use App\Models\Groupdetail;
+use App\Models\Reason;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\Change;
+use Egulias\EmailValidator\Result\Reason\Reason as ReasonReason;
 
 class SchedulingController extends Controller
 {
@@ -39,8 +41,11 @@ class SchedulingController extends Controller
                         return '<span class="badge badge-secondary">Programado</span>';
                     }elseif($scheduling->status == 2){
                         return '<span class="badge badge-success">Completado</span>';
-                    }else{
-                        return '<span class="badge badge-danger">Reprogramado</span>';
+                    }elseif($scheduling->status == 0){
+                        return '<span class="badge badge-danger">Cancelado</span>';
+                    }
+                    else{
+                        return '<span class="badge badge-warning">Reprogramado</span>';
                     }
                 })
                 ->addColumn('shift', function ($scheduling) {
@@ -56,19 +61,19 @@ class SchedulingController extends Controller
                     return $scheduling->employeegroup->name;
                 })                
                 ->addColumn('action', function ($scheduling) {
-                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $scheduling->id . '">
-                                    <i class="fas fa-edit"></i>
+                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" alt="Reprogramar" id="' . $scheduling->id . '">
+                                    <i class="fas fa-retweet"></i>
                                 </button>';
 
-                    $viewBtn = '<button class="btn btn-info btn-sm btnVer" id="' . $scheduling->id . '">
+                    $viewBtn = '<button class="btn btn-info btn-sm btnVer" alt="Ver" id="' . $scheduling->id . '">
                                 <i class="fas fa-users"></i>
                             </button>';
                     
                     $deleteBtn = '<form class="delete d-inline" action="' . route('admin.schedulings.destroy', $scheduling->id) . '" method="POST">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
+                                    <button type="submit" class="btn btn-danger btn-sm" alt="Cancelar">
+                                        <i class="fas fa-ban"></i>
                                     </button>
                                 </form>';
                     
@@ -208,9 +213,37 @@ class SchedulingController extends Controller
             'employeegroup.vehicle',
             'employeegroup.zone',
         ])->findOrFail($id);
+
+        $changes = DB::select("
+            SELECT 
+        c.id,
+        c.scheduling_id,
+        c.change_date,
+        c.notes,
+        c.created_at,
+        e_old.names AS old_employee_name,
+        e_new.names AS new_employee_name,
+        v_old.plate AS old_vehicle_plate,
+        v_new.plate AS new_vehicle_plate,
+        s_old.name AS old_shift_name,
+        s_new.name AS new_shift_name,
+        r.name AS reason_name
+    FROM changes c
+    LEFT JOIN employees e_old ON c.old_employee_id = e_old.id
+    LEFT JOIN employees e_new ON c.new_employee_id = e_new.id
+    LEFT JOIN vehicles v_old ON c.old_vehicle_id = v_old.id
+    LEFT JOIN vehicles v_new ON c.new_vehicle_id = v_new.id
+    LEFT JOIN shifts s_old ON c.old_shift_id = s_old.id
+    LEFT JOIN shifts s_new ON c.new_shift_id = s_new.id
+    LEFT JOIN reasons r ON c.reason_id = r.id
+    WHERE c.scheduling_id = ?
+    ORDER BY c.change_date DESC
+        ", [$id]);
+
+        
     
         // Pasar los datos a la vista
-        return view('admin.schedulings.show', compact('scheduling'));
+        return view('admin.schedulings.show', compact('scheduling', 'changes'));
     }
 
     /**
@@ -218,7 +251,17 @@ class SchedulingController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $scheduling = Scheduling::findOrFail($id);
+        $employeeGroup = EmployeeGroup::where('id', $scheduling->group_id)->first();
+        $reasons = Reason::all();
+        $shifts = Shift::all();
+        $vehicles = Vehicle::all();
+        $personal = Groupdetail::where('scheduling_id', $id)
+        ->with('employee','employee.employeeType')
+        ->get();
+        $personalDisponible = Employee::all();
+        
+        return view('admin.schedulings.edit', compact('scheduling', 'reasons', 'shifts', 'vehicles', 'personal', 'employeeGroup', 'personalDisponible'));
     }
 
     /**
@@ -234,7 +277,19 @@ class SchedulingController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $scheduling = Scheduling::findOrFail($id);
+            $scheduling->update([
+                'status' => 0
+            ]);
+            return response()->json([
+                'message' => 'Programación eliminada correctamente.'
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Error al eliminar la programación.' . $th->getMessage()
+            ], 500);
+        }
     }
 
     public function getContent(string $shiftId)
@@ -261,6 +316,70 @@ class SchedulingController extends Controller
             'employeesAyudantes',
             'shift'
         ));
+    }
+
+
+    public function AddChangeScheduling(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $changes = is_array($request->changes) ? $request->changes : json_decode($request->changes, true);
+            $id_scheduling = $request->scheduling_id;
+            $id_shift = Reason::whereRaw('LOWER(name) LIKE ?', ['%turno%'])->first()->id;
+            $id_vehicle = Reason::whereRaw('LOWER(name) LIKE ?', ['%vehiculo%'])->first()->id;
+            $id_employee = Reason::whereRaw('LOWER(name) LIKE ?', ['%personal%'])->first()->id;
+
+            foreach ($changes as $change) {
+                switch ($change['tipo']) {
+                    case 'Turno':
+                        Change::create([
+                            'scheduling_id' => $id_scheduling,
+                            'new_shift_id' => $change['id_nuevo'],
+                            'reason_id' => $id_shift,
+                            'change_date' => now(),
+                            'old_shift_id' => $change['id_anterior'],
+                            'notes' => $change['nota'],
+                        ]);
+                        $scheduling = Scheduling::findOrFail($id_scheduling);
+                        $scheduling->update([
+                            'status' => 3
+                        ]);
+                        break;
+                    case 'Vehiculo':
+                        Change::create([
+                            'scheduling_id' => $id_scheduling,
+                            'new_vehicle_id' => $change['id_nuevo'],
+                            'reason_id' => $id_vehicle,
+                            'change_date' => now(),
+                            'old_vehicle_id' => $change['id_anterior'],
+                            'notes' => $change['nota'],
+                        ]);
+                        break;
+                    case 'Personal':
+                        Change::create([
+                            'scheduling_id' => $id_scheduling,
+                            'new_employee_id' => $change['id_nuevo'],
+                            'reason_id' => $id_employee,
+                            'change_date' => now(),
+                            'old_employee_id' => $change['id_anterior'],
+                            'notes' => $change['nota'],
+                        ]);
+                        break;
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Cambio agregado correctamente.'
+            ], 200);
+
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Ocurrió un error al guardar los cambios.' . $th->getMessage()
+            ], 500);
+        }
     }
     
 }

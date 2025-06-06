@@ -30,6 +30,7 @@ return new class extends Migration
             $table->unsignedBigInteger('old_shift_id')->nullable();
             $table->foreign('old_shift_id')->references('id')->on('shifts');
             $table->date('change_date');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

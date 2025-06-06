@@ -17,20 +17,8 @@ class ReasonsSeeder extends Seeder
         
         $reasons = [
             [
-                'name' => 'Enfermedad',
+                'name' => 'Cambio de personal',
                 'description' => 'El empleado no puede asistir por motivos de salud',
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'name' => 'Asuntos familiares',
-                'description' => 'El empleado tiene un asunto familiar que atender',
-                'created_at' => $now,
-                'updated_at' => $now
-            ],
-            [
-                'name' => 'Problemas de transporte',
-                'description' => 'El empleado tiene dificultades para llegar al trabajo',
                 'created_at' => $now,
                 'updated_at' => $now
             ],
@@ -41,8 +29,15 @@ class ReasonsSeeder extends Seeder
                 'updated_at' => $now
             ],
             [
-                'name' => 'Incapacidad temporal',
-                'description' => 'El empleado presenta una incapacidad médica',
+                'name' => 'Cambio de vehículo',
+                'description' => 'El empleado necesita cambiar su vehículo con otro empleado',
+                'created_at' => $now,
+                'updated_at' => $now
+            ],
+            
+            [
+                'name' => 'Asignacion del sistema',
+                'description' => 'El sistema necesita asignar un nuevo cambio',
                 'created_at' => $now,
                 'updated_at' => $now
             ],

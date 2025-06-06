@@ -7,7 +7,7 @@
 <div class="p-2"></div>
 
 <!-- Modal -->
-<div class="modal fade" id="modalEmployeeGroup" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+<div class="modal fade" id="modalScheduling" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -89,7 +89,7 @@ $(document).ready(function() {
             text: "¡Este cambio no se puede deshacer!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'Sí, Cancelar',
             cancelButtonText: 'Cancelar',
             reverseButtons: true
         }).then((result) => {
@@ -126,15 +126,30 @@ $(document).ready(function() {
         });
     });
 
+    $(document).on('click', '.btnEditar', function() {
+        var schedulingId = $(this).attr('id');
+        $.ajax({
+            url: '{{ route('admin.schedulings.edit', 'id') }}'.replace('id', schedulingId),
+            type: "GET",
+            success: function(response) {
+                $('#ModalLongTitle').text('Editar Programación');
+                $('#modalScheduling .modal-body').html(response);
+                $('#modalScheduling').modal('show');
+            }
+        });
+    });
+
+
+
     $(document).on('click', '.btnVer', function() {
         var schedulingId = $(this).attr('id');
         $.ajax({
             url: '{{ route('admin.schedulings.show', 'id') }}'.replace('id', schedulingId),
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Ver Grupo Programación');
-                $('#modalEmployeeGroup .modal-body').html(response);
-                $('#modalEmployeeGroup').modal('show');
+                $('#ModalLongTitle').text('Ver Programación');
+                $('#modalScheduling .modal-body').html(response);
+                $('#modalScheduling').modal('show');
             }
         });
     });
