@@ -381,5 +381,10 @@ class SchedulingController extends Controller
             ], 500);
         }
     }
+
+    public function module()
+    {
+        return view('admin.schedulings.module');
+    }
     
 }
