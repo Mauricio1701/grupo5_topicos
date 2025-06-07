@@ -10,7 +10,7 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Visualización de todas las zonas</h3>
+        <h3 class="card-title">Visualización de zonas activas</h3>
         <div class="card-tools">
             <a href="{{ route('admin.zones.index') }}" class="btn btn-primary">
                 <i class="fas fa-list"></i> Volver al listado
@@ -22,7 +22,6 @@
     </div>
 </div>
 
-<!-- Modal para detalles de zona -->
 <div class="modal fade" id="zoneDetailsModal" tabindex="-1" role="dialog" aria-labelledby="zoneDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -60,6 +59,27 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-primary"><i class="fas fa-building"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Departamento</span>
+                                    <span class="info-box-number" id="zone-department"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-warning"><i class="fas fa-trash"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Residuos promedio</span>
+                                    <span class="info-box-number" id="zone-waste"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Descripción</h3>
@@ -92,7 +112,6 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="#" id="edit-zone-btn" class="btn btn-warning"><i class="fas fa-edit"></i> Editar</a>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
@@ -139,7 +158,7 @@
             var allPolygons = [];
             
             @foreach($zones as $zone)
-                @if($zone->coords->count() >= 3)
+                @if($zone->status == 'A' && $zone->coords->count() >= 3)
                     var zoneCoords = [];
                     @foreach($zone->coords()->orderBy('coord_index')->get() as $coord)
                         zoneCoords.push([{{ $coord->latitude }}, {{ $coord->longitude }}]);
@@ -156,6 +175,12 @@
                     polygon.bindPopup(`
                         <div class="zone-popup">
                             <div class="zone-name">{{ $zone->name }}</div>
+                            @if($zone->department)
+                                <div class="zone-department"><strong>Departamento:</strong> {{ $zone->department->name }}</div>
+                            @endif
+                            @if($zone->average_waste)
+                                <div class="zone-waste"><strong>Residuos promedio:</strong> {{ $zone->average_waste }} kg</div>
+                            @endif
                             <div class="zone-description">{{ $zone->description ?: 'Sin descripción' }}</div>
                             <div class="zone-coords">{{ $zone->coords->count() }} puntos</div>
                             <div class="zone-details">
@@ -190,9 +215,10 @@
                     dataType: 'json',
                     success: function(response) {
                         $('#zone-name').text(response.name);
+                        $('#zone-department').text(response.department ? response.department.name : 'N/A');
+                        $('#zone-waste').text(response.average_waste ? response.average_waste + ' kg' : 'No especificado');
                         $('#zone-description').text(response.description || 'Sin descripción');
                         $('#zone-points').text(response.coords.length);
-                        $('#edit-zone-btn').attr('href', "{{ url('admin/zones') }}/" + zoneId + "/edit");
                         
                         var coordsHtml = '';
                         response.coords.forEach(function(coord, index) {
