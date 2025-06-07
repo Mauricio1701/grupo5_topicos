@@ -23,7 +23,8 @@ class Employee extends Model
         'phone',
         'status',
         'password',
-        'type_id'
+        'type_id',
+        'position_id'
     ];
 
     protected $hidden = [
@@ -39,6 +40,10 @@ class Employee extends Model
         return $this->names . ' ' . $this->lastnames;
     }
 
+    public function position()
+    {
+        return $this->belongsTo(EmployeeType::class, 'type_id', 'id');
+    }
     public function vacations()
     {
         return $this->hasMany(Vacation::class);

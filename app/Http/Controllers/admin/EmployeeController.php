@@ -28,15 +28,15 @@ class EmployeeController extends Controller
                     return $employee->employeeType ? $employee->employeeType->name : 'Sin tipo';
                 })
                 ->addColumn('status_badge', function ($employee) {
-                    return $employee->status ? 
-                           '<span class="badge badge-success">Activo</span>' : 
-                           '<span class="badge badge-danger">Inactivo</span>';
+                    return $employee->status ?
+                        '<span class="badge badge-success">Activo</span>' :
+                        '<span class="badge badge-danger">Inactivo</span>';
                 })
                 ->addColumn('action', function ($employee) {
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employee->id . '">
                                     <i class="fas fa-edit"></i>
                                 </button>';
-                    
+
                     $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employees.destroy', $employee->id) . '" method="POST">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
@@ -44,7 +44,7 @@ class EmployeeController extends Controller
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>';
-                    
+
                     return $editBtn . ' ' . $deleteBtn;
                 })
                 ->rawColumns(['status_badge', 'action'])
@@ -85,7 +85,6 @@ class EmployeeController extends Controller
 
         $data = $request->all();
 
-        // Manejar subida de foto
         if ($request->hasFile('photo')) {
             $photo = $request->file('photo');
             $photoName = time() . '_' . $photo->getClientOriginalName();
@@ -131,14 +130,11 @@ class EmployeeController extends Controller
 
         $data = $request->all();
 
-        // Si no se proporciona password, no lo actualizar
         if (empty($data['password'])) {
             unset($data['password']);
         }
 
-        // Manejar subida de foto
         if ($request->hasFile('photo')) {
-            // Eliminar foto anterior si existe
             if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
                 Storage::delete('public/employees/' . $employee->photo);
             }
@@ -161,14 +157,12 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee)
     {
-        // Verificar si el empleado tiene asignaciones
         if ($employee->groupDetails()->count() > 0) {
             return response()->json([
                 'message' => 'No se puede eliminar este empleado porque está asignado a grupos de trabajo.'
             ], 400);
         }
 
-        // Eliminar foto si existe
         if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
             Storage::delete('public/employees/' . $employee->photo);
         }
@@ -178,5 +172,30 @@ class EmployeeController extends Controller
         return response()->json([
             'message' => 'Empleado eliminado exitosamente.'
         ], 200);
+    }
+
+    public function getPosition($id)
+    {
+        try {
+            $employee = Employee::findOrFail($id);
+
+            $positionId = $employee->type_id;
+
+            if (!$positionId) {
+                return response()->json([
+                    'error' => 'Type ID is null for this employee',
+                    'position_id' => 1  
+                ], 200);
+            }
+
+            return response()->json([
+                'position_id' => $positionId
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Employee not found',
+                'position_id' => 1
+            ], 200);
+        }
     }
 }

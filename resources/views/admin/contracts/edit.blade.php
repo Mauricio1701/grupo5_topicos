@@ -1,4 +1,5 @@
-{!! Form::model($contract, ['route' => ['admin.contracts.update', $contract->id], 'method' => 'PUT']) !!}
+
+{!! Form::model($contract, ['route' => ['admin.contracts.update', $contract->id], 'method' => 'PUT', 'id' => 'editContractForm']) !!}
     @include('admin.contracts.templantes.form')
     <div class="d-flex justify-content-end gap-2">
         <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-save"></i> Actualizar</button>

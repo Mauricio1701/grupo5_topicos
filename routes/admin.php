@@ -28,8 +28,10 @@ Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
 Route::resource('employeetypes', EmployeeTypeController::class)->names('admin.employeetypes');
 Route::resource('employees', EmployeeController::class)->names('admin.employees');
 Route::resource('shifts', ShiftController::class)->names('admin.shifts');
-Route::resource('contracts', ContractController::class)->names('admin.contracts'); 
+Route::resource('contracts', ContractController::class)->names('admin.contracts');
 
+
+Route::get('/employees/getposition/{id}', [EmployeeController::class, 'getPosition'])->name('admin.employees.getposition');
 
 Route::resource('vacations', VacationController::class)->names('admin.vacations');
 Route::post('vacations/calculate-days', [VacationController::class, 'calculateDays'])->name('admin.vacations.calculate-days');
