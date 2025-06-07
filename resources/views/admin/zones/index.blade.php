@@ -9,18 +9,18 @@
 @section('content')
 <div class="p-2"></div>
 
-<!-- Modal -->
 <div class="modal fade" id="modalZone" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ModalLongTitle"></h5>
+            <div class="modal-header py-2">
+                <h5 class="modal-title" id="ModalLongTitle">Zona</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-
+            <div class="modal-body p-3">
+            </div>
+            <div class="modal-footer py-1">
             </div>
         </div>
     </div>
@@ -43,7 +43,8 @@
             <thead>
                 <tr>
                     <th>NOMBRE</th>
-                    <th>DESCRIPCIÓN</th>
+                    <th>DEPARTAMENTO</th>
+                    <th>ESTADO</th>
                     <th>COORDENADAS</th>
                     <th>ACCIÓN</th>
                 </tr>
@@ -67,6 +68,11 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
     let table;
 
     $(document).ready(function() {
@@ -81,7 +87,11 @@
                     "data": "name"
                 },
                 {
-                    "data": "description"
+                    "data": "department_name"
+                },
+                {
+                    "data": "status_badge",
+                    "orderable": false
                 },
                 {
                     "data": "coordinates_count"
@@ -104,10 +114,26 @@
                 $('#modalZone .modal-body').html(response);
                 $('#modalZone').modal('show');
 
-                $('#modalZone form').submit(function(e) {
+                setTimeout(function() {
+                    if (typeof map !== 'undefined') {
+                        map.invalidateSize();
+                    }
+                }, 300);
+
+                $(document).off('submit', '#zoneForm').on('submit', '#zoneForm', function(e) {
                     e.preventDefault();
+                    $('.error-text').text('');
+
+                    if (polygonCoords && polygonCoords.length < 3) {
+                        $('.coords_error').text('Debe dibujar al menos 3 puntos en el mapa para formar un polígono válido.');
+                        return false;
+                    }
+
                     var form = $(this);
                     var formData = form.serialize();
+
+                    $('#btnSaveZone').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
+
                     $.ajax({
                         url: form.attr('action'),
                         type: form.attr('method'),
@@ -115,9 +141,7 @@
                         success: function(response) {
                             if (response.success) {
                                 $('#modalZone').modal('hide');
-
                                 table.ajax.reload();
-
                                 Swal.fire({
                                     icon: 'success',
                                     title: '¡Éxito!',
@@ -125,23 +149,55 @@
                                     confirmButtonColor: '#3085d6',
                                     confirmButtonText: 'Aceptar'
                                 });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '¡Error!',
+                                    text: response.message || 'No se pudo guardar la zona',
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'Aceptar'
+                                });
                             }
                         },
                         error: function(xhr) {
-                            var errors = xhr.responseJSON.errors;
-                            var errorMessage = '';
-                            $.each(errors, function(key, value) {
-                                errorMessage += value + '<br>';
-                            });
-                            Swal.fire({
-                                icon: 'error',
-                                title: '¡Error!',
-                                html: errorMessage,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
+                            console.error("Error completo:", xhr.responseText);
+
+                            if (xhr.status === 422) {
+                                var errors = xhr.responseJSON.errors;
+                                $.each(errors, function(key, value) {
+                                    $('.' + key.replace(/\./g, '_') + '_error').text(value[0]);
+                                });
+
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '¡Error de validación!',
+                                    text: 'Por favor corrija los errores señalados en el formulario.',
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '¡Error!',
+                                    text: 'No se pudo guardar la zona: ' + (xhr.responseJSON ? xhr.responseJSON.message : 'Error desconocido'),
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            }
+                        },
+                        complete: function() {
+                            $('#btnSaveZone').prop('disabled', false).html('<i class="fas fa-save"></i> Guardar');
                         }
                     });
+                });
+            },
+            error: function(xhr) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: 'No se pudo cargar el formulario.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
                 });
             }
         });
