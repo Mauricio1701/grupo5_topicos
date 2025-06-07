@@ -1,4 +1,5 @@
-{!! Form::open(['route' => 'admin.contracts.store', 'method' => 'POST']) !!}
+
+{!! Form::open(['route' => 'admin.contracts.store', 'method' => 'POST', 'id' => 'createContractForm']) !!}
     @include('admin.contracts.templantes.form')
     <div class="d-flex justify-content-end gap-2">
         <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-save"></i> Guardar</button>

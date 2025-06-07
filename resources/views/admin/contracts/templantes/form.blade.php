@@ -1,23 +1,18 @@
 
 <div class="form-group">
     {!! Form::label('employee_id', 'Empleado:') !!} <span class="text-danger">*</span>
-    {!! Form::select('employee_id', $employees->pluck('name_with_last_name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un empleado', 'required']) !!}
+    {!! Form::select('employee_id', $employees->pluck('name_with_last_name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un empleado', 'required', 'id' => 'employee_id']) !!}
     @error('employee_id')
     <span class="text-danger">{{ $message }}</span>
     @enderror
 </div>
 <div class="form-group">
-    {!! Form::label('contract_type', 'Tipo de Contrato:') !!} <span class="text-danger">*</span>
+    {!! Form::label('contract_type', 'Tipo de Contrato') !!}
     {!! Form::select('contract_type', [
-    'Tiempo completo' => 'Tiempo completo',
-    'Medio tiempo' => 'Medio tiempo',
-    'Temporal' => 'Temporal',
-    'Por proyecto' => 'Por proyecto',
-    'Prácticas' => 'Prácticas'
-    ], null, ['class' => 'form-control', 'placeholder' => 'Seleccione un tipo', 'required', 'id' => 'contract_type']) !!}
-    @error('contract_type')
-    <span class="text-danger">{{ $message }}</span>
-    @enderror
+    'Nombrado' => 'Nombrado',
+    'Contrato permanente' => 'Contrato permanente',
+    'Temporal' => 'Temporal'
+    ], null, ['class' => 'form-control', 'required', 'id' => 'contract_type']) !!}
 </div>
 
 <div class="row">
@@ -52,19 +47,10 @@
             @enderror
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="form-group">
-            {!! Form::label('position_id', 'Posición:') !!} <span class="text-danger">*</span>
-            {!! Form::select('position_id', $positions->pluck('name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione una posición', 'required']) !!}
-            @error('position_id')
-            <span class="text-danger">{{ $message }}</span>
-            @enderror
-        </div>
-    </div>
-    <div class="col-md-4">
+    <div class="col-md-8">
         <div class="form-group">
             {!! Form::label('department_id', 'Departamento:') !!} <span class="text-danger">*</span>
-            {!! Form::select('department_id', $departments->pluck('name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un departamento', 'required']) !!}
+            {!! Form::select('department_id', $departments, null, ['class' => 'form-control', 'placeholder' => 'Seleccione un departamento', 'required']) !!}
             @error('department_id')
             <span class="text-danger">{{ $message }}</span>
             @enderror
@@ -72,11 +58,16 @@
     </div>
 </div>
 
+<div id="position_id_container" style="display:none;">
+    {!! Form::hidden('position_id', null, ['id' => 'position_id_input']) !!}
+</div>
+
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-6" id="vacation_days_container">
         <div class="form-group">
             {!! Form::label('vacation_days_per_year', 'Días de Vacaciones por Año:') !!} <span class="text-danger">*</span>
             {!! Form::number('vacation_days_per_year', null, ['class' => 'form-control', 'min' => '0', 'required']) !!}
+            <div id="vacation_days_info" class="form-text text-muted"></div>
             @error('vacation_days_per_year')
             <span class="text-danger">{{ $message }}</span>
             @enderror
@@ -92,13 +83,13 @@
         </div>
     </div>
 </div>
+
 <div class="row">
     <div class="col-md-6">
         <div class="form-group">
             <div class="custom-control custom-switch">
                 {!! Form::checkbox('is_active', 1, null, ['class' => 'custom-control-input', 'id' => 'is_active']) !!}
                 {!! Form::label('is_active', '¿Contrato Activo?', ['class' => 'custom-control-label']) !!}
-                <input type="hidden" name="is_active_submitted" value="1">
             </div>
             @error('is_active')
             <span class="text-danger">{{ $message }}</span>

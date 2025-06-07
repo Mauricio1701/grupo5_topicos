@@ -114,116 +114,114 @@
             var endDateField = $('#end_date');
             var endDateContainer = $('#end_date_container');
             var vacationDaysField = $('#vacation_days_per_year');
+            var vacationDaysContainer = $('#vacation_days_container');
+            var vacationDaysInfo = $('#vacation_days_info');
 
             originalVacationDays = vacationDaysField.val();
 
             $('.vacation-days-notice').remove();
 
+            function updateEndDateField() {
+                var contractsWithoutEndDate = ['Nombrado', 'Contrato permanente'];
 
-            function updateVacationDays() {
-                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
-
-                $('.vacation-days-notice').remove();
-
-                if (specialContractTypes.includes(contractTypeSelect.val())) {
-                    vacationDaysField.val(0);
-                    vacationDaysField.prop('disabled', true);
-                    vacationDaysField.parent().append('<small class="text-info d-block vacation-days-notice">Los contratos de este tipo no tienen días de vacaciones.</small>');
+                if (contractsWithoutEndDate.includes(contractTypeSelect.val())) {
+                    endDateField.val('');
+                    endDateContainer.addClass('d-none');
+                    endDateField.prop('required', false);
                 } else {
-                    vacationDaysField.prop('disabled', false);
-
-                    var isEditing = $('input[name="_method"]').val() === 'PUT';
-
-                    if (isEditing) {
-                        if (originalVacationDays == 0) {
-                            vacationDaysField.val(15); 
-                        } else {
-                            vacationDaysField.val(originalVacationDays);
-                        }
-                    } else if (!vacationDaysField.val() || vacationDaysField.val() === '') {
-                        vacationDaysField.val(15);
-                    }
+                    endDateContainer.removeClass('d-none');
+                    endDateField.prop('required', true);
                 }
             }
 
             function updateVacationDays() {
-                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
+                var contractType = contractTypeSelect.val();
 
-                $('.vacation-days-notice').remove();
-
-                if (specialContractTypes.includes(contractTypeSelect.val())) {
+                if (contractType === 'Temporal') {
                     vacationDaysField.val(0);
-                    vacationDaysField.prop('disabled', true);
-                    vacationDaysField.parent().append('<small class="text-info d-block vacation-days-notice">Los contratos de este tipo no tienen días de vacaciones.</small>');
+                    vacationDaysField.prop('readonly', true);
+                    vacationDaysInfo.text('Los contratos temporales no tienen días de vacaciones');
+                    vacationDaysContainer.addClass('d-none'); 
+                } else if (['Nombrado', 'Contrato permanente'].includes(contractType)) {
+                    vacationDaysField.val(30);
+                    vacationDaysField.prop('readonly', true);
+                    vacationDaysInfo.text('Tipo de contrato con 30 días de vacaciones fijos');
+                    vacationDaysContainer.addClass('d-none');
                 } else {
-                    vacationDaysField.prop('disabled', false);
-
-                    var isNewRecord = !$('input[name="_method"]').val();
-
-                    if (isNewRecord && (!vacationDaysField.val() || vacationDaysField.val() === '')) {
-                        vacationDaysField.val(15);
-                    }
+                    vacationDaysField.val(originalVacationDays || 15);
+                    vacationDaysField.prop('readonly', false);
+                    vacationDaysInfo.text('');
+                    vacationDaysContainer.removeClass('d-none');
                 }
             }
 
             function toggleTerminationReason() {
-                if ($('#is_active').length && $('#termination_reason_container').length) {
-                    if ($('#is_active').prop('checked')) {
-                        $('#termination_reason_container').addClass('d-none');
-                        $('#termination_reason').val('');
-                    } else {
-                        $('#termination_reason_container').removeClass('d-none');
-                    }
+                var isActiveCheckbox = $('#is_active');
+                var terminationReasonContainer = $('#termination_reason_container');
+                var terminationReasonField = $('#termination_reason');
+
+                if (isActiveCheckbox.is(':checked')) {
+                    terminationReasonContainer.addClass('d-none');
+                    terminationReasonField.val('');
+                } else {
+                    terminationReasonContainer.removeClass('d-none');
+                }
+            }
+
+            function updatePositionId() {
+                var employeeId = $('#employee_id').val();
+
+                if (employeeId) {
+                    $.ajax({
+                        url: "{{ route('admin.employees.getposition', '') }}/" + employeeId,
+                        type: "GET",
+                        success: function(response) {
+                            console.log("Position ID recibido:", response.position_id);
+                            $('#position_id_input').val(response.position_id);
+                        },
+                        error: function(xhr) {
+                            console.error("Error al obtener la posición:", xhr.responseText);
+                            $('#position_id_input').val('');
+                        }
+                    });
+                } else {
+                    $('#position_id_input').val('');
                 }
             }
 
             updateEndDateField();
-            if (vacationDaysField.length) {
-                updateVacationDays();
-            }
+            updateVacationDays();
             toggleTerminationReason();
+
+            setTimeout(updatePositionId, 500);
 
             contractTypeSelect.on('change', function() {
                 updateEndDateField();
-                if (vacationDaysField.length) {
-                    updateVacationDays();
-                }
+                updateVacationDays();
             });
 
-            $('#is_active').on('change', toggleTerminationReason);
+            $('#is_active').on('change', function() {
+                toggleTerminationReason();
+            });
+
+            $('#employee_id').on('change', function() {
+                updatePositionId();
+            });
         }
+
+
+
 
         function setupFormSubmit(form) {
             form.off('submit').on('submit', function(e) {
                 e.preventDefault();
 
-                var disabledFields = form.find(':disabled').prop('disabled', false);
-
-                var formData = form.serialize();
-
-                disabledFields.prop('disabled', true);
-
-                if ($('#is_active').length) {
-                    formData = formData.replace(/&is_active=1/, '');
-                    formData += '&is_active=' + ($('#is_active').prop('checked') ? 1 : 0);
-                }
-
-                var contractType = $('#contract_type').val();
-                var specialContractTypes = ['Temporal', 'Por proyecto', 'Prácticas'];
-
-                if (specialContractTypes.includes(contractType)) {
-                    formData = formData.replace(/&vacation_days_per_year=\d+/, '');
-                    formData += '&vacation_days_per_year=0';
-                }
-
                 $.ajax({
                     url: form.attr('action'),
                     type: form.attr('method'),
-                    data: formData,
+                    data: form.serialize(),
                     success: function(response) {
                         if (response.success) {
-                            $('#modalContract').modal('hide');
-                            table.ajax.reload(null, false);
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
@@ -231,18 +229,26 @@
                                 confirmButtonColor: '#3085d6',
                                 confirmButtonText: 'Aceptar'
                             });
+                            $('#modalContract').modal('hide');
+                            table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.message || 'Ha ocurrido un error',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'Aceptar'
+                            });
                         }
                     },
                     error: function(xhr) {
-                        var errors = xhr.responseJSON?.errors;
-                        var errorMessage = '';
+                        console.log(xhr.responseText);
+                        let errorMessage = 'Ha ocurrido un error';
 
-                        if (errors) {
-                            $.each(errors, function(key, value) {
-                                errorMessage += value + '<br>';
-                            });
-                        } else {
-                            errorMessage = 'Ha ocurrido un error al guardar el contrato.';
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            errorMessage = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
                         }
 
                         Swal.fire({
@@ -258,25 +264,24 @@
         }
 
         $('#btnNewContract').click(function() {
+            $('#modalContract .modal-title').text('Nuevo Contrato');
             $('#modalContract .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">Cargando...</p></div>');
+            $('#modalContract').modal('show');
 
             $.ajax({
                 url: "{{ route('admin.contracts.create') }}",
                 type: "GET",
-                cache: false,
                 success: function(response) {
-                    $('#ModalLongTitle').text('Nuevo Contrato');
                     $('#modalContract .modal-body').html(response);
-                    $('#modalContract').modal('show');
-
                     initContractForm();
-                    setupFormSubmit($('#modalContract form'));
+                    setupFormSubmit($('#createContractForm'));
                 },
                 error: function(xhr) {
+                    console.log(xhr.responseText);
                     Swal.fire({
                         icon: 'error',
                         title: '¡Error!',
-                        text: 'No se pudo cargar el formulario de contrato.',
+                        text: 'No se pudo cargar el formulario de contrato',
                         confirmButtonColor: '#3085d6',
                         confirmButtonText: 'Aceptar'
                     });
