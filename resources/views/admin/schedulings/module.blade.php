@@ -62,6 +62,7 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s ease-in-out;
+            cursor: pointer;
         }
 
         .card.vehicle-card:hover {
@@ -86,15 +87,58 @@
             flex-direction: column;
             justify-content: center;
         }
+
+        .refresh-btn {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
+<div class="modal fade" id="modalScheduling" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ModalLongTitle"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {{-- Contenido del formulario cargado por AJAX --}}
+        </div>
+      </div>
+    </div>
+</div>
+
 
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-        <h1 class="h4">Programación - Turno Mañana</h1>
-        <button class="btn btn-primary">Asignar Ayudantes</button>
+        <h1 class="h4">Programación</h1>
+        <!-- Botón de refrescar -->
+        <button class="btn btn-secondary refresh-btn" onclick="loadData()">
+            <i class="fas fa-sync-alt"></i> Refrescar
+        </button>
     </div>
 
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-3">
+            <label for="date-select">Seleccione una fecha:</label>
+            <input type="date" id="date-select" class="form-control" value="{{ \Carbon\Carbon::today()->toDateString() }}">
+        </div>
+        <div class="col-md-3">
+            <label for="turn-select">Seleccione un turno:</label>
+            <select class="form-control" id="turn-select">
+                @foreach($shifts as $shift)
+                    <option value="{{ $shift->id }}">{{ $shift->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-6 d-flex align-items-center justify-content-between">
+            <button id="search-btn" class="btn btn-primary">Buscar programación</button>
+        </div>
+    </div>
+    <hr>
+
+    <!-- Aquí va el resto del contenido y resumen -->
     <div class="row mb-4">
         <!-- Resumen en cuadritos -->
         <div class="col-md-6">
@@ -102,15 +146,16 @@
                 <div class="col-6 mb-3">
                     <div class="card text-center shadow-sm">
                         <div class="card-body p-3">
-                            <div class="h4 mb-1">👥 24</div>
-                            <small class="text-muted">Asistieron</small>
+                            👥<div id="attendance-count" class="h4 mb-1">00</div>
+                            <small class="text-muted">Asistencias</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 mb-3">
                     <div class="card text-center shadow-sm ">
                         <div class="card-body p-3">
-                            <div class="h4 mb-1">🚚 2</div>
+                            🚚
+                            <div id="completed-groups" class="h4 mb-1">00</div>
                             <small class="text-muted">Grupos completos</small>
                         </div>
                     </div>
@@ -118,7 +163,8 @@
                 <div class="col-6">
                     <div class="card text-center shadow-sm ">
                         <div class="card-body p-3">
-                            <div class="h4 mb-1">🧍 5</div>
+                            🧍
+                            <div id="available-support" class="h4 mb-1">00</div>
                             <small class="text-muted">Apoyos disponibles</small>
                         </div>
                     </div>
@@ -126,7 +172,8 @@
                 <div class="col-6">
                     <div class="card text-center shadow-sm ">
                         <div class="card-body p-3">
-                            <div class="h4 mb-1">❌ 3</div>
+                            ❌
+                            <div id="missing-count" class="h4 mb-1">00</div>
                             <small class="text-muted">Faltan</small>
                         </div>
                     </div>
@@ -146,48 +193,129 @@
             </div>
         </div>
     </div>
-    
-    <div class="row">
-        <div class="col-md-3 mb-4">
-            <div class="card vehicle-card green">
-                <div class="card-body text-center">
-                    <div class="vehicle-title">Placa: ABC-123</div>
-                    <div>Grupo completo y listo para operar</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card vehicle-card red">
-                <div class="card-body text-center">
-                    <div class="vehicle-title">Placa: XYZ-789</div>
-                    <div>Faltan integrantes por registrar asistencia</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card vehicle-card green">
-                <div class="card-body text-center">
-                    <div class="vehicle-title">Placa: DEF-456</div>
-                    <div>Grupo completo y listo para operar</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-4">
-            <div class="card vehicle-card red">
-                <div class="card-body text-center">
-                    <div class="vehicle-title">Placa: LMN-321</div>
-                    <div>Faltan integrantes por registrar asistencia</div>
-                </div>
-            </div>
-        </div>
+
+    <!-- Aquí los cards con vehículos -->
+    <div class="row" id="zonas">
+       
     </div>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+    <script>
+        // Función para manejar el click en los cards
+        function cardClicked(plate) {
+            console.log("Card seleccionado: " + plate);
+        }
+
+        // Seleccionar automáticamente el turno según la hora actual
+        $(document).ready(function() {
+            var hour = new Date().getHours();
+            var turnSelect = $('#turn-select');
+
+            if (hour >= 6 && hour < 12) {
+                turnSelect.val(1);
+            } else if (hour >= 1 && hour < 18) {
+                turnSelect.val(2);
+            } else {
+                turnSelect.val(3);
+            }
+
+            loadData(); // Cargar datos al iniciar
+            
+            $('#search-btn').click(function() {
+                loadData();
+            });
+        });
+
+        function loadData() {
+            var date = $('#date-select').val();
+            var turn = $('#turn-select').val();
+
+            // Mostrar un mensaje de carga
+            Swal.fire({
+                title: 'Cargando Datos...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Realizar la solicitud AJAX
+            $.ajax({
+                url: '{{ route('admin.schedulings.getDatascheduling') }}',  // Actualiza con la ruta de tu servidor
+                type: 'GET',
+                data: {
+                    date: date,
+                    turn: turn
+                },
+                success: function(response) {
+                    Swal.close();  // Cerrar el mensaje de carga
+                    console.log('Vehículos cargados:', response);
+                    let countAttendance = response.countAttendance;
+                    let completedGroups = response.completedGroups;
+                    let availableSupport = response.availableSupport;
+                    let missing = response.missing;
+                    $('#attendance-count').text(countAttendance);
+                    $('#completed-groups').text(completedGroups);
+                    $('#available-support').text(availableSupport);
+                    $('#missing-count').text(missing);
+                    // Aquí puedes actualizar los cards con los vehículos obtenidos
+                    $('#zonas').empty();
+
+                    // Generar tarjetas de zonas
+                  response.zonas.forEach((zona, index) => {
+                    // Crear el card para la zona
+                    let zoneCard = `
+                        <div class="col-md-3 mb-4">
+                            <div class="card vehicle-card ${zona.status == 'completa' ? 'green' : 'red'}" onclick="cardClicked('${zona.name}')">
+                                <div class="card-body text-center">
+                                    <div class="vehicle-title">Zona: ${zona.name}</div>
+                                    <div>${zona.status === 'completa' ? 'Grupo completo y listo para operar' : 'Faltan integrantes por registrar asistencia'}</div>
+                                    <!-- Agregar el botón de editar solo si la zona está incompleta -->
+                                    ${zona.status === 'incompleta' ? 
+                                        `<button class="btn btn-warning btn-sm btnEditar" alt="Reprogramar" id="${zona.scheduling_id}">
+                                            <i class="fas fa-retweet"></i>
+                                        </button>` 
+                                        : ''
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Añadir el card de la zona al contenedor de zonas
+                    $('#zonas').append(zoneCard);
+                });
+
+                },
+                error: function(xhr, status, error) {
+                    Swal.close();
+                    console.error('Error al cargar los datos:', error);
+                    Swal.fire('Error', 'Hubo un problema al cargar los datos', 'error');
+                }
+            });
+        }
+
+        $(document).on('click', '.btnEditar', function() {
+            var schedulingId = $(this).attr('id');
+            $.ajax({
+                url: '{{ route('admin.schedulings.edit', 'id') }}'.replace('id', schedulingId),
+                type: "GET",
+                success: function(response) {
+                    $('#ModalLongTitle').text('Editar Programación');
+                    $('#modalScheduling .modal-body').html(response);
+                    $('#modalScheduling').modal('show');
+                }
+            });
+        });
+
+
+    </script>
 </body>
 </html>

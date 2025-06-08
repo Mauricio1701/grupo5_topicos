@@ -20,4 +20,9 @@ class Groupdetail extends Model
         return $this->belongsTo(Employeegroup::class);
     }
 
+    public function scheduling()
+    {
+        return $this->belongsTo(Scheduling::class, 'scheduling_id'); // Asumiendo que la columna foránea es 'scheduling_id'
+    }
+
 }

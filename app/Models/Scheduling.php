@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Employeegroup;
 use App\Models\Change;
+use App\Models\Shift;
+use App\Models\Vehicle;
 
 class Scheduling extends Model
 {
@@ -15,6 +17,16 @@ class Scheduling extends Model
     public function employeegroup()
     {
         return $this->belongsTo(Employeegroup::class,'group_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(Shift::class,'shift_id');
+    }
+
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class,'vehicle_id');
     }
 
     public function change()

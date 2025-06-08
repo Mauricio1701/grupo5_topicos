@@ -30,8 +30,8 @@
                             @endif
                         </td> <!-- Estado -->
                         <td>{{ $scheduling->employeegroup->zone->name ?? 'N/A' }}</td> <!-- Zona -->
-                        <td>{{ $scheduling->employeegroup->shift->name ?? 'N/A' }}</td> <!-- Turno -->
-                        <td>{{ $scheduling->employeegroup->vehicle->name ?? 'N/A' }}</td> <!-- Vehículo -->
+                        <td>{{ $scheduling->shift->name ?? 'N/A' }}</td> <!-- Turno -->
+                        <td>{{ $scheduling->vehicle->code ?? 'N/A' }}</td> <!-- Vehículo -->
                     </tr>
                 </tbody>
             </table>

@@ -33,4 +33,6 @@ class Shift extends Model
     {
         return $this->description ?? 'Sin descripción';
     }
+
+    
 }

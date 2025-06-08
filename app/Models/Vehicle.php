@@ -33,4 +33,6 @@ class Vehicle extends Model
     {
         return $this->belongsTo(Brandmodel::class);
     }
+
+    
 }

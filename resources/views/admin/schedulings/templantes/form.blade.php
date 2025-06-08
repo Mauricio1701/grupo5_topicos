@@ -116,7 +116,7 @@
         groupData.end_date = $('#end_date').val() || null;  // Si no hay end_date, lo ponemos como vacío
 
         // Imprimimos el JSON en consola para verificar
-        console.log(JSON.stringify(groupData));
+       
 
         return groupData;
     }
@@ -130,15 +130,23 @@
     $('#submitAll').on('click', function () {
         const data = getGroupData();
         data._token = '{{ csrf_token() }}';
+        Swal.fire({
+            title:'Estamos registrando la programación',
+            text: 'Por favor, espere un momento...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        })
 
-        console.log(data);
-
+        console.log(JSON.stringify(data));
         $.ajax({
             url: '{{ route('admin.schedulings.store') }}',
             type: 'POST',
             data: data,
             success: function(response) {
                 console.log('Datos enviados correctamente');
+                Swal.close();
                 Swal.fire({
                     icon: 'success',
                     title: '¡Éxito!',

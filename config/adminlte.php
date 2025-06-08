@@ -319,93 +319,111 @@ return [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
-        ['header' => 'GESTIÓN DE VEHICULOS'],
         [
-            'text' => 'Color',
-            'route' => 'admin.colors.index',
-            'icon' => 'fas fa-palette',
-        ],
-        [
-            'text' => 'Marcas',
-            'route' => 'admin.brands.index',
-            'icon' => 'fas fa-fw fa-tags',
-        ],
-        [
-            'text' => 'Modelos',
-            'route' => 'admin.models.index',
-            'icon' => 'fas fa-fw fa-wrench',
-        ],
-        [
-            'text' => 'Tipo de Vehiculo',
-            'route' => 'admin.vehiclestypes.index',
+            'text' => 'GESTIÓN DE VEHICULOS',
             'icon' => 'fas fa-car',
+            'submenu' =>[
+                [
+                    'text' => 'Color',
+                    'route' => 'admin.colors.index',
+                    'icon' => 'fas fa-palette',
+                ],
+                [
+                    'text' => 'Marcas',
+                    'route' => 'admin.brands.index',
+                    'icon' => 'fas fa-fw fa-tags',
+                ],
+                [
+                    'text' => 'Modelos',
+                    'route' => 'admin.models.index',
+                    'icon' => 'fas fa-fw fa-wrench',
+                ],
+                [
+                    'text' => 'Tipo de Vehiculo',
+                    'route' => 'admin.vehiclestypes.index',
+                    'icon' => 'fas fa-car',
+                ],
+                [
+                    'text' => 'Vehículo',
+                    'route' => 'admin.vehicles.index',
+                    'icon'  => 'fas fa-car-side',
+                ],
+            ]
         ],
         [
-            'text' => 'Vehículo',
-            'route' => 'admin.vehicles.index',
-            'icon'  => 'fas fa-car-side',
-        ],
-        ['header' => 'GESTIÓN DE EMPLEADOS'],
-        [
-            'text'=>'Tipo de Empleados',
-            'route'=>'admin.employeetypes.index',
-            'icon'=>'fas fa-fw fa-user-tie',
-        ],
-        [
-            'text'=>'Empleados',
-            'route'=>'admin.employees.index',
-            'icon'=>'fas fa-fw fa-user',
-        ],
-        [
-            'text'=>'Contratos',
-            'route'=>'admin.contracts.index',
-            'icon'=>'fas fa-fw fa-file-contract',
-        ],
-        [
-            'text'=>'Asistencia',
-            'route'=>'admin.attendances.index',
-            'icon'=>'fas fa-fw fa-user-clock',
-        ],
-        [
-            'text'=>'Vacaciones',
-            'route'=>'admin.vacations.index',
-            'icon'=>'fas fa-fw fa-plane',
-            
-        ],
-        ['header' => 'PROGRAMACIÓN'],
-        
-        [
-            'text' => 'Turnos',
-            'route' => 'admin.shifts.index',
-            'icon' => 'fas fa-fw fa-clock',
+            'text' => 'GESTIÓN DE EMPLEADOS',
+            'icon' => 'fas fa-users',
+            'submenu'=>[
+                [
+                    'text'=>'Tipo de Empleados',
+                    'route'=>'admin.employeetypes.index',
+                    'icon'=>'fas fa-fw fa-user-tie',
+                ],
+                [
+                    'text'=>'Empleados',
+                    'route'=>'admin.employees.index',
+                    'icon'=>'fas fa-fw fa-user',
+                ],
+                [
+                    'text'=>'Contratos',
+                    'route'=>'admin.contracts.index',
+                    'icon'=>'fas fa-fw fa-file-contract',
+                ],
+                [
+                    'text'=>'Asistencia',
+                    'route'=>'admin.attendances.index',
+                    'icon'=>'fas fa-fw fa-user-clock',
+                ],
+                [
+                    'text'=>'Vacaciones',
+                    'route'=>'admin.vacations.index',
+                    'icon'=>'fas fa-fw fa-plane',
+                    
+                ],
+            ]
         ],
         [
-            'text'=>'Zonas',
-            'route'=>'admin.zones.index',
-            'icon'=>'fas fa-fw fa-map-marker-alt',
-            
+            'text' => 'PROGRAMACIÓN',
+            'icon' => 'fas fa-fw fa-calendar-alt',
+            'submenu'=>[
+                    [
+                        'text' => 'Turnos',
+                        'route' => 'admin.shifts.index',
+                        'icon' => 'fas fa-fw fa-clock',
+                    ],
+                    [
+                        'text'=>'Zonas',
+                        'route'=>'admin.zones.index',
+                        'icon'=>'fas fa-fw fa-map-marker-alt',
+                        
+                    ],
+                    [
+                        'text'=>'Grupo de Personal',
+                        'route'=>'admin.employeegroups.index',
+                        'icon'=>'fas fa-fw fa-users',
+                    ],
+                    [
+                        'text'=>'Programación',
+                        'route'=>'admin.schedulings.index',
+                        'icon'=>'fas fa-fw fa-clock',
+                    ],
+            ]
         ],
         [
-            'text'=>'Grupo de Personal',
-            'route'=>'admin.employeegroups.index',
-            'icon'=>'fas fa-fw fa-users',
+            'text' => 'GESTIÓN DE CAMBIOS',
+            'icon' => 'fas fa-exchange-alt',
+            'submenu'=>[
+                [
+                    'text' => 'Motivos',
+                    'route' => 'admin.reasons.index',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                ],
+                [
+                    'text' => 'Cambios',
+                    'icon' => 'fas fa-fw fa-clipboard-list',
+                ],
+                ]
         ],
-        [
-            'text'=>'Programación',
-            'route'=>'admin.schedulings.index',
-            'icon'=>'fas fa-fw fa-clock',
-        ],
-        ['header' => 'GESTIÓN DE CAMBIOS'],
-        [
-            'text' => 'Motivos',
-            'route' => 'admin.reasons.index',
-            'icon' => 'fas fa-fw fa-clipboard-list',
-        ],
-        [
-            'text' => 'Cambios',
-            'icon' => 'fas fa-fw fa-clipboard-list',
-        ],
-
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
