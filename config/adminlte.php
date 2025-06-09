@@ -63,12 +63,12 @@ return [
     |
     */
 
-    'logo' => '<b>Grupo</b> 5',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo' => '<b>Muni.</b> JLO',
+    'logo_img' => 'vendor/adminlte/dist/img/Escudo_del_Distrito_de_Jose_Leonardo_Ortiz.jpg',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Admin Logo',
+    'logo_img_alt' => 'Mun. JLO Logo',
 
     /*
     |--------------------------------------------------------------------------
@@ -86,8 +86,8 @@ return [
     'auth_logo' => [
         'enabled' => false,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Auth Logo',
+            'path' => 'vendor/adminlte/dist/img/Escudo_del_Distrito_de_Jose_Leonardo_Ortiz.jpg',
+            'alt' => 'JLO Preloader Image',
             'class' => '',
             'width' => 50,
             'height' => 50,
@@ -113,8 +113,8 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'AdminLTE Preloader Image',
+            'path' => 'vendor/adminlte/dist/img/Escudo_del_Distrito_de_Jose_Leonardo_Ortiz.jpg',
+            'alt' => 'JLO Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,
             'height' => 60,
