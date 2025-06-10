@@ -49,6 +49,7 @@ Route::get('vehicles/by-type/{typeId}', [VehicleController::class, 'byType'])->n
 Route::get('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechange'])->name('admin.employee-groups.vehiclechange');
 Route::put('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechangeUpdate'])->name('admin.employee-groups.vehiclechangeupdate');
 Route::post('schedulings/add-change', [SchedulingController::class, 'AddChangeScheduling'])->name('admin.schedulings.add-change');
+Route::get('schedulings/editModule/{id}', [SchedulingController::class, 'editModule'])->name('admin.schedulings.editModule');
 
 Route::get('module', [SchedulingController::class, 'module'])->name('admin.module');
 Route::get('module/data', [SchedulingController::class, 'getDatascheduling'])->name('admin.schedulings.getDatascheduling');

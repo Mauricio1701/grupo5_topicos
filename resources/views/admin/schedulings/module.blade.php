@@ -1,100 +1,10 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Programación</title>
+@extends('adminlte::page')
 
-    <!-- Bootstrap 4 CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+@section('title', 'Portal de Programación')
 
-    <style>
-        body {
-            background-color: #f4f6f9;
-            color: #333;
-            padding: 40px;
-        }
 
-        .summary-row {
-            background-color: #fff;
-            border-left: 5px solid #17a2b8;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-
-        .summary-row .item {
-            font-weight: 500;
-        }
-
-        .legend {
-            margin-bottom: 30px;
-            padding: 15px;
-            background-color: #fff;
-            border-left: 5px solid #007bff;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            max-width: 600px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .color-box {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            border-radius: 3px;
-        }
-
-        .green-box { background-color: #28a745; }
-        .red-box { background-color: #dc3545; }
-
-        .card.vehicle-card {
-            height: 160px;
-            border-width: 2px;
-            border-style: solid;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease-in-out;
-            cursor: pointer;
-        }
-
-        .card.vehicle-card:hover {
-            transform: translateY(-4px);
-        }
-
-        .card.vehicle-card.green {
-            border-color: #28a745;
-        }
-
-        .card.vehicle-card.red {
-            border-color: #dc3545;
-        }
-
-        .vehicle-title {
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .card-body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .refresh-btn {
-            margin-left: 10px;
-        }
-    </style>
-</head>
-<body>
-<div class="modal fade" id="modalScheduling" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+@section('content')
+   <div class="modal fade" id="modalScheduling" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -111,7 +21,8 @@
 </div>
 
 
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+   <div class="container-fluid pt-2"  style="height: calc(100vh - 100px); overflow-y: auto;">
+     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1 class="h4">Programación</h1>
         <!-- Botón de refrescar -->
         <button class="btn btn-secondary refresh-btn" onclick="loadData()">
@@ -198,9 +109,93 @@
     <div class="row" id="zonas">
        
     </div>
+   </div>
+@stop
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+@section('css')
+ <style>
+   body 
+
+        .summary-row {
+            background-color: #fff;
+            border-left: 5px solid #17a2b8;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .summary-row .item {
+            font-weight: 500;
+        }
+
+        .legend {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #fff;
+            border-left: 5px solid #007bff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            max-width: 600px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+
+        .green-box { background-color: #28a745; }
+        .red-box { background-color: #dc3545; }
+
+        .card.vehicle-card {
+            height: 160px;
+            border-width: 2px;
+            border-style: solid;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .card.vehicle-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card.vehicle-card.green {
+            border-color: #28a745;
+        }
+
+        .card.vehicle-card.red {
+            border-color: #dc3545;
+        }
+
+        .vehicle-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .refresh-btn {
+            margin-left: 10px;
+        }
+    </style>
+@stop
+
+@section('js')
+     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -305,7 +300,7 @@
         $(document).on('click', '.btnEditar', function() {
             var schedulingId = $(this).attr('id');
             $.ajax({
-                url: '{{ route('admin.schedulings.edit', 'id') }}'.replace('id', schedulingId),
+                url: '{{ route('admin.schedulings.editModule', 'id') }}'.replace('id', schedulingId),
                 type: "GET",
                 success: function(response) {
                     $('#ModalLongTitle').text('Editar Programación');
@@ -317,5 +312,5 @@
 
 
     </script>
-</body>
-</html>
+@stop
+

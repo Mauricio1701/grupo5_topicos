@@ -27,7 +27,9 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Lista de Programaciones</h3>
+      
         <div class="card-tools">
+            <a href="{{route('admin.module')}}" class="btn btn-success"><i class="fas fa-calendar"></i> Ir a modulo</a> 
             <a href="{{route('admin.schedulings.create')}}" id="btnNewScheduling" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nueva Programación</a> 
         </div>
     </div>

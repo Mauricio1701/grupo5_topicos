@@ -301,6 +301,60 @@ class SchedulingController extends Controller
         }
     }
 
+
+    public function editModule(string $id)
+    {
+        $scheduling = Scheduling::findOrFail($id);
+        $employeeGroup = EmployeeGroup::where('id', $scheduling->group_id)->first();
+        $reasons = Reason::all();
+        $shifts = Shift::all();
+        $vehicles = Vehicle::all();
+        
+        $personal = Groupdetail::where('scheduling_id', $id)
+        ->with('employee','employee.employeeType')
+        ->get();
+
+        $personalIds = $personal->pluck('employee_id');
+
+        $personalAsistido = Attendance::with('employee', 'employee.employeeType')
+        ->whereIn('employee_id', $personalIds)
+        ->whereDate('attendance_date', $scheduling->date)
+        ->get();
+
+        // Obtener IDs de los que asistieron
+        $asistieronIds = $personalAsistido->pluck('employee_id');
+
+        // Obtener al personal que NO asistió (filtrando los que no están en la lista de asistencia)
+        $personalNoAsistido = $personal->filter(function ($item) use ($asistieronIds) {
+            return !$asistieronIds->contains($item->employee_id);
+        });
+
+  
+        $fecha = $scheduling->date;
+        $turnoId = optional($scheduling->employeegroup)->shift_id;
+
+        // 2. Obtener TODAS las schedulings de ese mismo turno y fecha
+        $schedulingsMismoTurno = Scheduling::whereDate('date', $fecha)
+            ->whereHas('employeegroup', function ($q) use ($turnoId) {
+                $q->where('shift_id', $turnoId);
+            })->pluck('id');
+
+        // 3. Obtener los employee_id ya asignados en cualquier programación de esa fecha y turno
+        $empleadosAsignados = Groupdetail::whereIn('scheduling_id', $schedulingsMismoTurno)
+            ->pluck('employee_id');
+
+        // 4. Obtener los employee_id que asistieron ese día
+        $empleadosConAsistencia = Attendance::whereDate('attendance_date', $fecha)
+            ->pluck('employee_id');
+
+        // 5. Empleados que asistieron pero no están en ningún Groupdetail de ese turno y fecha
+        $personalDisponible = Employee::whereIn('id', $empleadosConAsistencia)
+            ->whereNotIn('id', $empleadosAsignados)
+            ->get();
+        
+        return view('admin.schedulings.editModule', compact('scheduling', 'reasons', 'shifts', 'vehicles', 'personalNoAsistido', 'employeeGroup', 'personalDisponible'));
+    }
+
     public function getContent(string $shiftId)
     {
         $employeeGroups = EmployeeGroup::with(['conductors', 'helpers'])
