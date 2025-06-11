@@ -61,9 +61,15 @@
 @stop
 
 @section('css')
-    <!-- FontAwesome para íconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    .card-body.table-responsive {
+        max-height: 630px; /* Puedes ajustar la altura a lo que desees */
+        overflow-y: auto;
+    }
+</style>
 @stop
+
 
 @section('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
