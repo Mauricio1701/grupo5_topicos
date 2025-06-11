@@ -1,6 +1,6 @@
 <div class="form-group">
     {!! Form::label('brand_id', 'Marca') !!}
-    {!! Form::select('brand_id', $brands, null, ['class' => 'form-control','placeholder' => 'Seleccione una marca','required']) !!}
+    {!! Form::select('brand_id', $brands, null, ['class' => 'form-control','placeholder' => 'Seleccione una marca','required','pattern' => '[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+']) !!}
 </div>
 
 <div class="form-group">

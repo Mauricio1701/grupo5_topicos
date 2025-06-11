@@ -2,7 +2,7 @@
     <div class="col-8">
         <div class="form-group">
             {!! Form::label('name', 'Nombre') !!}
-            {!! Form::text('name', null, ['class' => 'form-control','placeholder' => 'Ingrese el nombre','required']) !!}
+            {!! Form::text('name', null, ['class' => 'form-control','placeholder' => 'Ingrese el nombre','required','pattern' => '[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+']) !!}
         </div>
         <div class="form-group">
             {!! Form::label('description', 'Descripción') !!}
