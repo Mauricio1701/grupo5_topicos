@@ -1,26 +1,34 @@
 <?php
-
 namespace Database\Seeders;
-
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ColorsTableSeeder extends Seeder
 {
-   public function run()
-{
-    DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-    DB::table('colors')->truncate();
+    public function run()
+    {
+        $now = Carbon::now();
 
-    // Aquí el código para insertar datos nuevos
-    DB::table('colors')->insert([
-        ['name' => 'Rojo'],
-        ['name' => 'Azul'],
-        ['name' => 'Verde'],
-    ]);
-
-    DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-}
-
-
+        DB::table('colors')->insert([
+            [
+                'name' => 'Rojo',
+                'description' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Azul',
+                'description' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'name' => 'Verde',
+                'description' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ]);
+    }
 }

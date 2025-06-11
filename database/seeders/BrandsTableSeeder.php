@@ -1,31 +1,29 @@
 <?php
 
 namespace Database\Seeders;
-
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class BrandsTableSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('brands')->truncate();
+        $now = Carbon::now();
 
         $brands = [
-            ['name' => 'Toyota'],
-            ['name' => 'Ford'],
-            ['name' => 'Chevrolet'],
-            ['name' => 'Honda'],
-            ['name' => 'Nissan'],
-            ['name' => 'BMW'],
-            ['name' => 'Mercedes-Benz'],
-            ['name' => 'Volkswagen'],
-            ['name' => 'Hyundai'],
-            ['name' => 'Kia'],
+            'Toyota', 'Ford', 'Chevrolet', 'Honda', 'Nissan',
+            'BMW', 'Mercedes-Benz', 'Volkswagen', 'Hyundai', 'Kia',
         ];
 
-        DB::table('brands')->insert($brands);
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        foreach ($brands as $brand) {
+            DB::table('brands')->insert([
+                'name' => $brand,
+                'description' => null,
+                'logo' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 }
