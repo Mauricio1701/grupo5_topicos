@@ -87,7 +87,7 @@
             url: "{{ route('admin.vehiclestypes.create') }}",
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Nuevo Vehiclestype');
+                $('#ModalLongTitle').text('Nuevo Tipo Vehiculo');
                 $('#modalVehiclestype .modal-body').html(response);
                 $('#modalVehiclestype').modal('show');
 

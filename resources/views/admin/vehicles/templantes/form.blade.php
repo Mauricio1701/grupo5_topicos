@@ -1,11 +1,19 @@
 <!-- Fila 1: Código y Nombre -->
 <div class="row">
     <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('code', 'Código *') !!}
-            {!! Form::text('code', null, ['class' => 'form-control', 'placeholder' => 'Ingrese el código', 'required']) !!}
-        </div>
+    <div class="form-group">
+        {!! Form::label('code', 'Código *') !!}
+        {!! Form::text('code', null, [
+            'class' => 'form-control',
+            'placeholder' => 'Ingrese el código',
+            'required',
+            'pattern' => '^[A-Za-z0-9\-]+$',
+            'title' => 'Solo letras mayúsculas, números y guiones son permitidos (ej. VEH-UKONW)',
+            'style' => 'text-transform:uppercase;'
+        ]) !!}
     </div>
+    </div>
+
     <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('type_id', 'Tipo de Vehículo *') !!}
@@ -17,17 +25,20 @@
 <!-- Fila 2: Nombre y Placa -->
 <div class="row">
     <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('name', 'Nombre del Vehículo *') !!}
-            {!! Form::text('name', null, ['class' => 'form-control', 'placeholder' => 'Ingrese el nombre', 'required']) !!}
-        </div>
+    <div class="form-group">
+        {!! Form::label('name', 'Nombre del Vehículo *') !!}
+        {!! Form::text('name', null, [ 'class' => 'form-control', 'placeholder' => 'Ingrese el nombre', 'required', 'pattern' => '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\- ]+$','title' => 'Solo letras, números, espacios y guiones son permitidos', 'style' => 'text-transform:capitalize;'
+        ]) !!}
+    </div>
     </div>
     <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('plate', 'Placa *') !!}
-            {!! Form::text('plate', null, ['class' => 'form-control', 'placeholder' => 'Ingrese la placa', 'required']) !!}
-        </div>
+    <div class="form-group">
+        {!! Form::label('plate', 'Placa *') !!}
+        {!! Form::text('plate', null, [ 'class' => 'form-control', 'placeholder' => '(Ej: ABC-123)', 'required', 'pattern' => '^[A-Z]{3}-[0-9]{3}$','title' => 'Debe ingresar una placa válida con el formato ABC-123', 'style' => 'text-transform:uppercase;'
+        ]) !!}
     </div>
+    </div>
+
 </div>
 
 <!-- Fila 3: Año y Color -->
@@ -51,23 +62,14 @@
     <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('brand_id', 'Marca *') !!}
-            {!! Form::select('brand_id', $brands, null, [
-                'class' => 'form-control', 
-                'placeholder' => 'Seleccione una marca', 
-                'required', 
-                'id' => 'brandSelect',
-                'onchange' => 'loadModels(this.value)'
+            {!! Form::select('brand_id', $brands, null, [ 'class' => 'form-control',  'placeholder' => 'Seleccione una marca',   'required',  'id' => 'brandSelect', 'onchange' => 'loadModels(this.value)'
             ]) !!}
         </div>
     </div>
     <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('model_id', 'Modelo *') !!}
-            {!! Form::select('model_id', [], null, [
-                'class' => 'form-control', 
-                'placeholder' => 'Seleccione un modelo', 
-                'required', 
-                'id' => 'modelSelect'
+            {!! Form::select('model_id', [], null, ['class' => 'form-control',  'placeholder' => 'Seleccione un modelo',  'required',  'id' => 'modelSelect'
             ]) !!}
         </div>
     </div>
@@ -98,11 +100,13 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="form-group">
-            {!! Form::label('people_capacity', 'Capacidad de Personas *') !!}
-            {!! Form::number('people_capacity', null, ['class' => 'form-control', 'placeholder' => 'Ingrese la capacidad de personas', 'required', 'min' => 0]) !!}
-        </div>
+    <div class="form-group">
+        {!! Form::label('people_capacity', 'Capacidad de Personas *') !!}
+        {!! Form::number('people_capacity', 3, [ 'class' => 'form-control', 'placeholder' => 'Ingrese la capacidad de personas', 'required', 'min' => 0, 'step' => 1
+        ]) !!}
     </div>
+</div>
+
 </div>
 
 <!-- Descripción (campo completo) -->
@@ -114,7 +118,7 @@
 <!-- Estado (como checkbox) -->
 <div class="form-group">
     <div class="form-check">
-        {!! Form::checkbox('status', 1, true, ['class' => 'form-check-input', 'id' => 'status']) !!}
+       {!! Form::checkbox('status', 1, isset($vehicle) ? $vehicle->status == 1 : true, ['class' => 'form-check-input', 'id' => 'status']) !!}
         {!! Form::label('status', 'Vehículo activo', ['class' => 'form-check-label']) !!}
     </div>
 </div>

@@ -35,7 +35,11 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             VacationSeeder::class,
             ContractSeeder::class,
+            BrandsTableSeeder::class,
+            ColorsTableSeeder::class,
+            ModelTableSeeder::class,
             VehiclesTableSeeder::class,
+
         ]);
     }
 }

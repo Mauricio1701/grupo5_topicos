@@ -14,9 +14,9 @@ class ColorsTableSeeder extends Seeder
 
     // Aquí el código para insertar datos nuevos
     DB::table('colors')->insert([
-        ['name' => 'Red'],
-        ['name' => 'Blue'],
-        ['name' => 'Green'],
+        ['name' => 'Rojo'],
+        ['name' => 'Azul'],
+        ['name' => 'Verde'],
     ]);
 
     DB::statement('SET FOREIGN_KEY_CHECKS=1;');
