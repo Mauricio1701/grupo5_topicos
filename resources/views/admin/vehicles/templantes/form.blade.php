@@ -11,8 +11,7 @@
                                 'placeholder' => 'Ingrese el código (Ej: VEH-ZXIPO)',
                                 'required',
                                 'pattern' => '^[A-Za-z0-9\-]+$',
-                                'title' => 'Solo letras mayúsculas, números y guiones son permitidos (ej. VEH-UKONW)',
-                                'style' => 'text-transform:uppercase;'
+                                'title' => 'Solo letras mayúsculas, números y guiones son permitidos (ej. VEH-UKONW)'
                             ]) !!}
                         </div>
                     </div>
@@ -32,11 +31,10 @@
                             {!! Form::label('name', 'Nombre del Vehículo *') !!}
                             {!! Form::text('name', null, [
                                 'class' => 'form-control',
-                                'placeholder' => 'Ingrese el nombre (Ej: VEHICULO01)',
+                                'placeholder' => 'Ingrese el nombre (EJ: VEHICULO01)',
                                 'required',
                                 'pattern' => '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\- ]+$',
-                                'title' => 'Solo letras, números, espacios y guiones son permitidos',
-                                'style' => 'text-transform:capitalize;'
+                                'title' => 'Solo letras, números, espacios y guiones son permitidos'
                             ]) !!}
                         </div>
                     </div>
@@ -49,8 +47,7 @@
                                 'placeholder' => 'Ingrese la placa (Ej: ABC-123)',
                                 'required',
                                 'pattern' => '^[A-Z]{3}-[0-9]{3}$',
-                                'title' => 'Debe ingresar una placa válida con el formato ABC-123',
-                                'style' => 'text-transform:uppercase;'
+                                'title' => 'Debe ingresar una placa válida con el formato ABC-123'
                             ]) !!}
                         </div>
                     </div>
