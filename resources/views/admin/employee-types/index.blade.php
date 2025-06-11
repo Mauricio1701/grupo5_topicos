@@ -2,23 +2,27 @@
 
 @section('title', 'Tipos de Empleados')
 
+@section('content_header')
+    
+@stop
+
 @section('content')
 <div class="p-2"></div>
 
 <!-- Modal -->
 <div class="modal fade" id="modalEmployeeType" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="ModalLongTitle"></h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-            <span aria-hidden="true">&times;</span>
-          </button>
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {{-- Contenido del formulario cargado por AJAX --}}
+            </div>
         </div>
-        <div class="modal-body">
-          {{-- Contenido del formulario cargado por AJAX --}}
-        </div>
-      </div>
     </div>
 </div>
 
@@ -29,19 +33,20 @@
             <button id="btnNewEmployeeType" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nuevo Tipo</button> 
         </div>
     </div>
-    <div class="card-body table-responsive">
+    <div class="card-body">
         <table class="table table-striped" id="datatableEmployeeTypes" style="width:100%">
             <thead>
                 <tr>
                     <th>NOMBRE</th>
                     <th>DESCRIPCIÓN</th>
+                    <th>EMPLEADOS</th>
+                    <th>ESTADO</th>
                     <th>CREADO</th>
-                    <th>ACTUALIZADO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
-                {{-- Si usas serverSide, queda vacío --}}
+                {{-- DataTables serverSide content --}}
             </tbody>
         </table>
     </div>
@@ -49,8 +54,7 @@
 @stop
 
 @section('css')
-    <!-- FontAwesome para íconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
 @stop
 
 @section('js')
@@ -70,14 +74,15 @@ $(document).ready(function() {
         columns: [
             { data: 'name', name: 'name' },
             { data: 'description', name: 'description' },
+            { data: 'employees_count', name: 'employees_count', orderable: false, searchable: false },
+            { data: 'is_protected', name: 'is_protected', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
-            { data: 'updated_at', name: 'updated_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[2, 'desc']]
+        order: [[4, 'desc']]
     });
 
-    // Nuevo tipo de empleado - abrir modal
+    // Nuevo tipo de empleado
     $('#btnNewEmployeeType').click(function() {
         $.ajax({
             url: "{{ route('admin.employee-types.create') }}",
@@ -87,11 +92,11 @@ $(document).ready(function() {
                 $('#modalEmployeeType .modal-body').html(response);
                 $('#modalEmployeeType').modal('show');
 
-                // Enviar formulario AJAX para crear
                 $('#modalEmployeeType form').off('submit').on('submit', function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
+
                     $.ajax({
                         url: form.attr('action'),
                         type: form.attr('method'),
@@ -100,7 +105,7 @@ $(document).ready(function() {
                         contentType: false,
                         success: function(response) {
                             $('#modalEmployeeType').modal('hide');
-                            table.ajax.reload(null, false);
+                            refreshTable();
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
@@ -111,36 +116,46 @@ $(document).ready(function() {
                         },
                         error: function(xhr) {
                             let res = xhr.responseJSON;
+                            let errors = res.errors || {};
+                            let errorMessage = res.message || 'Ocurrió un error';
+                            
+                            if (Object.keys(errors).length > 0) {
+                                errorMessage = Object.values(errors).flat().join('\n');
+                            }
+                            
                             Swal.fire({
                                 icon: 'error',
                                 title: '¡Error!',
-                                text: res.message || 'Ocurrió un error',
+                                text: errorMessage,
                                 confirmButtonColor: '#3085d6',
                                 confirmButtonText: 'Aceptar'
                             });
                         }
                     });
                 });
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
             }
         });
     });
 
-    // Editar tipo de empleado - abrir modal
+    // Editar tipo de empleado
     $(document).on('click', '.btnEditar', function() {
         var employeeTypeId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.employee-types.edit', ':id') }}".replace(':id', employeeTypeId),
+            url: "{{ route('admin.employee-types.edit', 'id') }}".replace('id', employeeTypeId),
             type: "GET",
             success: function(response) {
                 $('#ModalLongTitle').text('Editar Tipo de Empleado');
                 $('#modalEmployeeType .modal-body').html(response);
                 $('#modalEmployeeType').modal('show');
 
-                // Enviar formulario AJAX para actualizar
                 $('#modalEmployeeType form').off('submit').on('submit', function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
+
                     $.ajax({
                         url: form.attr('action'),
                         type: form.attr('method'),
@@ -149,7 +164,7 @@ $(document).ready(function() {
                         contentType: false,
                         success: function(response) {
                             $('#modalEmployeeType').modal('hide');
-                            table.ajax.reload(null, false);
+                            refreshTable();
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
@@ -160,21 +175,31 @@ $(document).ready(function() {
                         },
                         error: function(xhr) {
                             let res = xhr.responseJSON;
+                            let errors = res.errors || {};
+                            let errorMessage = res.message || 'Ocurrió un error';
+                            
+                            if (Object.keys(errors).length > 0) {
+                                errorMessage = Object.values(errors).flat().join('\n');
+                            }
+                            
                             Swal.fire({
                                 icon: 'error',
                                 title: '¡Error!',
-                                text: res.message || 'Ocurrió un error',
+                                text: errorMessage,
                                 confirmButtonColor: '#3085d6',
                                 confirmButtonText: 'Aceptar'
                             });
                         }
                     });
                 });
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
             }
         });
     });
 
-    // Eliminar tipo de empleado con confirmación
+    // Eliminar tipo de empleado
     $(document).on('submit', '.delete', function(e) {
         e.preventDefault();
         let form = $(this);
@@ -197,7 +222,7 @@ $(document).ready(function() {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        table.ajax.reload(null, false);
+                        refreshTable();
                         Swal.fire({
                             icon: 'success',
                             title: '¡Éxito!',
@@ -220,6 +245,11 @@ $(document).ready(function() {
             }
         });
     });
+
+    function refreshTable() {
+        var table = $('#datatableEmployeeTypes').DataTable();
+        table.ajax.reload(null, false);
+    }
 });
 </script>
 @stop

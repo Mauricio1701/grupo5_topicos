@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeRequest;
 use App\Models\Employee;
 use App\Models\EmployeeType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -18,7 +20,7 @@ class EmployeeController extends Controller
     {
         if ($request->ajax()) {
             $employees = Employee::with('employeeType')
-                ->select(['id', 'dni', 'names', 'lastnames', 'email', 'phone', 'status', 'type_id', 'created_at', 'updated_at']);
+                ->select(['id', 'dni', 'names', 'lastnames', 'email', 'phone', 'status', 'type_id', 'photo', 'created_at', 'updated_at']);
 
             return DataTables::of($employees)
                 ->addColumn('full_name', function ($employee) {
@@ -31,6 +33,15 @@ class EmployeeController extends Controller
                     return $employee->status ?
                         '<span class="badge badge-success">Activo</span>' :
                         '<span class="badge badge-danger">Inactivo</span>';
+                })
+                ->addColumn('photo', function ($employee) {
+                    if ($employee->photo) {
+                        return '<img src="' . asset('storage/employees/' . $employee->photo) . '" alt="Foto" width="50" height="50" style="border-radius: 50%; object-fit: cover;">';
+                    } else {
+                        return '<div style="width: 50px; height: 50px; border-radius: 50%; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                    <i class="fas fa-user"></i>
+                                </div>';
+                    }
                 })
                 ->addColumn('action', function ($employee) {
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employee->id . '">
@@ -47,7 +58,7 @@ class EmployeeController extends Controller
 
                     return $editBtn . ' ' . $deleteBtn;
                 })
-                ->rawColumns(['status_badge', 'action'])
+                ->rawColumns(['status_badge', 'action', 'photo'])
                 ->make(true);
         }
 
@@ -66,37 +77,51 @@ class EmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(EmployeeRequest $request)
     {
-        $request->validate([
-            'dni' => 'required|string|max:10|unique:employees,dni',
-            'names' => 'required|string|max:100',
-            'lastnames' => 'required|string|max:200',
-            'birthday' => 'required|date',
-            'license' => 'nullable|string|max:20',
-            'address' => 'required|string|max:200',
-            'email' => 'nullable|email|max:100|unique:employees,email',
-            'phone' => 'nullable|string|max:20',
-            'status' => 'boolean',
-            'password' => 'required|string|min:6',
-            'type_id' => 'required|exists:employeetype,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+        try {
+            $data = $request->validated();
 
-        $data = $request->all();
+            // Encriptar contraseña
+            if (isset($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
 
-        if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
-            $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->storeAs('public/employees', $photoName);
-            $data['photo'] = $photoName;
+            // Manejar la foto
+            if ($request->hasFile('photo')) {
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $photo->storeAs('public/employees', $photoName);
+                $data['photo'] = $photoName;
+            }
+
+            // Crear empleado
+            $employee = Employee::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado creado exitosamente.',
+                'employee' => $employee
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el empleado: ' . $e->getMessage()
+            ], 500);
         }
+    }
 
-        Employee::create($data);
-
+    /**
+     * Display the specified resource.
+     */
+    public function show(Employee $employee)
+    {
+        $employee->load('employeeType');
         return response()->json([
-            'message' => 'Empleado creado exitosamente.'
-        ], 200);
+            'success' => true,
+            'employee' => $employee
+        ]);
     }
 
     /**
@@ -111,45 +136,46 @@ class EmployeeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Employee $employee)
+    public function update(EmployeeRequest $request, Employee $employee)
     {
-        $request->validate([
-            'dni' => 'required|string|max:10|unique:employees,dni,' . $employee->id,
-            'names' => 'required|string|max:100',
-            'lastnames' => 'required|string|max:200',
-            'birthday' => 'required|date',
-            'license' => 'nullable|string|max:20',
-            'address' => 'required|string|max:200',
-            'email' => 'nullable|email|max:100|unique:employees,email,' . $employee->id,
-            'phone' => 'nullable|string|max:20',
-            'status' => 'boolean',
-            'password' => 'nullable|string|min:6',
-            'type_id' => 'required|exists:employeetype,id',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+        try {
+            $data = $request->validated();
 
-        $data = $request->all();
-
-        if (empty($data['password'])) {
-            unset($data['password']);
-        }
-
-        if ($request->hasFile('photo')) {
-            if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
-                Storage::delete('public/employees/' . $employee->photo);
+            // Solo actualizar contraseña si se proporciona
+            if (isset($data['password']) && !empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']);
             }
 
-            $photo = $request->file('photo');
-            $photoName = time() . '_' . $photo->getClientOriginalName();
-            $photo->storeAs('public/employees', $photoName);
-            $data['photo'] = $photoName;
+            // Manejar la foto
+            if ($request->hasFile('photo')) {
+                // Eliminar foto anterior si existe
+                if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
+                    Storage::delete('public/employees/' . $employee->photo);
+                }
+
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $photo->storeAs('public/employees', $photoName);
+                $data['photo'] = $photoName;
+            }
+
+            // Actualizar empleado
+            $employee->update($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Empleado actualizado exitosamente.',
+                'employee' => $employee->fresh()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el empleado: ' . $e->getMessage()
+            ], 500);
         }
-
-        $employee->update($data);
-
-        return response()->json([
-            'message' => 'Empleado actualizado exitosamente.'
-        ], 200);
     }
 
     /**
@@ -157,23 +183,38 @@ class EmployeeController extends Controller
      */
     public function destroy(Employee $employee)
     {
-        if ($employee->groupDetails()->count() > 0) {
+        try {
+            // Verificar si el empleado está asignado a grupos de trabajo
+            if ($employee->groupDetails()->count() > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar este empleado porque está asignado a grupos de trabajo.'
+                ], 400);
+            }
+
+            // Eliminar foto si existe
+            if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
+                Storage::delete('public/employees/' . $employee->photo);
+            }
+
+            $employee->delete();
+
             return response()->json([
-                'message' => 'No se puede eliminar este empleado porque está asignado a grupos de trabajo.'
-            ], 400);
+                'success' => true,
+                'message' => 'Empleado eliminado exitosamente.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el empleado: ' . $e->getMessage()
+            ], 500);
         }
-
-        if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
-            Storage::delete('public/employees/' . $employee->photo);
-        }
-
-        $employee->delete();
-
-        return response()->json([
-            'message' => 'Empleado eliminado exitosamente.'
-        ], 200);
     }
 
+    /**
+     * Get employee position/type
+     */
     public function getPosition($id)
     {
         try {
@@ -183,19 +224,54 @@ class EmployeeController extends Controller
 
             if (!$positionId) {
                 return response()->json([
+                    'success' => false,
                     'error' => 'Type ID is null for this employee',
                     'position_id' => 1  
                 ], 200);
             }
 
             return response()->json([
+                'success' => true,
                 'position_id' => $positionId
             ]);
         } catch (\Exception $e) {
             return response()->json([
+                'success' => false,
                 'error' => 'Employee not found',
                 'position_id' => 1
             ], 200);
         }
+    }
+
+    /**
+     * Verificar unicidad de campo para validación dinámica
+     */
+    public function checkUnique(Request $request)
+    {
+        $request->validate([
+            'field' => 'required|in:dni,email,license',
+            'value' => 'required',
+            'employee_id' => 'nullable|exists:employees,id'
+        ]);
+
+        $field = $request->field;
+        $value = $request->value;
+        $employeeId = $request->employee_id;
+
+        // Buscar si existe otro empleado con este valor
+        $query = Employee::where($field, $value);
+        
+        // Si es edición, excluir el empleado actual
+        if ($employeeId) {
+            $query->where('id', '!=', $employeeId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'unique' => !$exists,
+            'field' => $field,
+            'value' => $value
+        ]);
     }
 }
