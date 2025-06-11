@@ -12,14 +12,22 @@ class BrandsTableSeeder extends Seeder
         $now = Carbon::now();
 
         $brands = [
-            'Toyota', 'Ford', 'Chevrolet', 'Honda', 'Nissan',
-            'BMW', 'Mercedes-Benz', 'Volkswagen', 'Hyundai', 'Kia',
+            'Toyota' => 'Fabricante japonés conocido por su fiabilidad y eficiencia.',
+            'Ford' => 'Marca estadounidense pionera en la industria automotriz.',
+            'Chevrolet' => 'Fabricante americano con una amplia gama de vehículos.',
+            'Honda' => 'Empresa japonesa reconocida por sus autos y motocicletas.',
+            'Nissan' => 'Marca japonesa destacada por su innovación tecnológica.',
+            'BMW' => 'Marca alemana de lujo y alto rendimiento.',
+            'Mercedes-Benz' => 'Reconocida marca alemana de vehículos premium.',
+            'Volkswagen' => 'Fabricante alemán con modelos populares como el Golf y Passat.',
+            'Hyundai' => 'Empresa surcoreana conocida por su diseño moderno y accesible.',
+            'Kia' => 'Marca coreana que ofrece una buena relación calidad-precio.',
         ];
 
-        foreach ($brands as $brand) {
+        foreach ($brands as $name => $description) {
             DB::table('brands')->insert([
-                'name' => $brand,
-                'description' => null,
+                'name' => $name,
+                'description' => $description,
                 'logo' => null,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -27,3 +35,4 @@ class BrandsTableSeeder extends Seeder
         }
     }
 }
+

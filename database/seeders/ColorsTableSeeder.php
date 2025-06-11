@@ -13,19 +13,19 @@ class ColorsTableSeeder extends Seeder
         DB::table('colors')->insert([
             [
                 'name' => 'Rojo',
-                'description' => null,
+                'description' => '#FF0000',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Azul',
-                'description' => null,
+                'description' => '#0000FF',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
                 'name' => 'Verde',
-                'description' => null,
+                'description' => '#00FF00',
                 'created_at' => $now,
                 'updated_at' => $now,
             ],

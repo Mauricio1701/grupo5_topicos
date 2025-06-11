@@ -158,6 +158,7 @@ $(document).ready(function() {
 
     // Editar vehículo - abrir modal
     $(document).on('click', '.btnEditar', function() {
+        
         var vehicleId = $(this).attr('id');
         $.ajax({
             url: "{{ route('admin.vehicles.edit', ':id') }}".replace(':id', vehicleId),
