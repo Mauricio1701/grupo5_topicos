@@ -12,6 +12,8 @@ class BrandsTableSeeder extends Seeder
         $now = Carbon::now();
 
         $brands = [
+            'Scania' => 'Scania especializada en  camiones pesados y autobuses.',
+            'Volvo' => 'Volvo Trucks es una marca sueca de vehículos pesados.',
             'Toyota' => 'Fabricante japonés conocido por su fiabilidad y eficiencia.',
             'Ford' => 'Marca estadounidense pionera en la industria automotriz.',
             'Chevrolet' => 'Fabricante americano con una amplia gama de vehículos.',
@@ -22,6 +24,7 @@ class BrandsTableSeeder extends Seeder
             'Volkswagen' => 'Fabricante alemán con modelos populares como el Golf y Passat.',
             'Hyundai' => 'Empresa surcoreana conocida por su diseño moderno y accesible.',
             'Kia' => 'Marca coreana que ofrece una buena relación calidad-precio.',
+            
         ];
 
         foreach ($brands as $name => $description) {

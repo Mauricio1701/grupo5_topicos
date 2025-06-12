@@ -34,15 +34,20 @@ class BrandController extends Controller
                 return "<img src='" . ($brand->logo == '' ? asset('storage/brand_logo/producto_var.webp') : $brand->logo) . "' width='50'>";
             })
             ->addColumn('action', function($brand){
-                return "
-                <button class='btn btn-warning btnEditar' id='".$brand->id."'><i class='fas fa-edit'></i></button>
-                <form action=". route('admin.brands.destroy', $brand->id) ." id='delete-form-".$brand->id."' method='POST' class='d-inline formDelete'>
-                    " . csrf_field() . "
-                    " . method_field('DELETE') . "
-                    <button type='submit' class='btn btn-danger'><i class='fas fa-trash'></i></button>
-                </form>
-            ";
-            })
+               $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $brand->id . '">
+                                    <i class="fas fa-edit"></i>
+                                </button>';
+                    
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $brand->id) . '" method="POST">
+                                    ' . csrf_field() . '
+                                    ' . method_field('DELETE') . '
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>';
+                    
+                    return $editBtn . ' ' . $deleteBtn;
+                })
             ->rawColumns(['logo','action'])
             ->make(true);
         }else{  
