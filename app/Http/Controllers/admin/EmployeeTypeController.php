@@ -6,15 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\EmployeeTypeRequest;
 use App\Models\EmployeeType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class EmployeeTypeController extends Controller
 {
-    /**
-     * Tipos predefinidos que no se pueden eliminar
-     */
-    protected $protectedTypes = ['Conductor', 'Ayudante'];
-
     /**
      * Display a listing of the resource.
      */
@@ -25,42 +22,27 @@ class EmployeeTypeController extends Controller
 
             return DataTables::of($employeeTypes)
                 ->addColumn('action', function ($employeeType) {
-                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employeeType->id . '">
+                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employeeType->id . '" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>';
 
-                    // Verificar si es un tipo protegido
-                    $isProtected = in_array($employeeType->name, $this->protectedTypes);
-                    
-                    if ($isProtected) {
-                        $deleteBtn = '<button class="btn btn-secondary btn-sm" disabled title="No se puede eliminar">
-                                        <i class="fas fa-lock"></i>
-                                    </button>';
-                    } else {
-                        $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employee-types.destroy', $employeeType->id) . '" method="POST">
-                                        ' . csrf_field() . '
-                                        ' . method_field('DELETE') . '
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>';
-                    }
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employee-types.destroy', $employeeType->id) . '" method="POST" style="margin-left: 5px;">
+                                    ' . csrf_field() . '
+                                    ' . method_field('DELETE') . '
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>';
 
-                    return $editBtn . ' ' . $deleteBtn;
+                    return $editBtn . $deleteBtn;
                 })
-                ->addColumn('employees_count', function ($employeeType) {
-                    $count = $employeeType->employees()->count();
-                    return $count > 0 ? 
-                        '<span class="badge badge-info">' . $count . ' empleado(s)</span>' : 
-                        '<span class="badge badge-secondary">Sin empleados</span>';
+                ->editColumn('created_at', function ($employeeType) {
+                    return $employeeType->created_at->format('d/m/Y');
                 })
-                ->addColumn('is_protected', function ($employeeType) {
-                    $isProtected = in_array($employeeType->name, $this->protectedTypes);
-                    return $isProtected ? 
-                        '<span class="badge badge-warning"><i class="fas fa-lock"></i> Protegido</span>' : 
-                        '<span class="badge badge-success"><i class="fas fa-unlock"></i> Editable</span>';
+                ->editColumn('description', function ($employeeType) {
+                    return $employeeType->description ?: '<span class="text-muted">Sin descripción</span>';
                 })
-                ->rawColumns(['action', 'employees_count', 'is_protected'])
+                ->rawColumns(['action', 'description'])
                 ->make(true);
         }
 
@@ -78,20 +60,38 @@ class EmployeeTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(EmployeeTypeRequest $request)
+    public function store(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:100|unique:employeetype,name|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'description' => 'nullable|string|min:10|max:500',
+        ], [
+            'name.required' => 'El nombre del tipo de empleado es obligatorio.',
+            'name.max' => 'El nombre no puede exceder 100 caracteres.',
+            'name.unique' => 'Ya existe un tipo de empleado con este nombre.',
+            'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'description.min' => 'La descripción debe tener al menos 10 caracteres.',
+            'description.max' => 'La descripción no puede exceder 500 caracteres.',
+        ]);
+
         try {
-            $data = $request->validated();
-            
-            $employeeType = EmployeeType::create($data);
+            DB::beginTransaction();
+
+            $employeeType = EmployeeType::create([
+                'name' => trim($request->name),
+                'description' => $request->description ? trim($request->description) : null,
+            ]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Tipo de empleado creado exitosamente.',
                 'employee_type' => $employeeType
-            ], 201);
+            ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el tipo de empleado: ' . $e->getMessage()
@@ -110,12 +110,35 @@ class EmployeeTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(EmployeeTypeRequest $request, EmployeeType $employeeType)
+    public function update(Request $request, EmployeeType $employeeType)
     {
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('employeetype', 'name')->ignore($employeeType->id),
+                'regex:/^[a-zA-ZÀ-ÿ\s]+$/'
+            ],
+            'description' => 'nullable|string|min:10|max:500',
+        ], [
+            'name.required' => 'El nombre del tipo de empleado es obligatorio.',
+            'name.max' => 'El nombre no puede exceder 100 caracteres.',
+            'name.unique' => 'Ya existe un tipo de empleado con este nombre.',
+            'name.regex' => 'El nombre solo puede contener letras y espacios.',
+            'description.min' => 'La descripción debe tener al menos 10 caracteres.',
+            'description.max' => 'La descripción no puede exceder 500 caracteres.',
+        ]);
+
         try {
-            $data = $request->validated();
-            
-            $employeeType->update($data);
+            DB::beginTransaction();
+
+            $employeeType->update([
+                'name' => trim($request->name),
+                'description' => $request->description ? trim($request->description) : null,
+            ]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -124,6 +147,7 @@ class EmployeeTypeController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el tipo de empleado: ' . $e->getMessage()
@@ -137,23 +161,11 @@ class EmployeeTypeController extends Controller
     public function destroy(EmployeeType $employeeType)
     {
         try {
-            // Verificar si es un tipo protegido
-            if (in_array($employeeType->name, $this->protectedTypes)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se puede eliminar el tipo "' . $employeeType->name . '" porque es un tipo predefinido del sistema.'
-                ], 400);
-            }
-
-            // Verificar si hay empleados asignados a este tipo
-            if ($employeeType->employees()->count() > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se puede eliminar este tipo de empleado porque tiene ' . $employeeType->employees()->count() . ' empleado(s) asignado(s).'
-                ], 400);
-            }
+            DB::beginTransaction();
 
             $employeeType->delete();
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -161,6 +173,7 @@ class EmployeeTypeController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al eliminar el tipo de empleado: ' . $e->getMessage()
@@ -173,45 +186,18 @@ class EmployeeTypeController extends Controller
      */
     public function checkUnique(Request $request)
     {
-        $request->validate([
-            'field' => 'required|in:name',
-            'value' => 'required',
-            'employee_type_id' => 'nullable|exists:employeetype,id'
-        ]);
+        $field = $request->input('field');
+        $value = $request->input('value');
+        $employeeTypeId = $request->input('employee_type_id');
 
-        $field = $request->field;
-        $value = $request->value;
-        $employeeTypeId = $request->employee_type_id;
-
-        // Buscar si existe otro tipo con este valor
         $query = EmployeeType::where($field, $value);
         
-        // Si es edición, excluir el tipo actual
         if ($employeeTypeId) {
             $query->where('id', '!=', $employeeTypeId);
         }
 
         $exists = $query->exists();
 
-        return response()->json([
-            'unique' => !$exists,
-            'field' => $field,
-            'value' => $value
-        ]);
-    }
-
-    /**
-     * Obtener tipos de empleados para select
-     */
-    public function getTypes()
-    {
-        $types = EmployeeType::select('id', 'name', 'description')
-            ->orderBy('name')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'types' => $types
-        ]);
+        return response()->json(['unique' => !$exists]);
     }
 }

@@ -49,3 +49,20 @@ Route::post('attendances/store', [AttendanceController::class, 'storeAttendance'
 Route::get('attendances', [AttendanceController::class, 'indexAttendance'])->name('attendances.indexAttendance');
 
 Route::get('admin/zones/{zone}/ajax', [App\Http\Controllers\Admin\ZoneController::class, 'getZoneAjax'])->name('admin.zones.ajax');
+// Rutas para el módulo de Empleados
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('employees', App\Http\Controllers\Admin\EmployeeController::class);
+    Route::post('employees/check-unique', [App\Http\Controllers\Admin\EmployeeController::class, 'checkUnique']);
+});
+
+// Rutas para el módulo de Tipos de Empleados  
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
+    Route::post('employee-types/check-unique', [App\Http\Controllers\Admin\EmployeeTypeController::class, 'checkUnique']);
+});
+
+// Rutas para el módulo de Turnos
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('shifts', App\Http\Controllers\Admin\ShiftController::class);
+    Route::post('shifts/check-unique', [App\Http\Controllers\Admin\ShiftController::class, 'checkUnique']);
+});

@@ -1,16 +1,12 @@
 @extends('adminlte::page')
 
-@section('title', 'Tipos de Empleados')
-
-@section('content_header')
-    
-@stop
+@section('title', 'Empleados')
 
 @section('content')
 <div class="p-2"></div>
 
 <!-- Modal -->
-<div class="modal fade" id="modalEmployeeType" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+<div class="modal fade" id="modalEmployee" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -28,25 +24,28 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Tipos de Empleados</h3>
+        <h3 class="card-title">Lista de Empleados</h3>
         <div class="card-tools">
-            <button id="btnNewEmployeeType" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nuevo Tipo</button> 
+            <button id="btnNewEmployee" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Agregar Nuevo Empleado
+            </button> 
         </div>
     </div>
     <div class="card-body">
-        <table class="table table-striped" id="datatableEmployeeTypes" style="width:100%">
+        <table class="table" id="datatableEmployees">
             <thead>
                 <tr>
-                    <th>NOMBRE</th>
-                    <th>DESCRIPCIÓN</th>
-                    <th>EMPLEADOS</th>
+                    <th>FOTO</th>
+                    <th>DNI</th>
+                    <th>NOMBRE COMPLETO</th>
+                    <th>TELÉFONO</th>
                     <th>TIPO</th>
+                    <th>ESTADO</th>
                     <th>CREADO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
-                {{-- DataTables serverSide content --}}
             </tbody>
         </table>
     </div>
@@ -64,35 +63,45 @@
 
 <script>
 $(document).ready(function() {
-    var table = $('#datatableEmployeeTypes').DataTable({
+    // Configurar token CSRF para todas las peticiones AJAX
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // Inicializar DataTable
+    var table = $('#datatableEmployees').DataTable({
         language: {
             url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.employee-types.index') }}",
+        ajax: "{{ route('admin.employees.index') }}",
         columns: [
-            { data: 'name', name: 'name' },
-            { data: 'description', name: 'description' },
-            { data: 'employees_count', name: 'employees_count', orderable: false, searchable: false },
-            { data: 'is_protected', name: 'is_protected', orderable: false, searchable: false },
+            { data: 'photo', name: 'photo', orderable: false, searchable: false },
+            { data: 'dni', name: 'dni' },
+            { data: 'full_name', name: 'full_name', orderable: false, searchable: false },
+            { data: 'phone', name: 'phone' },
+            { data: 'employee_type_name', name: 'employee_type_name', orderable: false, searchable: false },
+            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[4, 'desc']]
+        order: [[6, 'desc']]
     });
 
-    // Nuevo tipo de empleado
-    $('#btnNewEmployeeType').click(function() {
+    // Nuevo empleado
+    $('#btnNewEmployee').click(function() {
         $.ajax({
-            url: "{{ route('admin.employee-types.create') }}",
+            url: "{{ route('admin.employees.create') }}",
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Nuevo Tipo de Empleado');
-                $('#modalEmployeeType .modal-body').html(response);
-                $('#modalEmployeeType').modal('show');
+                $('#ModalLongTitle').text('Nuevo Empleado');
+                $('#modalEmployee .modal-body').html(response);
+                $('#modalEmployee').modal('show');
 
-                $('#modalEmployeeType form').off('submit').on('submit', function(e) {
+                $('#modalEmployee form').off('submit').on('submit', function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
@@ -104,7 +113,7 @@ $(document).ready(function() {
                         processData: false,
                         contentType: false,
                         success: function(response) {
-                            $('#modalEmployeeType').modal('hide');
+                            $('#modalEmployee').modal('hide');
                             refreshTable();
                             Swal.fire({
                                 icon: 'success',
@@ -140,18 +149,18 @@ $(document).ready(function() {
         });
     });
 
-    // Editar tipo de empleado
+    // Editar empleado
     $(document).on('click', '.btnEditar', function() {
-        var employeeTypeId = $(this).attr('id');
+        var employeeId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.employee-types.edit', 'id') }}".replace('id', employeeTypeId),
+            url: "{{ route('admin.employees.edit', 'id') }}".replace('id', employeeId),
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Editar Tipo de Empleado');
-                $('#modalEmployeeType .modal-body').html(response);
-                $('#modalEmployeeType').modal('show');
+                $('#ModalLongTitle').text('Editar Empleado');
+                $('#modalEmployee .modal-body').html(response);
+                $('#modalEmployee').modal('show');
 
-                $('#modalEmployeeType form').off('submit').on('submit', function(e) {
+                $('#modalEmployee form').off('submit').on('submit', function(e) {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
@@ -163,7 +172,7 @@ $(document).ready(function() {
                         processData: false,
                         contentType: false,
                         success: function(response) {
-                            $('#modalEmployeeType').modal('hide');
+                            $('#modalEmployee').modal('hide');
                             refreshTable();
                             Swal.fire({
                                 icon: 'success',
@@ -199,7 +208,7 @@ $(document).ready(function() {
         });
     });
 
-    // Eliminar tipo de empleado
+    // Eliminar empleado
     $(document).on('submit', '.delete', function(e) {
         e.preventDefault();
         let form = $(this);
@@ -247,7 +256,7 @@ $(document).ready(function() {
     });
 
     function refreshTable() {
-        var table = $('#datatableEmployeeTypes').DataTable();
+        var table = $('#datatableEmployees').DataTable();
         table.ajax.reload(null, false);
     }
 });

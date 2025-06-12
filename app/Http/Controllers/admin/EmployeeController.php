@@ -3,26 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\EmployeeRequest;
 use App\Models\Employee;
 use App\Models\EmployeeType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         if ($request->ajax()) {
             $employees = Employee::with('employeeType')
-                ->select(['id', 'dni', 'names', 'lastnames', 'email', 'phone', 'status', 'type_id', 'photo', 'created_at', 'updated_at']);
+                ->select(['id', 'dni', 'names', 'lastnames', 'phone', 'status', 'type_id', 'photo', 'created_at', 'updated_at']);
 
             return DataTables::of($employees)
+                ->addColumn('photo', function ($employee) {
+                    if ($employee->photo) {
+                        return '<img src="' . asset('storage/employees/' . $employee->photo) . '" alt="Foto" width="40" height="40" style="border-radius: 50%; object-fit: cover;">';
+                    } else {
+                        return '<div style="width: 40px; height: 40px; border-radius: 50%; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                                    <i class="fas fa-user"></i>
+                                </div>';
+                    }
+                })
                 ->addColumn('full_name', function ($employee) {
                     return $employee->names . ' ' . $employee->lastnames;
                 })
@@ -34,58 +41,95 @@ class EmployeeController extends Controller
                         '<span class="badge badge-success">Activo</span>' :
                         '<span class="badge badge-danger">Inactivo</span>';
                 })
-                ->addColumn('photo', function ($employee) {
-                    if ($employee->photo) {
-                        return '<img src="' . asset('storage/employees/' . $employee->photo) . '" alt="Foto" width="50" height="50" style="border-radius: 50%; object-fit: cover;">';
-                    } else {
-                        return '<div style="width: 50px; height: 50px; border-radius: 50%; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                                    <i class="fas fa-user"></i>
-                                </div>';
-                    }
-                })
                 ->addColumn('action', function ($employee) {
-                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employee->id . '">
+                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $employee->id . '" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>';
 
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employees.destroy', $employee->id) . '" method="POST">
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.employees.destroy', $employee->id) . '" method="POST" style="margin-left: 5px;">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Eliminar">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>';
 
-                    return $editBtn . ' ' . $deleteBtn;
+                    return $editBtn . $deleteBtn;
                 })
-                ->rawColumns(['status_badge', 'action', 'photo'])
+                ->editColumn('created_at', function ($employee) {
+                    return $employee->created_at->format('d/m/Y H:i');
+                })
+                ->editColumn('updated_at', function ($employee) {
+                    return $employee->updated_at->format('d/m/Y H:i');
+                })
+                ->rawColumns(['photo', 'status_badge', 'action'])
                 ->make(true);
         }
 
         return view('admin.employees.index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $employeeTypes = EmployeeType::all();
         return view('admin.employees.create', compact('employeeTypes'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(EmployeeRequest $request)
+    public function store(Request $request)
     {
-        try {
-            $data = $request->validated();
+        $request->validate([
+            'dni' => 'required|string|size:8|unique:employees,dni|regex:/^[0-9]+$/',
+            'names' => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'lastnames' => 'required|string|max:200|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'email' => 'nullable|email|max:100|unique:employees,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'required|string|max:200|min:10',
+            'type_id' => 'required|exists:employeetype,id',
+            'birthday' => 'required|date|before:-18 years',
+            'license' => 'nullable|string|max:20|unique:employees,license',
+            'password' => 'required|string|min:8',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'dni.required' => 'El DNI es obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+            'dni.unique' => 'Este DNI ya está registrado.',
+            'dni.regex' => 'El DNI solo puede contener números.',
+            'names.required' => 'Los nombres son obligatorios.',
+            'names.regex' => 'Los nombres solo pueden contener letras y espacios.',
+            'lastnames.required' => 'Los apellidos son obligatorios.',
+            'lastnames.regex' => 'Los apellidos solo pueden contener letras y espacios.',
+            'email.email' => 'El formato del email no es válido.',
+            'email.unique' => 'Este email ya está registrado.',
+            'address.required' => 'La dirección es obligatoria.',
+            'address.min' => 'La dirección debe tener al menos 10 caracteres.',
+            'type_id.required' => 'Debe seleccionar un tipo de empleado.',
+            'type_id.exists' => 'El tipo de empleado seleccionado no es válido.',
+            'birthday.required' => 'La fecha de nacimiento es obligatoria.',
+            'birthday.before' => 'Debe ser mayor de 18 años.',
+            'license.unique' => 'Esta licencia ya está registrada.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'photo.image' => 'El archivo debe ser una imagen.',
+            'photo.mimes' => 'La imagen debe ser JPG, PNG o JPEG.',
+            'photo.max' => 'La imagen no puede ser mayor a 2MB.',
+        ]);
 
-            // Encriptar contraseña
-            if (isset($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            }
+        try {
+            DB::beginTransaction();
+
+            $data = [
+                'dni' => trim($request->dni),
+                'names' => trim($request->names),
+                'lastnames' => trim($request->lastnames),
+                'email' => $request->email ? trim($request->email) : null,
+                'phone' => $request->phone ? trim($request->phone) : null,
+                'address' => trim($request->address),
+                'type_id' => $request->type_id,
+                'birthday' => $request->birthday,
+                'license' => $request->license ? trim($request->license) : null,
+                'password' => Hash::make($request->password),
+                'status' => $request->has('status') && $request->status == '1' ? 1 : 0,
+            ];
 
             // Manejar la foto
             if ($request->hasFile('photo')) {
@@ -95,16 +139,18 @@ class EmployeeController extends Controller
                 $data['photo'] = $photoName;
             }
 
-            // Crear empleado
             $employee = Employee::create($data);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Empleado creado exitosamente.',
                 'employee' => $employee
-            ], 201);
+            ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el empleado: ' . $e->getMessage()
@@ -112,47 +158,105 @@ class EmployeeController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Employee $employee)
-    {
-        $employee->load('employeeType');
-        return response()->json([
-            'success' => true,
-            'employee' => $employee
-        ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Employee $employee)
     {
         $employeeTypes = EmployeeType::all();
         return view('admin.employees.edit', compact('employee', 'employeeTypes'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(EmployeeRequest $request, Employee $employee)
+    public function update(Request $request, Employee $employee)
     {
-        try {
-            $data = $request->validated();
+        // Verificar si el tipo de empleado requiere licencia
+        $employeeType = \App\Models\EmployeeType::find($request->type_id);
+        $requiresLicense = $employeeType && stripos($employeeType->name, 'conductor') !== false;
 
-            // Solo actualizar contraseña si se proporciona
-            if (isset($data['password']) && !empty($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            } else {
-                unset($data['password']);
-            }
+        $rules = [
+            'dni' => [
+                'required',
+                'string',
+                'size:8',
+                Rule::unique('employees', 'dni')->ignore($employee->id),
+                'regex:/^[0-9]+$/'
+            ],
+            'names' => 'required|string|max:100|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'lastnames' => 'required|string|max:200|regex:/^[a-zA-ZÀ-ÿ\s]+$/',
+            'email' => [
+                'nullable',
+                'email',
+                'max:100',
+                Rule::unique('employees', 'email')->ignore($employee->id)
+            ],
+            'phone' => 'nullable|string|max:20|regex:/^(\+?51)?9[0-9]{8}$/',
+            'address' => 'required|string|max:200|min:10',
+            'type_id' => 'required|exists:employeetype,id',
+            'birthday' => 'required|date|before:-18 years',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ];
+
+        // Agregar validación de licencia solo si es conductor
+        if ($requiresLicense) {
+            $rules['license'] = [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('employees', 'license')->ignore($employee->id)
+            ];
+        } else {
+            $rules['license'] = [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('employees', 'license')->ignore($employee->id)
+            ];
+        }
+
+        $messages = [
+            'dni.required' => 'El DNI es obligatorio.',
+            'dni.size' => 'El DNI debe tener exactamente 8 dígitos.',
+            'dni.unique' => 'Este DNI ya está registrado.',
+            'dni.regex' => 'El DNI solo puede contener números.',
+            'names.required' => 'Los nombres son obligatorios.',
+            'names.regex' => 'Los nombres solo pueden contener letras y espacios.',
+            'lastnames.required' => 'Los apellidos son obligatorios.',
+            'lastnames.regex' => 'Los apellidos solo pueden contener letras y espacios.',
+            'email.email' => 'El formato del email no es válido.',
+            'email.unique' => 'Este email ya está registrado.',
+            'address.required' => 'La dirección es obligatoria.',
+            'address.min' => 'La dirección debe tener al menos 10 caracteres.',
+            'type_id.required' => 'Debe seleccionar un tipo de empleado.',
+            'type_id.exists' => 'El tipo de empleado seleccionado no es válido.',
+            'birthday.required' => 'La fecha de nacimiento es obligatoria.',
+            'birthday.before' => 'Debe ser mayor de 18 años.',
+            'license.required' => 'La licencia es obligatoria para conductores.',
+            'license.unique' => 'Esta licencia ya está registrada.',
+            'photo.image' => 'El archivo debe ser una imagen.',
+            'photo.mimes' => 'La imagen debe ser JPG, PNG o JPEG.',
+            'photo.max' => 'La imagen no puede ser mayor a 2MB.',
+        ];
+
+        $request->validate($rules, $messages);
+
+        try {
+            DB::beginTransaction();
+
+            $data = [
+                'dni' => trim($request->dni),
+                'names' => trim($request->names),
+                'lastnames' => trim($request->lastnames),
+                'email' => $request->email ? trim($request->email) : null,
+                'phone' => $request->phone ? trim($request->phone) : null,
+                'address' => trim($request->address),
+                'type_id' => $request->type_id,
+                'birthday' => $request->birthday,
+                'license' => $request->license ? trim($request->license) : null,
+                'status' => $request->has('status') && $request->status == '1' ? 1 : 0,
+            ];
 
             // Manejar la foto
             if ($request->hasFile('photo')) {
                 // Eliminar foto anterior si existe
-                if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
-                    Storage::delete('public/employees/' . $employee->photo);
+                if ($employee->photo && \Storage::exists('public/employees/' . $employee->photo)) {
+                    \Storage::delete('public/employees/' . $employee->photo);
                 }
 
                 $photo = $request->file('photo');
@@ -161,8 +265,9 @@ class EmployeeController extends Controller
                 $data['photo'] = $photoName;
             }
 
-            // Actualizar empleado
             $employee->update($data);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -171,6 +276,7 @@ class EmployeeController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al actualizar el empleado: ' . $e->getMessage()
@@ -178,26 +284,14 @@ class EmployeeController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Employee $employee)
     {
         try {
-            // Verificar si el empleado está asignado a grupos de trabajo
-            if ($employee->groupDetails()->count() > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se puede eliminar este empleado porque está asignado a grupos de trabajo.'
-                ], 400);
-            }
-
-            // Eliminar foto si existe
-            if ($employee->photo && Storage::exists('public/employees/' . $employee->photo)) {
-                Storage::delete('public/employees/' . $employee->photo);
-            }
+            DB::beginTransaction();
 
             $employee->delete();
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -205,6 +299,7 @@ class EmployeeController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al eliminar el empleado: ' . $e->getMessage()
@@ -212,66 +307,25 @@ class EmployeeController extends Controller
         }
     }
 
-    /**
-     * Get employee position/type
-     */
-    public function getPosition($id)
-    {
-        try {
-            $employee = Employee::findOrFail($id);
-
-            $positionId = $employee->type_id;
-
-            if (!$positionId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Type ID is null for this employee',
-                    'position_id' => 1  
-                ], 200);
-            }
-
-            return response()->json([
-                'success' => true,
-                'position_id' => $positionId
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Employee not found',
-                'position_id' => 1
-            ], 200);
-        }
-    }
-
-    /**
-     * Verificar unicidad de campo para validación dinámica
-     */
     public function checkUnique(Request $request)
     {
-        $request->validate([
-            'field' => 'required|in:dni,email,license',
-            'value' => 'required',
-            'employee_id' => 'nullable|exists:employees,id'
-        ]);
+        $field = $request->input('field');
+        $value = $request->input('value');
+        $employeeId = $request->input('employee_id');
 
-        $field = $request->field;
-        $value = $request->value;
-        $employeeId = $request->employee_id;
+        // Validar que el campo sea permitido
+        if (!in_array($field, ['dni', 'email', 'license'])) {
+            return response()->json(['unique' => false], 400);
+        }
 
-        // Buscar si existe otro empleado con este valor
         $query = Employee::where($field, $value);
         
-        // Si es edición, excluir el empleado actual
         if ($employeeId) {
             $query->where('id', '!=', $employeeId);
         }
 
         $exists = $query->exists();
 
-        return response()->json([
-            'unique' => !$exists,
-            'field' => $field,
-            'value' => $value
-        ]);
+        return response()->json(['unique' => !$exists]);
     }
 }

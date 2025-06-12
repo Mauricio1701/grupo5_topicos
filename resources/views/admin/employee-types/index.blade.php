@@ -2,10 +2,6 @@
 
 @section('title', 'Tipos de Empleados')
 
-@section('content_header')
-    
-@stop
-
 @section('content')
 <div class="p-2"></div>
 
@@ -34,19 +30,16 @@
         </div>
     </div>
     <div class="card-body">
-        <table class="table table-striped" id="datatableEmployeeTypes" style="width:100%">
+        <table class="table" id="datatableEmployeeTypes">
             <thead>
                 <tr>
                     <th>NOMBRE</th>
                     <th>DESCRIPCIÓN</th>
-                    <th>EMPLEADOS</th>
-                    <th>ESTADO</th>
                     <th>CREADO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
-                {{-- DataTables serverSide content --}}
             </tbody>
         </table>
     </div>
@@ -74,12 +67,10 @@ $(document).ready(function() {
         columns: [
             { data: 'name', name: 'name' },
             { data: 'description', name: 'description' },
-            { data: 'employees_count', name: 'employees_count', orderable: false, searchable: false },
-            { data: 'is_protected', name: 'is_protected', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[4, 'desc']]
+        order: [[2, 'desc']]
     });
 
     // Nuevo tipo de empleado
