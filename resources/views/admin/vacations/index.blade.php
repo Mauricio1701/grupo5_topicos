@@ -32,23 +32,25 @@
         </div>
     </div>
     <div class="card-body">
-        <table class="table table-striped" id="datatable">
-            <thead>
-                <tr>
-                    <th>EMPLEADO</th>
-            <th>FECHA SOLICITUD</th>
-            <th>DÍAS SOLICITADOS</th>
-            <th>FECHA FINAL</th>
-            <th>DÍAS DISPONIBLES AL SOLICITAR</th>
-            <th>DÍAS DISPONIBLES ACTUALES</th>
-            <th>ESTADO</th>
-            <th>NOTAS</th>
-            <th>ACCIÓN</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-striped table-sm" id="datatable" style="width:100%">
+                <thead>
+                    <tr>
+                        <th style="min-width: 150px;">EMPLEADO</th>
+                        <th style="min-width: 100px;">FECHA SOLICITUD</th>
+                        <th style="min-width: 80px;">DÍAS SOLICITADOS</th>
+                        <th style="min-width: 100px;">FECHA FINAL</th>
+                        <th style="min-width: 120px;">DÍAS DISPONIBLES AL SOLICITAR</th>
+                        <th style="min-width: 120px;">DÍAS DISPONIBLES ACTUALES</th>
+                        <th style="min-width: 90px;">ESTADO</th>
+                        <th style="min-width: 150px;">NOTAS</th>
+                        <th style="min-width: 120px;">ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @stop

@@ -15,7 +15,13 @@ class VacationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            $employeesWithEligibleContract = Contract::where('is_active', true)
+                ->whereIn('contract_type', ['Nombrado', 'Contrato permanente'])
+                ->pluck('employee_id')
+                ->toArray();
+
             $vacations = Vacation::with(['employee'])
+                ->whereIn('employee_id', $employeesWithEligibleContract) 
                 ->select(
                     'id',
                     'employee_id',
@@ -97,12 +103,13 @@ class VacationController extends Controller
 
     public function create()
     {
-        $employeesWithContract = Contract::where('is_active', true)
+        $employeesWithEligibleContract = Contract::where('is_active', true)
+            ->whereIn('contract_type', ['Nombrado', 'Contrato permanente'])
             ->pluck('employee_id')
             ->toArray();
 
         $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
-            ->whereIn('id', $employeesWithContract)
+            ->whereIn('id', $employeesWithEligibleContract)
             ->where('status', true)
             ->get()
             ->map(function ($employee) {
@@ -181,12 +188,13 @@ class VacationController extends Controller
     {
         $vacation = Vacation::findOrFail($id);
 
-        $employeesWithContract = Contract::where('is_active', true)
+        $employeesWithEligibleContract = Contract::where('is_active', true)
+            ->whereIn('contract_type', ['Nombrado', 'Contrato permanente'])
             ->pluck('employee_id')
             ->toArray();
 
         $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
-            ->whereIn('id', $employeesWithContract)
+            ->whereIn('id', $employeesWithEligibleContract)
             ->where('status', true)
             ->get()
             ->map(function ($employee) {
