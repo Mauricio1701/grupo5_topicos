@@ -33,7 +33,7 @@
                 <option value="{{ $vehicle->id }}"
                     data-capacidad="{{ $vehicle->people_capacity }}"
                     {{ (isset($employeeGroup) && $employeeGroup->vehicle_id == $vehicle->id) ? 'selected' : '' }}>
-                    {{ $vehicle->name }} (Capacidad: {{ $vehicle->people_capacity }})
+                    {{ $vehicle->code }} (Capacidad: {{ $vehicle->people_capacity }})
                 </option>
             @endforeach
             </select>

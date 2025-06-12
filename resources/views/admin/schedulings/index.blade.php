@@ -29,27 +29,47 @@
         <h3 class="card-title">Lista de Programaciones</h3>
       
         <div class="card-tools">
-            <a href="{{route('admin.module')}}" class="btn btn-success"><i class="fas fa-calendar"></i> Ir a modulo</a> 
-            <a href="{{route('admin.schedulings.create')}}" id="btnNewScheduling" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nueva Programación</a> 
+            <a href="{{route('admin.module')}}" class="btn btn-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
+            <a href="{{route('admin.schedulings.createOne')}}" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Programación</a>
+            <a href="{{route('admin.schedulings.create')}}" id="btnNewScheduling" class="btn btn-dark"><i class="fas fa-plus"></i>Programación Masiva</a> 
+ 
         </div>
     </div>
-    <div class="card-body table-responsive">
-        <table class="table table-striped" id="datatableSchedulings" style="width:100%">
-            <thead>
-                <tr>
-                    <th>FECHA</th>
-                    <th>ESTADO</th>
-                    <th>ZONA</th>
-                    <th>TURNOS</th>
-                    <th>VEHICULO</th>
-                    <th>GRUPO</th>
-                    <th>ACCIÓN</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Si usas serverSide, queda vacío --}}
-            </tbody>
-        </table>
+    
+
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
+                <input type="date" value="{{$fechaActual}}" name="start_date" id="start_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">Fecha de fin: </label>
+                <input type="date" name="end_date" id="end_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-info" id="btnFilter">Filtrar</button>
+            </div>
+        </div>
+        <div class=" table-responsive">
+            <table class="table table-striped" id="datatableSchedulings" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>FECHA</th>
+                        <th>ESTADO</th>
+                        <th>ZONA</th>
+                        <th>TURNOS</th>
+                        <th>VEHICULO</th>
+                        <th>GRUPO</th>
+                        <th>ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{-- Si usas serverSide, queda vacío --}}
+                </tbody>
+            </table>
+        </div>
+        
     </div>
 </div>
 @stop
@@ -61,13 +81,20 @@
 
 <script>
 $(document).ready(function() {
+    
     var table = $('#datatableSchedulings').DataTable({
         language: {
             url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.schedulings.index') }}",
+        ajax: {
+            url: "{{ route('admin.schedulings.index') }}",
+            data: function(d) {
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
+            }
+        },
         columns: [
             { data: 'date', name: 'date' },
             { data: 'status_badge', name: 'status_badge' },
@@ -155,6 +182,48 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#btnFilter').on('click', function() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+
+        if (startDate === '' || startDate === null) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Por favor, selecciona al menos la fecha de inicio para filtrar.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        console.log('Fecha de inicio:', startDate);
+        console.log('Fecha de fin:', endDate);
+
+
+        if (endDate !== '' || endDate !== null) {
+            
+            if (startDate > endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'La fecha de fin no puede ser menor que la fecha de inicio.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            // Recargar el DataTable con las fechas
+            table.ajax.reload();
+            return;
+        }
+        table.ajax.reload();
+       
+    });
+
+
+   
 });
 </script>
 @stop

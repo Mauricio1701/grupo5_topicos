@@ -314,11 +314,7 @@ return [
             'topnav_right' => true,
         ],
 
-        // Sidebar items:
-        [
-            'type' => 'sidebar-menu-search',
-            'text' => 'search',
-        ],
+
         [
             'text' => 'GESTIÓN DE VEHICULOS',
             'icon' => 'fas fa-car',
@@ -420,7 +416,8 @@ return [
                 ],
                 [
                     'text' => 'Cambios',
-                    'icon' => 'fas fa-fw fa-clipboard-list',
+                    'route' => 'admin.changes.index',
+                    'icon' => 'fas fa-fw fa-retweet',
                 ],
                 ]
         ],

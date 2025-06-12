@@ -8,6 +8,11 @@
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Nueva Programación</h3>
+         <div class="card-tools">
+            <a href="{{route('admin.schedulings.index')}}" class="btn btn-link"> Volver</a> 
+            
+ 
+        </div>
     </div>
     <div class="card-body">
         <label for="">Seleccione Turno</label>

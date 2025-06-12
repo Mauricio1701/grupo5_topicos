@@ -16,6 +16,7 @@ use App\Http\Controllers\admin\AttendanceController;
 use App\Http\Controllers\admin\EmployeegroupController;
 use App\Http\Controllers\admin\ZoneController;
 use App\Http\Controllers\admin\SchedulingController;
+use App\Http\Controllers\admin\ChangeController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -40,6 +41,7 @@ Route::post('vacations/{vacation}/change-status', [VacationController::class, 'c
 
 Route::resource('attendances', AttendanceController::class)->names('admin.attendances');
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
+Route::resource('changes', ChangeController::class)->names('admin.changes');
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');
 Route::get('data', [EmployeegroupController::class, 'data'])->name('admin.data');
@@ -48,9 +50,13 @@ Route::get('schedulings/get-content/{shiftId}', [SchedulingController::class, 'g
 Route::get('vehicles/by-type/{typeId}', [VehicleController::class, 'byType'])->name('admin.vehicles.bytype');
 Route::get('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechange'])->name('admin.employee-groups.vehiclechange');
 Route::put('employee-groups/vehiclechange/{group_id}', [EmployeegroupController::class, 'vehiclechangeUpdate'])->name('admin.employee-groups.vehiclechangeupdate');
+
 Route::post('schedulings/add-change', [SchedulingController::class, 'AddChangeScheduling'])->name('admin.schedulings.add-change');
 Route::get('schedulings/editModule/{id}', [SchedulingController::class, 'editModule'])->name('admin.schedulings.editModule');
 
+
 Route::get('module', [SchedulingController::class, 'module'])->name('admin.module');
+Route::get('createone', [SchedulingController::class, 'createOne'])->name('admin.schedulings.createOne');
+
 Route::get('module/data', [SchedulingController::class, 'getDatascheduling'])->name('admin.schedulings.getDatascheduling');
 Route::resource('/', AdminController::class)->names('admin');

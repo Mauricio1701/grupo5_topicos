@@ -27,25 +27,42 @@ class SchedulingController extends Controller
      */
     public function index(Request $request)
     {
-        $schedulings = Scheduling::with('employeegroup','shift','vehicle')
-        ->get();
+        $fechaActual = Carbon::now()->format('Y-m-d');
 
         if ($request->ajax()) {
+            // Inicia la consulta
+            $query = Scheduling::with('employeegroup', 'shift', 'vehicle');
+
+            // Aplica los filtros de fecha si están presentes
+
+            if($request->filled('start_date') && !$request->filled('end_date')){
+                    $query->whereDate('date', '=', $request->start_date);
+            }else{
+                if ($request->filled('start_date')) {
+                    $query->whereDate('date', '>=', $request->start_date);
+                }
+
+                if ($request->filled('end_date')) {
+                    $query->whereDate('date', '<=', $request->end_date);
+                }
+            }
            
+
+            // Ejecuta la consulta y obtiene los resultados
+            $schedulings = $query->get();
 
             return DataTables::of($schedulings)
                 ->addColumn('date', function ($scheduling) {
                     return $scheduling->date;
                 })
                 ->addColumn('status_badge', function ($scheduling) {
-                    if($scheduling->status == 1){
+                    if ($scheduling->status == 1) {
                         return '<span class="badge badge-secondary">Programado</span>';
-                    }elseif($scheduling->status == 2){
+                    } elseif ($scheduling->status == 2) {
                         return '<span class="badge badge-success">Completado</span>';
-                    }elseif($scheduling->status == 0){
+                    } elseif ($scheduling->status == 0) {
                         return '<span class="badge badge-danger">Cancelado</span>';
-                    }
-                    else{
+                    } else {
                         return '<span class="badge badge-warning">Reprogramado</span>';
                     }
                 })
@@ -60,7 +77,7 @@ class SchedulingController extends Controller
                 })
                 ->addColumn('group', function ($scheduling) {
                     return $scheduling->employeegroup->name;
-                })                
+                })
                 ->addColumn('action', function ($scheduling) {
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" alt="Reprogramar" id="' . $scheduling->id . '">
                                     <i class="fas fa-retweet"></i>
@@ -69,7 +86,7 @@ class SchedulingController extends Controller
                     $viewBtn = '<button class="btn btn-info btn-sm btnVer" alt="Ver" id="' . $scheduling->id . '">
                                 <i class="fas fa-users"></i>
                             </button>';
-                    
+
                     $deleteBtn = '<form class="delete d-inline" action="' . route('admin.schedulings.destroy', $scheduling->id) . '" method="POST">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
@@ -77,13 +94,14 @@ class SchedulingController extends Controller
                                         <i class="fas fa-ban"></i>
                                     </button>
                                 </form>';
-                    
+
                     return $editBtn . ' ' . $viewBtn . ' ' . $deleteBtn;
                 })
                 ->rawColumns(['action', 'status_badge'])
                 ->make(true);
         }
-        return view('admin.schedulings.index');
+
+        return view('admin.schedulings.index', compact('fechaActual'));
     }
 
     /**
@@ -140,6 +158,7 @@ class SchedulingController extends Controller
                                     'group_id' => $group['employee_group_id'],
                                     'shift_id' => $employeeGroup->shift_id,
                                     'vehicle_id' => $employeeGroup->vehicle_id,
+                                    'zone_id' => $employeeGroup->zone_id,
                                     'notes' => '',
                                     'status' => 1,
                                 ]);
@@ -173,6 +192,7 @@ class SchedulingController extends Controller
                             'group_id' => $group['employee_group_id'],
                             'shift_id' => $employeeGroup->shift_id,
                             'vehicle_id' => $employeeGroup->vehicle_id,
+                            'zone_id' => $employeeGroup->zone_id,
                             'notes' => '',
                             'status' => 1,
                         ]);
@@ -470,114 +490,141 @@ class SchedulingController extends Controller
     }
 
    public function getDatascheduling(Request $request)
-{
-    $shiftId = $request->turn;  // El turno seleccionado
-    $date = $request->date;  // La fecha seleccionada
-    $date = Carbon::parse($date)->format('Y-m-d');  // Convertir la fecha al formato adecuado
-    
-    // Obtener todos los schedulings con su relación con 'groupdetail'
-    $schedulings = Scheduling::with('groupdetail')  // Cargar groupdetails relacionados
-        ->where('shift_id', $shiftId)
-        ->where('date', $date)
-        ->get();
-
-    // Inicializamos los contadores y las zonas
-    $countAttendance = 0;
-    $completedGroups = 0;
-    $availableSupport = 0;
-    $missing = 0;
-    $zonas = [];
-    $trueofalse = [];
-
-    $availableSupport = Attendance::whereDate('attendance_date', $date)  // Filtramos por fecha de asistencia
-    ->whereNotIn('employee_id', function($query) use ($shiftId, $date) {
-        // Subconsulta para obtener los empleados asignados a un grupo en el turno y fecha específica
-        $query->select('gd.employee_id')
-            ->from('groupdetails as gd')
-            ->join('schedulings as s', 'gd.scheduling_id', '=', 's.id')
-            ->whereDate('s.date', $date)  // Filtramos por fecha
-            ->where('s.shift_id', $shiftId);  // Filtramos por turno
-    })
-    ->count();
-
-    // Recorrer todos los schedulings y calcular los datos
-    foreach ($schedulings as $scheduling) {
-        // 1. Contar los asistentes: Personas que están registradas en 'groupdetails' y tienen asistencia en 'attendance'
-        $attendedMembers = Attendance::whereIn('employee_id', $scheduling->groupdetail->pluck('employee_id'))
-            ->whereDate('attendance_date', $date)
-            ->count();
-        $countAttendance += $attendedMembers;  // Acumulamos el conteo de asistentes
-
-        // 2. Contar los grupos completos: Un grupo se considera completo cuando todos los miembros tienen asistencia
-        $totalGroupMembers = $scheduling->groupdetail->count();  // Número total de empleados en este grupo
-
-        // Verificar si todos los empleados del grupo tienen asistencia
-        $groupComplete = true;  // Suponemos que el grupo está completo
-
-        foreach ($scheduling->groupdetail as $groupDetail) {
-            $attendance = Attendance::where('employee_id', $groupDetail->employee_id)
-                ->whereDate('attendance_date', $date)
-                ->first();
-            $trueofalse[] = $groupDetail;  // Guardamos si el empleado tiene asistencia o no
-            // Si algún miembro no tiene asistencia, marcamos el grupo como incompleto
-            if (!$attendance) {
-                $groupComplete = false;
-                break;
-            }
-        }
-
-        // Si el grupo está completo, lo contamos como un grupo completo
-        if ($groupComplete) {
-            $completedGroups++;
-        }
-
-
+    {
+        $shiftId = $request->turn;  // El turno seleccionado
+        $date = $request->date;  // La fecha seleccionada
+        $date = Carbon::parse($date)->format('Y-m-d');  // Convertir la fecha al formato adecuado
         
-        // 4. Contar los faltantes: Miembros que no tienen una entrada en Attendance para ese día
-        foreach ($scheduling->groupdetail as $groupDetail) {
-            $attendance = Attendance::where('employee_id', $groupDetail->employee_id)
+        // Obtener todos los schedulings con su relación con 'groupdetail'
+        $schedulings = Scheduling::with('groupdetail')  // Cargar groupdetails relacionados
+            ->where('shift_id', $shiftId)
+            ->where('date', $date)
+            ->get();
+
+        // Inicializamos los contadores y las zonas
+        $countAttendance = 0;
+        $completedGroups = 0;
+        $availableSupport = 0;
+        $missing = 0;
+        $zonas = [];
+        $trueofalse = [];
+
+        $availableSupport = Attendance::whereDate('attendance_date', $date)  // Filtramos por fecha de asistencia
+        ->whereNotIn('employee_id', function($query) use ($shiftId, $date) {
+            // Subconsulta para obtener los empleados asignados a un grupo en el turno y fecha específica
+            $query->select('gd.employee_id')
+                ->from('groupdetails as gd')
+                ->join('schedulings as s', 'gd.scheduling_id', '=', 's.id')
+                ->whereDate('s.date', $date)  // Filtramos por fecha
+                ->where('s.shift_id', $shiftId);  // Filtramos por turno
+        })
+        ->count();
+
+        // Recorrer todos los schedulings y calcular los datos
+        foreach ($schedulings as $scheduling) {
+            // 1. Contar los asistentes: Personas que están registradas en 'groupdetails' y tienen asistencia en 'attendance'
+            $attendedMembers = Attendance::whereIn('employee_id', $scheduling->groupdetail->pluck('employee_id'))
                 ->whereDate('attendance_date', $date)
-                ->first();
+                ->count();
+            $countAttendance += $attendedMembers;  // Acumulamos el conteo de asistentes
 
-            if (!$attendance) {
-                $missing++;  // Si no tiene asistencia para esa fecha, lo contamos como faltante
+            // 2. Contar los grupos completos: Un grupo se considera completo cuando todos los miembros tienen asistencia
+            $totalGroupMembers = $scheduling->groupdetail->count();  // Número total de empleados en este grupo
+
+            // Verificar si todos los empleados del grupo tienen asistencia
+            $groupComplete = true;  // Suponemos que el grupo está completo
+
+            foreach ($scheduling->groupdetail as $groupDetail) {
+                $attendance = Attendance::where('employee_id', $groupDetail->employee_id)
+                    ->whereDate('attendance_date', $date)
+                    ->first();
+                $trueofalse[] = $groupDetail;  // Guardamos si el empleado tiene asistencia o no
+                // Si algún miembro no tiene asistencia, marcamos el grupo como incompleto
+                if (!$attendance) {
+                    $groupComplete = false;
+                    break;
+                }
             }
-        }
 
-        // 5. Obtener la zona del grupo y marcar si está completo o no
-        $groupEmployee = EmployeeGroup::where('id', $scheduling->group_id)
-            ->select('zone_id')
-            ->first();
-        
-        if ($groupEmployee) {
-            $zone = Zone::where('id', $groupEmployee->zone_id)
-                ->select('id', 'name')
+            // Si el grupo está completo, lo contamos como un grupo completo
+            if ($groupComplete) {
+                $completedGroups++;
+            }
+
+
+            
+            // 4. Contar los faltantes: Miembros que no tienen una entrada en Attendance para ese día
+            foreach ($scheduling->groupdetail as $groupDetail) {
+                $attendance = Attendance::where('employee_id', $groupDetail->employee_id)
+                    ->whereDate('attendance_date', $date)
+                    ->first();
+
+                if (!$attendance) {
+                    $missing++;  // Si no tiene asistencia para esa fecha, lo contamos como faltante
+                }
+            }
+
+            // 5. Obtener la zona del grupo y marcar si está completo o no
+            $groupEmployee = EmployeeGroup::where('id', $scheduling->group_id)
+                ->select('zone_id')
                 ->first();
             
-            // Si la zona no está repetida, la agregamos al array
-            if ($zone && !in_array($zone, $zonas)) {
-                // Verificar si el grupo está completo con asistencia para marcar la zona como 'completa' o 'incompleta'
-                $zoneStatus = $groupComplete ? 'completa' : 'incompleta';
+            if ($groupEmployee) {
+                $zone = Zone::where('id', $groupEmployee->zone_id)
+                    ->select('id', 'name')
+                    ->first();
+                
+                // Si la zona no está repetida, la agregamos al array
+                if ($zone && !in_array($zone, $zonas)) {
+                    // Verificar si el grupo está completo con asistencia para marcar la zona como 'completa' o 'incompleta'
+                    $zoneStatus = $groupComplete ? 'completa' : 'incompleta';
 
-                $zonas[] = [
-                    'id' => $zone->id,
-                    'scheduling_id' => $scheduling->id, // Agregar el ID de la programación
-                    'name' => $zone->name,
-                    'status' => $zoneStatus // Asignar el estado de la zona
-                ];
+                    $zonas[] = [
+                        'id' => $zone->id,
+                        'scheduling_id' => $scheduling->id, // Agregar el ID de la programación
+                        'name' => $zone->name,
+                        'status' => $zoneStatus // Asignar el estado de la zona
+                    ];
+                }
             }
         }
+        
+        // Retornar los resultados
+        return response()->json([
+            'countAttendance' => $countAttendance,
+            'completedGroups' => $completedGroups,
+            'availableSupport' => $availableSupport,  // Pasamos los schedulings para que se puedan usar en la vista
+            'missing' => $missing,
+            'zonas' => $zonas,  // Pasamos las zonas con su estado
+        ]);
     }
-    
-    // Retornar los resultados
-    return response()->json([
-        'countAttendance' => $countAttendance,
-        'completedGroups' => $completedGroups,
-        'availableSupport' => $availableSupport,  // Pasamos los schedulings para que se puedan usar en la vista
-        'missing' => $missing,
-        'zonas' => $zonas,  // Pasamos las zonas con su estado
-    ]);
-}
+
+    public function createOne(Request $request)
+    {
+        $employeeGroups = EmployeeGroup::all();
+
+        if ($request->ajax()) {
+            // Si la petición es AJAX, devolvemos los datos correspondientes según el grupo
+            $groupId = $request->input('employeegroups_id');
+            $group = EmployeeGroup::with('shift','vehicle','zone','configgroup','configgroup.employee','configgroup.employee.employeeType')->find($groupId);
+            $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
+            $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
+            $employeesConductor = Employee::where('type_id', $conductor)->get();
+            $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
+            // Parsear los días de trabajo del grupo
+            $diasTrabajo = $group ? explode(',', $group->days) : [];
+
+            return response()->json([
+                'group' => $group,
+                'diasTrabajo' => $diasTrabajo,
+                'employeesConductor'=> $employeesConductor,
+                'employeesAyudantes' => $employeesAyudantes// Pasar los días de trabajo seleccionados
+            ]);
+        }
+
+        return view('admin.schedulings.createOne', compact('employeeGroups'));
+    }
+
 
 
     

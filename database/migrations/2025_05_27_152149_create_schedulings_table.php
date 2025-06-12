@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreign('shift_id')->references('id')->on('shifts');
             $table->unsignedBigInteger('vehicle_id')->nullable();
             $table->foreign('vehicle_id')->references('id')->on('vehicles');
+            $table->unsignedBigInteger('zone_id')->nullable();
+            $table->foreign('zone_id')->references('id')->on('zones');
             $table->date('date');
             $table->integer('status');
             $table->text('notes')->nullable();

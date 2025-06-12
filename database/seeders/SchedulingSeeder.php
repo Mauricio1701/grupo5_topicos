@@ -17,6 +17,7 @@ class SchedulingSeeder extends Seeder
         $scheduling->group_id = 1;
         $scheduling->shift_id = 1;
         $scheduling->vehicle_id = 1;
+        $scheduling->zone_id = 1;
         $scheduling->date = now();
         $scheduling->status = 1;
         $scheduling->save();
@@ -25,6 +26,7 @@ class SchedulingSeeder extends Seeder
         $scheduling->group_id = 2;
         $scheduling->shift_id = 1;
         $scheduling->vehicle_id = 2;
+        $scheduling->zone_id = 2;
         $scheduling->date = now();
         $scheduling->status = 1;
         $scheduling->save();

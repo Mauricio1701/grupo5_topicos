@@ -25,9 +25,14 @@
      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <h1 class="h4">Programación</h1>
         <!-- Botón de refrescar -->
-        <button class="btn btn-secondary refresh-btn" onclick="loadData()">
-            <i class="fas fa-sync-alt"></i> Refrescar
-        </button>
+        <div>
+             <button class="btn btn-secondary refresh-btn" onclick="loadData()">
+                <i class="fas fa-sync-alt"></i> Refrescar
+            </button>
+            <a href="{{route('admin.schedulings.index')}}" class="btn btn-link">
+                Volver
+            </a>
+        </div>
     </div>
 
     <div class="row mb-4 align-items-center">
