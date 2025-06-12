@@ -27,15 +27,20 @@ class BrandmodelController extends Controller
         if($request->ajax()){
             return DataTables::of($models)
             ->addColumn('action', function($model){
-                return "
-                <button class='btn btn-warning btnEditar' id='".$model->id."'><i class='fas fa-edit'></i></button>
-                <form action=". route('admin.models.destroy', $model->id) ." id='delete-form-".$model->id."' method='POST' class='d-inline'>
-                    " . csrf_field() . "
-                    " . method_field('DELETE') . "
-                    <button type='button' onclick='confirmDelete(".$model->id.")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
-                </form>
-            ";
-            })
+               $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $model->id . '">
+                                    <i class="fas fa-edit"></i>
+                                </button>';
+                    
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $model->id) . '" method="POST">
+                                    ' . csrf_field() . '
+                                    ' . method_field('DELETE') . '
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>';
+                    
+                    return $editBtn . ' ' . $deleteBtn;
+                })
             ->rawColumns(['action'])
             ->make(true);
         }else{

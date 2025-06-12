@@ -46,14 +46,19 @@ class VehicleController extends Controller
         if ($request->ajax()) {
             return DataTables::of($vehicles)
                 ->addColumn('action', function ($vehicle) {
-                    return '
-                    <button id="' . $vehicle->id . '" class="btn btn-warning btnEditar" title="Editar"><i class="fas fa-edit"></i></button>
-                    <form method="POST" action="' . route('admin.vehicles.destroy', $vehicle->id) . '" class="delete" style="display:inline;">
-                        ' . csrf_field() . '
-                        ' . method_field('DELETE') . '
-                        <button type="submit" class="btn btn-danger btnEliminar" title="Eliminar"><i class="fas fa-trash"></i></button>
-                    </form>
-                    ';
+                   $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $vehicle->id . '">
+                                    <i class="fas fa-edit"></i>
+                                </button>';
+                    
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $vehicle->id) . '" method="POST">
+                                    ' . csrf_field() . '
+                                    ' . method_field('DELETE') . '
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>';
+                    
+                    return $editBtn . ' ' . $deleteBtn;
                 })
 
                 ->rawColumns(['action'])

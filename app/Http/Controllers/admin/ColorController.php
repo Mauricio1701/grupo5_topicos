@@ -26,15 +26,20 @@ class ColorController extends Controller
         if($request->ajax()){
             return DataTables::of($colors)
             ->addColumn('action', function($color){
-                return "
-                <button class='btn btn-warning btnEditar' id='".$color->id."'><i class='fas fa-edit'></i></button>
-                <form action=". route('admin.colors.destroy', $color->id) ." id='delete-form-".$color->id."' method='POST' class='d-inline'>
-                    " . csrf_field() . "
-                    " . method_field('DELETE') . "
-                    <button type='button' onclick='confirmDelete(".$color->id.")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
-                </form>
-                ";
-            })
+                $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $color->id . '">
+                                    <i class="fas fa-edit"></i>
+                                </button>';
+                    
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $color->id) . '" method="POST">
+                                    ' . csrf_field() . '
+                                    ' . method_field('DELETE') . '
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>';
+                    
+                    return $editBtn . ' ' . $deleteBtn;
+                })
             ->rawColumns(['action'])
             ->make(true);
         }else{
