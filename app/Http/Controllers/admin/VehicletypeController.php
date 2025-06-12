@@ -27,11 +27,11 @@ class VehicletypeController extends Controller
             return DataTables::of($vehiclestypes)
             ->addColumn('action', function($vehiclestype){
                 return "
-                <button class='btn btn-warning btnEditar' id='".$vehiclestype->id."'><i class='fas fa-edit'></i></button>
+                <button class='btn btn-warning btnEditar btn-sm' id='".$vehiclestype->id."'><i class='fas fa-edit'></i></button>
                 <form action=". route('admin.vehiclestypes.destroy', $vehiclestype->id) ." id='delete-form-".$vehiclestype->id."' method='POST' class='d-inline'>
                     " . csrf_field() . "
                     " . method_field('DELETE') . "
-                    <button type='button' onclick='confirmDelete(".$vehiclestype->id.")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                    <button type='button' onclick='confirmDelete(".$vehiclestype->id.")' class='btn btn-sm btn-danger'><i class='fas fa-trash'></i></button>
                 </form>
                 ";
             })
