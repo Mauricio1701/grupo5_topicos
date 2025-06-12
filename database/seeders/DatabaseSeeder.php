@@ -39,7 +39,10 @@ class DatabaseSeeder extends Seeder
             ColorsTableSeeder::class,
             ModelTableSeeder::class,
             VehiclesTableSeeder::class,
-
+            EmployeeGruopSeeder::class,
+            AttendanceSeeder::class,
+            SchedulingSeeder::class,
+            GroupDetailSeeder::class,
         ]);
     }
 }

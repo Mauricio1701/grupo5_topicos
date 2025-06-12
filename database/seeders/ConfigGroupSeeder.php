@@ -12,6 +12,6 @@ class ConfigGroupSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        
     }
 }

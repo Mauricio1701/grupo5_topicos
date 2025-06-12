@@ -68,41 +68,43 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-    let table;
+  
 
     $(document).ready(function() {
-        table = $('#datatable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        var table = $('#datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
-            "processing": true,
-            "serverSide": true,
-            "ajax": "{{ route('admin.zones.index') }}",
-            "columns": [{
-                    "data": "name"
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('admin.zones.index') }}",
+            columns: [
+                {
+                    data: "name"
                 },
                 {
-                    "data": "department_name"
+                    data: "department_name"
                 },
                 {
-                    "data": "status_badge",
-                    "orderable": false
+                    data: "status_badge",
+                    orderable: false
                 },
                 {
-                    "data": "coordinates_count"
+                    data: "coordinates_count"
                 },
                 {
-                    "data": "action",
-                    "orderable": false,
-                    "searchable": false
+                    data: "action",
+                    orderable: false,
+                    searchable: false
                 }
             ]
         });
+
+
+        $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
     });
 
     $('#btnNewZone').click(function() {
@@ -307,6 +309,8 @@
             }
         });
     }
+    });
+    
 </script>
 
 @stop

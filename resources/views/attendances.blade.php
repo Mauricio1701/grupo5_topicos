@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistencia</title>
+    <title>Portal de Asistencia</title>
     <style>
         * {
             box-sizing: border-box;
