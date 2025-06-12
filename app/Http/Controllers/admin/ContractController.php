@@ -46,11 +46,11 @@ class ContractController extends Controller
                 })
                 ->addColumn('action', function ($contract) {
                     return "
-                    <button class='btn btn-warning btnEditar' id='" . $contract->id . "'><i class='fas fa-edit'></i></button>
+                    <button class='btn btn-warning btn-sm btnEditar' id='" . $contract->id . "'><i class='fas fa-edit'></i></button>
                     <form action=" . route('admin.contracts.destroy', $contract->id) . " id='delete-form-" . $contract->id . "' method='POST' class='d-inline'>
                         " . csrf_field() . "
                         " . method_field('DELETE') . "
-                        <button type='button' onclick='confirmDelete(" . $contract->id . ")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                        <button type='button' onclick='confirmDelete(" . $contract->id . ")' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i></button>
                     </form>
                     ";
                 })

@@ -80,11 +80,11 @@ class VacationController extends Controller
                 })
                 ->addColumn('action', function ($vacation) {
                     return "
-                <button class='btn btn-warning btnEditar' id='" . $vacation->id . "'><i class='fas fa-edit'></i></button>
+                <button class='btn btn-warning btn-sm btnEditar' id='" . $vacation->id . "'><i class='fas fa-edit'></i></button>
                 <form action=" . route('admin.vacations.destroy', $vacation->id) . " id='delete-form-" . $vacation->id . "' method='POST' class='d-inline'>
                     " . csrf_field() . "
                     " . method_field('DELETE') . "
-                    <button type='button' onclick='confirmDelete(" . $vacation->id . ")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                    <button type='button' onclick='confirmDelete(" . $vacation->id . ")' class='btn btn-danger btn-sm'><i class='fas fa-trash'></i></button>
                 </form>
                 ";
                 })
