@@ -54,8 +54,12 @@
                             </td>
                             <td>{{ $brand->name }}</td>
                             <td>{{ $brand->description }}</td>
-                            <td>{{ $brand->created_at }}</td>
-                            <td>{{ $brand->updated_at }}</td>
+                            <td>{{ \Carbon\Carbon::parse($brand->created_at)->format('d-m-Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($brand->updated_at)->format('d-m-Y') }}</td>
+
+
+
+
                             <td>
                                 <button type="button" class="btn btn-warning btnEditar" id="{{ $brand->id }}"> <i class="fas fa-edit"></i></button>
                                 <form action="{{ route('admin.brands.destroy', $brand->id) }}" id="delete-form-{{ $brand->id }}" method="POST" class="d-inline formDelete">
@@ -88,7 +92,7 @@
 
     $('#btnNewBrand').click(function() {
         $.ajax({
-            url: '{{ route('admin.brands.create') }}',
+            url: "{{ route('admin.brands.create') }}",
             type: 'GET',
             success: function(response) {
                 $('#ModalLongTitle').text('Agregar Nueva Marca');
@@ -145,7 +149,7 @@
     $(document).on('click', '.btnEditar', function() {
         var brandId = $(this).attr('id');
         $.ajax({
-            url: '{{ route('admin.brands.edit', 'id') }}'.replace('id', brandId),
+            url: "{{ route('admin.brands.edit', 'id') }}".replace('id', brandId),
             type: 'GET',
             success: function(response) {
                 $('#ModalLongTitle').text('Editar Marca');
@@ -196,26 +200,47 @@
     });
 
     $(document).ready(function() {
-        $('#datatable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+    $('#datatable').DataTable({
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "{{ route('admin.brands.index') }}",
+            type: "GET"
+        },
+        columns: [
+            { data: 'logo' },
+            { data: 'name' },
+            { data: 'description' },
+            {
+                data: 'created_at',
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
             },
-            "processing": true,
-            "serverSide": true,
-            "ajax": {
-                "url": "{{ route('admin.brands.index') }}",
-                "type": "GET"
+            {
+                data: 'updated_at',
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
             },
-            "columns": [
-                { data: 'logo' },
-                { data: 'name' },
-                { data: 'description' },
-                { data: 'created_at' },
-                { data: 'updated_at' },
-                { data: 'action' }
-            ]
-        });
+            { data: 'action', orderable: false, searchable: false }
+        ]
     });
+});
+
 
     $(document).on('submit','.formDelete',function(e){
         e.preventDefault();

@@ -184,24 +184,45 @@
     });
     
     $(document).ready(function() {
-        $('#datatable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+    $('#datatable').DataTable({
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
+        ajax: "{{ route('admin.models.index') }}",
+        processing: true,
+        serverSide: true,
+        columns: [
+            { data: 'model_name' },
+            { data: 'brand_name' },
+            { data: 'description' },
+            { data: 'code' },
+            {
+                data: 'created_at',
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
             },
-            "ajax":"{{route('admin.models.index')}}",
-            "processing": true,
-            "serverSide": true,
-            "columns": [
-                { data: 'model_name' },
-                { data: 'brand_name' },
-                { data: 'description' },
-                { data: 'code' },
-                { data: 'created_at' },
-                { data: 'updated_at' },
-                { data: 'action' }
-            ]
-        });
+            {
+                data: 'updated_at',
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
+            },
+            { data: 'action', orderable: false, searchable: false }
+        ]
     });
+});
+
 
     $(document).on('submit','.formDelete',function(e){
         e.preventDefault();

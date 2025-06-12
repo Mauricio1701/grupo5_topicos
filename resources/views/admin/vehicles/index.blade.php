@@ -102,8 +102,12 @@ $(document).ready(function() {
                 render: function(data) {
                     if (!data) return '';
                     let fecha = new Date(data);
-                    return fecha.toLocaleDateString();
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
                 }
+
             },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],

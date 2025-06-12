@@ -64,23 +64,44 @@
    <script>
     let table;
 
-    $(document).ready(function() {
-        table = $('#datatable').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+   $(document).ready(function() {
+    table = $('#datatable').DataTable({
+        language: {
+            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
+        },
+        processing: true,
+        serverSide: true,
+        ajax: "{{ route('admin.vehiclestypes.index') }}",
+        columns: [
+            { data: "name" },
+            { data: "description" },
+            {
+                data: "created_at",
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
             },
-            "processing": true,
-            "serverSide": true,
-            "ajax": "{{ route('admin.vehiclestypes.index') }}",
-            "columns": [
-                { "data": "name" },
-                { "data": "description" },
-                { "data": "created_at" },
-                { "data": "updated_at" },
-                { "data": "action", "orderable": false, "searchable": false }
-            ]
-        });
+            {
+                data: "updated_at",
+                render: function(data) {
+                    if (!data) return '';
+                    let fecha = new Date(data);
+                    let dia = ('0' + fecha.getDate()).slice(-2);
+                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
+                    let anio = fecha.getFullYear();
+                    return `${dia}-${mes}-${anio}`;
+                }
+            },
+            { data: "action", orderable: false, searchable: false }
+        ]
     });
+});
+
 
     $('#btnNewVehiclestype').click(function() {
         $.ajax({
