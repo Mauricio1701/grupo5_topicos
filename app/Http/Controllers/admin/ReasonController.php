@@ -26,11 +26,11 @@ class ReasonController extends Controller
             return DataTables::of($reasons)
             ->addColumn('action', function($reason){
                 return "
-                <button class='btn btn-warning btnEditar' id='".$reason->id."'><i class='fas fa-edit'></i></button>
+                <button class='btn btn-warning btn-sm btnEditar' id='".$reason->id."'><i class='fas fa-edit'></i></button>
                 <form action=". route('admin.reasons.destroy', $reason->id) ." id='delete-form-".$reason->id."' method='POST' class='d-inline'>
                     " . csrf_field() . "
                     " . method_field('DELETE') . "
-                    <button type='button' onclick='confirmDelete(".$reason->id.")' class='btn btn-danger'><i class='fas fa-trash'></i></button>
+                    <button type='button' onclick='confirmDelete(".$reason->id.")' class='btn btn-sm btn-danger'><i class='fas fa-trash'></i></button>
                 </form>
                 ";
             })
