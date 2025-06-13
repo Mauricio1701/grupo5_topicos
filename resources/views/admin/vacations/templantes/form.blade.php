@@ -1,9 +1,20 @@
+<?php
+
+$isReadonly = isset($vacation) && in_array($vacation->status, ['Approved', 'Completed']);
+?>
+
+@if($isReadonly)
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i>
+    Esta solicitud de vacaciones no puede ser editada porque está en estado "{{ $vacation->status == 'Approved' ? 'Aprobado' : 'Completado' }}".
+</div>
+@endif
 
 <div class="row">
     <div class="col-md-6">
         <div class="form-group">
             <label for="employee_id">Empleado</label>
-            <select class="form-control" id="employee_id" name="employee_id" required>
+            <select class="form-control" id="employee_id" name="employee_id" required {{ $isReadonly ? 'disabled' : '' }}>
                 <option value="">Seleccione un empleado</option>
                 @foreach($employees as $employee)
                 <option value="{{ $employee->id }}"
@@ -13,6 +24,9 @@
                 </option>
                 @endforeach
             </select>
+            @if($isReadonly)
+            <input type="hidden" name="employee_id" value="{{ $vacation->employee_id }}">
+            @endif
         </div>
     </div>
     <div class="col-md-6">
@@ -26,7 +40,8 @@
             ?>
             <input type="date" class="form-control datepicker" id="request_date" name="request_date" required
                 min="{{ $minDate }}"
-                value="{{ $defaultDate }}">
+                value="{{ $defaultDate }}"
+                {{ $isReadonly ? 'readonly' : '' }}>
             <small class="text-muted">Las solicitudes deben hacerse con al menos 10 días de anticipación</small>
         </div>
     </div>
@@ -37,7 +52,8 @@
         <div class="form-group">
             <label for="requested_days">Días Solicitados</label>
             <input type="number" class="form-control" id="requested_days" name="requested_days" min="1" required
-                value="{{ isset($vacation) ? $vacation->requested_days : '1' }}">
+                value="{{ isset($vacation) ? $vacation->requested_days : '1' }}"
+                {{ $isReadonly ? 'readonly' : '' }}>
         </div>
     </div>
     <div class="col-md-4">
@@ -62,7 +78,7 @@
     <div class="col-md-6">
         <div class="form-group">
             <label for="status">Estado</label>
-            <select class="form-control" id="status" name="status" required>
+            <select class="form-control" id="status" name="status" required {{ $isReadonly ? 'disabled' : '' }}>
                 @foreach($statusOptions as $option)
                 <option value="{{ $option }}" {{ isset($vacation) && $vacation->status == $option ? 'selected' : '' }}>
                     @switch($option)
@@ -87,12 +103,15 @@
                 </option>
                 @endforeach
             </select>
+            @if($isReadonly)
+            <input type="hidden" name="status" value="{{ $vacation->status }}">
+            @endif
         </div>
     </div>
     <div class="col-md-6">
         <div class="form-group">
             <label for="notes">Notas</label>
-            <textarea class="form-control" id="notes" name="notes" rows="3">{{ isset($vacation) ? $vacation->notes : '' }}</textarea>
+            <textarea class="form-control" id="notes" name="notes" rows="3" {{ $isReadonly ? 'readonly' : '' }}>{{ isset($vacation) ? $vacation->notes : '' }}</textarea>
         </div>
     </div>
 </div>
