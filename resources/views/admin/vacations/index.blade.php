@@ -37,11 +37,10 @@
                 <thead>
                     <tr>
                         <th style="min-width: 150px;">EMPLEADO</th>
-                        <th style="min-width: 100px;">FECHA INICIO</th>
-                        <th style="min-width: 80px;">DÍAS SOLICITADOS</th>
+                        <th style="min-width: 100px;">FECHA DE INICIO</th>
+                        <th style="min-width: 80px;">SOLICITADO</th>
                         <th style="min-width: 100px;">FECHA FINAL</th>
-                        <th style="min-width: 120px;">DÍAS DISPONIBLES AL SOLICITAR</th>
-                        <th style="min-width: 120px;">DÍAS DISPONIBLES ACTUALES</th>
+                        <th style="min-width: 120px;">DÍAS DISPONIBLES</th>
                         <th style="min-width: 90px;">ESTADO</th>
                         <th style="min-width: 150px;">NOTAS</th>
                         <th style="min-width: 120px;">ACCIÓN</th>
@@ -74,13 +73,12 @@
             },
             "processing": true,
             "serverSide": true,
+            "responsive": true,
+            "scrollX": true,
+            "autoWidth": false,
             "ajax": {
                 "url": "{{ route('admin.vacations.index') }}",
-                "type": "GET",
-                "cache": false,
-                "error": function(xhr, error, thrown) {
-                    console.error('Error en la carga de datos:', error, thrown);
-                }
+                "type": "GET"
             },
             "columns": [{
                     "data": "employee_name",
@@ -92,26 +90,23 @@
                 },
                 {
                     "data": "requested_days",
-                    "name": "requested_days"
+                    "name": "requested_days",
+                    "className": "text-center"
                 },
                 {
                     "data": "end_date_formatted",
                     "name": "end_date"
                 },
                 {
-                    "data": "available_days",
-                    "name": "available_days",
-                    "title": "DÍAS DISPONIBLES AL SOLICITAR"
-                },
-                {
                     "data": "current_available_days",
                     "name": "current_available_days",
-                    "title": "DÍAS DISPONIBLES ACTUALES"
+                    "className": "text-center"
                 },
                 {
                     "data": "status_badge",
                     "name": "status",
-                    "orderable": false
+                    "orderable": false,
+                    "className": "text-center"
                 },
                 {
                     "data": "notes",
@@ -121,15 +116,14 @@
                     "data": "action",
                     "name": "action",
                     "orderable": false,
-                    "searchable": false
+                    "searchable": false,
+                    "className": "text-center"
                 }
             ],
             "order": [
                 [1, "desc"]
-            ], // Ordenar por fecha de solicitud descendente
-            "pageLength": 10,
-            "stateSave": false, // Evita problemas de caché
-            "searching": true
+            ],
+            "pageLength": 10
         });
 
         $('#btnNewVacation').click(function() {
@@ -160,14 +154,12 @@
         });
 
         function initVacationForm() {
-            // Inicializar datepicker
-            // Dentro de la función initVacationForm()
             if ($.fn.datepicker) {
                 $('.datepicker').datepicker({
                     format: 'yyyy-mm-dd',
                     autoclose: true,
                     language: 'es',
-                    startDate: new Date(new Date().setDate(new Date().getDate() + 11)) // 11 días desde hoy (hoy + 10 días prohibidos + 1)
+                    startDate: new Date(new Date().setDate(new Date().getDate() + 11))
                 });
             }
             $('#employee_id').off('change').on('change', function() {
@@ -176,7 +168,6 @@
                 var originalEmployeeId = isEdit ? '{{ isset($vacation) ? $vacation->employee_id : "" }}' : '';
 
                 if (employeeId) {
-                    // Mostrar mensaje de carga
                     $('.available-days-info').text('Verificando días disponibles...');
 
                     $.ajax({
@@ -190,9 +181,7 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                // Si estamos en modo edición y cambiamos a un nuevo empleado
                                 if (isEdit && employeeId != originalEmployeeId) {
-                                    // Restamos los días solicitados actualmente
                                     var requestedDays = parseInt($('#requested_days').val() || 0);
                                     $('#available_days').val(response.available_days - requestedDays);
                                 } else {
@@ -230,11 +219,9 @@
                 }
             });
 
-            // Manejar cambio en días solicitados para actualizar días disponibles y fecha final
             $('#requested_days').off('change keyup').on('change keyup', function() {
                 calculateEndDate();
 
-                // Actualizar días disponibles si cambiamos los días solicitados en edición
                 var isEdit = $('#vacationForm').attr('action').includes('update');
                 if (isEdit) {
                     var originalDays = parseInt($('input[name="original_requested_days"]').val() || 0);
@@ -246,7 +233,6 @@
                 }
             });
 
-            // Manejar cambio en fecha de solicitud para actualizar fecha final
             $('#request_date').off('change').on('change', function() {
                 calculateEndDate();
             });
@@ -316,6 +302,22 @@
             form.off('submit').on('submit', function(e) {
                 e.preventDefault();
 
+                // VALIDACIÓN ADICIONAL ANTES DE ENVIAR
+                var requestedDays = parseInt($('#requested_days').val());
+                var availableDays = parseInt($('#available_days').val());
+                var status = $('#status').val();
+
+                if (status === 'Approved' && requestedDays > availableDays) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error de validación!',
+                        text: `No se puede aprobar la solicitud. El empleado solo tiene ${availableDays} días disponibles y está solicitando ${requestedDays} días.`,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return false;
+                }
+
                 var formData = form.serialize();
 
                 $.ajax({
@@ -361,6 +363,7 @@
             });
         }
 
+
         $(document).on('click', '.btnEditar', function() {
             var vacationId = $(this).attr('id');
             $('#modalVacation .modal-body').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">Cargando...</p></div>');
@@ -400,9 +403,18 @@
 
 
     function confirmDelete(id) {
+        // Primero verificar si la vacación está aprobada
+        var row = table.row($('#delete-form-' + id).closest('tr')).data();
+        var isApproved = row && row.status === 'Approved';
+
+        var message = "¡Este cambio no se puede deshacer!";
+        if (isApproved) {
+            message += "\n\nNota: Esta vacación está aprobada, por lo que los días serán devueltos al empleado.";
+        }
+
         Swal.fire({
             title: '¿Estás seguro?',
-            text: "¡Este cambio no se puede deshacer!",
+            text: message,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, eliminar',
@@ -416,7 +428,7 @@
                     data: $("#delete-form-" + id).serialize(),
                     success: function(response) {
                         if (response.success) {
-                            table.ajax.reload();
+                            table.ajax.reload(null, false);
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Éxito!',
@@ -427,10 +439,11 @@
                         }
                     },
                     error: function(xhr) {
+                        var errorMessage = xhr.responseJSON?.message || 'Ha ocurrido un error al eliminar la solicitud de vacaciones.';
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: 'Ha ocurrido un error al eliminar la solicitud de vacaciones.',
+                            text: errorMessage,
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });

@@ -34,10 +34,13 @@ Route::resource('contracts', ContractController::class)->names('admin.contracts'
 
 Route::get('/employees/getposition/{id}', [EmployeeController::class, 'getPosition'])->name('admin.employees.getposition');
 
+
 Route::resource('vacations', VacationController::class)->names('admin.vacations');
-Route::post('vacations/calculate-days', [VacationController::class, 'calculateDays'])->name('admin.vacations.calculate-days');
+
 Route::post('vacations/check-available-days', [VacationController::class, 'checkAvailableDays'])->name('admin.vacations.check-available-days');
-Route::post('vacations/{vacation}/change-status', [VacationController::class, 'changeStatus'])->name('admin.vacations.change-status');
+Route::post('vacations/calculate-days', [VacationController::class, 'calculateDays'])->name('admin.vacations.calculate-days');
+Route::get('vacations/employee/{employeeId}/available-days', [VacationController::class, 'getEmployeeAvailableDays'])->name('admin.vacations.employee.available-days');
+Route::patch('vacations/{vacation}/change-status', [VacationController::class, 'changeStatus'])->name('admin.vacations.change-status');
 
 Route::resource('attendances', AttendanceController::class)->names('admin.attendances');
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');

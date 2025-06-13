@@ -1,3 +1,4 @@
+
 <div class="row">
     <div class="col-md-6">
         <div class="form-group">
@@ -16,7 +17,7 @@
     </div>
     <div class="col-md-6">
         <div class="form-group">
-            <label for="request_date">Fecha de Solicitud</label>
+            <label for="request_date">Fecha de Inicio</label>
             <?php
             $minDate = \Carbon\Carbon::now()->addDays(11)->format('Y-m-d');
             $defaultDate = isset($vacation) && $vacation->request_date > \Carbon\Carbon::now()->addDays(10)
@@ -51,7 +52,7 @@
         <div class="form-group">
             <label for="available_days">Días Disponibles</label>
             <input type="number" class="form-control" id="available_days" name="available_days" readonly
-                value="{{ isset($vacation) ? $vacation->available_days : '0' }}">
+                value="{{ isset($vacation) && isset($employees) ? $employees->where('id', $vacation->employee_id)->first()->available_days ?? '0' : '0' }}">
             <small class="text-muted">Basado en contrato del empleado</small>
         </div>
     </div>
