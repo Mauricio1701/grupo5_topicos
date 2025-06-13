@@ -29,7 +29,7 @@
         <h3 class="card-title">Lista de Programaciones</h3>
       
         <div class="card-tools">
-            <a href="{{route('admin.module')}}" class="btn btn-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
+            <a href="{{route('admin.module')}}" target="_blank" class="btn btn-outline-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
             <a href="{{route('admin.schedulings.createOne')}}" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Programación</a>
             <a href="{{route('admin.schedulings.create')}}" id="btnNewScheduling" class="btn btn-dark"><i class="fas fa-plus"></i>Programación Masiva</a> 
  
