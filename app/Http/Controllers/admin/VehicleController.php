@@ -8,7 +8,9 @@ use App\Models\Color;
 use App\Models\Brand;
 use App\Models\VehicleType;
 use App\Models\Brandmodel;
+use App\Models\Vehicleimage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class VehicleController extends Controller
@@ -20,6 +22,7 @@ class VehicleController extends Controller
     {
         $vehicles = Vehicle::select(
             'vehicles.id',
+            'vi.image as image',
             'vehicles.name',
             'vehicles.code',
             'vehicles.plate',
@@ -40,6 +43,10 @@ class VehicleController extends Controller
         ->join('colors as c', 'vehicles.color_id', '=', 'c.id')
         ->join('brands as b', 'vehicles.brand_id', '=', 'b.id')
         ->join('vehicletypes as t', 'vehicles.type_id', '=', 't.id')
+        ->leftJoin('vehicleimages as vi', function ($join) {
+            $join->on('vehicles.id', '=', 'vi.vehicle_id')
+                ->where('vi.profile', '=', 1); // Solo imagen principal
+        })
         ->join('brandmodels as m', 'vehicles.model_id', '=', 'm.id')
         ->get();
 
@@ -49,6 +56,10 @@ class VehicleController extends Controller
                    $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $vehicle->id . '">
                                     <i class="fas fa-edit"></i>
                                 </button>';
+                    $imagenBtn = '<button class="btn btn-info btn-sm btnImage" id="' . $vehicle->id . '">
+                                    <i class="fas fa-image"></i>
+                                </button>';
+                    
                     
                     $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $vehicle->id) . '" method="POST">
                                     ' . csrf_field() . '
@@ -58,7 +69,7 @@ class VehicleController extends Controller
                                     </button>
                                 </form>';
                     
-                    return $editBtn . ' ' . $deleteBtn;
+                    return $editBtn .' '.$imagenBtn. ' ' . $deleteBtn;
                 })
 
                 ->rawColumns(['action'])
@@ -216,6 +227,64 @@ class VehicleController extends Controller
     {
         $models = Brand::where('brand_id', $brand_id)->get(['id', 'name']);
         return response()->json($models);
+    }
+
+    public function getImages($vehicle_id)
+    {
+        $imagesVehicle = Vehicleimage::where('vehicle_id', $vehicle_id)->get();
+        $vehicle = Vehicle::findOrFail($vehicle_id);
+        return view('admin.vehicles.viewImage', compact('imagesVehicle', 'vehicle'));
+    }
+
+
+    public function storeImages(Request $request)
+    {
+        try {
+            
+            $logo ="";
+        
+            
+            if($request->image != null){
+                $image  = $request->file('image')->store('public/brand_logo');
+                $image = Storage::url($image);
+
+                $profile = 0;
+
+                $vehicle = Vehicleimage::create([
+                    'profile' => $request->profile ?? $profile,
+                    'vehicle_id' => $request->vehicle_id,
+                    'image' => $image
+                ]);
+
+            }
+           
+            //$brand->update($request->all());
+            return back()->with('success', 'Imagen Registrada correctamente.');
+        } catch (\Throwable $th) {
+            return back()->with('success', 'Hubo un error.');
+        }
+    }
+
+    public function setProfile($image_id)
+    {
+        $image = Vehicleimage::findOrFail($image_id);
+        Vehicleimage::where('vehicle_id', $image->vehicle_id)->update(['profile' => 0]);
+        $image->update(['profile' => 1]);
+
+        return back()->with('success', 'Imagen establecida como principal.');
+    }
+
+    public function deleteImage($image_id)
+    {
+        $image = Vehicleimage::findOrFail($image_id);
+        
+        // Eliminar archivo físico
+        Storage::delete($image->image);
+
+        // Eliminar de BD
+        $image->delete();
+
+        return back()->with('success', 'Imagen eliminada correctamente.');
     }
 
 }
