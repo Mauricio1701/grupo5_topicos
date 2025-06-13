@@ -47,6 +47,7 @@
         <table class="table table-striped" id="datatableVehicles" style="width:100%">
             <thead>
                 <tr>
+                    <th>IMAGEN</th>
                     <th>PLACA</th>
                     <th>NOMBRE</th>
                     <th>MARCA</th>
@@ -81,6 +82,16 @@ $(document).ready(function() {
         serverSide: true,
         ajax: "{{ route('admin.vehicles.index') }}",
         columns: [
+            {
+                data: 'image',
+                name: 'image',
+                render: function(data) {
+                    const defaultImage = '{{ asset("storage/brand_logo/producto_var.webp") }}';
+                    const imageUrl = data && data.trim() !== '' ? data : defaultImage;
+
+                    return `<img src="${imageUrl}" alt="Imagen del Vehículo" class="img-fluid" style="width: 50px; height: 50px; object-fit: cover;">`;
+                }
+            },
             { data: 'plate', name: 'plate' },
             { data: 'name', name: 'name' },
             { data: 'brand_name', name: 'brand_name' },
@@ -142,6 +153,20 @@ $(document).ready(function() {
             }
         });
     });
+
+    $(document).on('click', '.btnImage', function() {
+        let vehicleId = $(this).attr('id');
+        $.ajax({
+            url: "{{ route('admin.getimages', ':id') }}".replace(':id', vehicleId),
+            type: "GET",
+            success: function(response) {
+                $('#ModalLongTitle').text('Imagenes del Vehículo');
+                $('#modalVehicle .modal-body').html(response);
+                $('#modalVehicle').modal('show');
+            }
+        });
+    });
+
 
     function handleFormSubmit() {
         $('#modalVehicle form').off('submit').on('submit', function(e) {

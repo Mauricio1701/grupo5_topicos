@@ -3,6 +3,7 @@
 use App\Http\Controllers\admin\BrandmodelController;
 use App\Http\Controllers\admin\AttendanceController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\admin\VehicleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,12 @@ Route::middleware([
 });
 
 Route::get('/get-models/{brand_id}', [BrandModelController::class, 'getModelsByBrand'])->name('admin.getModelsByBrand');
+
+Route::get('/getimages/{vehicle_id}', [VehicleController::class, 'getImages'])->name('admin.getimages');
+Route::post('/set-profile/{image_id}', [VehicleController::class, 'setProfile'])->name('admin.vehicles.setProfile');
+Route::delete('/delete-image/{image_id}', [VehicleController::class, 'deleteImage'])->name('admin.vehicles.deleteImage');
+Route::post('/store-image', [VehicleController::class, 'storeImages'])->name('admin.vehicles.storeImages');
+
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
