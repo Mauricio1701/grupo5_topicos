@@ -37,7 +37,7 @@
                 <thead>
                     <tr>
                         <th style="min-width: 150px;">EMPLEADO</th>
-                        <th style="min-width: 100px;">FECHA SOLICITUD</th>
+                        <th style="min-width: 100px;">FECHA INICIO</th>
                         <th style="min-width: 80px;">DÍAS SOLICITADOS</th>
                         <th style="min-width: 100px;">FECHA FINAL</th>
                         <th style="min-width: 120px;">DÍAS DISPONIBLES AL SOLICITAR</th>

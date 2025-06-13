@@ -57,6 +57,7 @@ Route::get('schedulings/editModule/{id}', [SchedulingController::class, 'editMod
 
 Route::get('module', [SchedulingController::class, 'module'])->name('admin.module');
 Route::get('createone', [SchedulingController::class, 'createOne'])->name('admin.schedulings.createOne');
-
+Route::post('createone', [SchedulingController::class, 'storeOne'])->name('admin.schedulings.storeOne');
+Route::get('validationVacations', [SchedulingController::class, 'validationVacations'])->name('admin.schedulings.validationVacations');
 Route::get('module/data', [SchedulingController::class, 'getDatascheduling'])->name('admin.schedulings.getDatascheduling');
 Route::resource('/', AdminController::class)->names('admin');

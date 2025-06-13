@@ -202,7 +202,7 @@ $(document).ready(function() {
         console.log('Fecha de fin:', endDate);
 
 
-        if (endDate !== '' || endDate !== null) {
+        if (endDate !== '' ) {
             
             if (startDate > endDate) {
                 Swal.fire({
@@ -218,6 +218,7 @@ $(document).ready(function() {
             table.ajax.reload();
             return;
         }
+
         table.ajax.reload();
        
     });

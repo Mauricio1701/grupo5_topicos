@@ -14,20 +14,22 @@
       </div>
     </div>
 </div>
-
+<hr>
 <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
         <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
         <input type="date" name="start_date" id="start_date" class="form-control">
     </div>
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
         <label for="end_date" class="form-label">Fecha de fin: </label>
         <input type="date" name="end_date" id="end_date" class="form-control">
     </div>
+    <div class="col-md-2 mb-3 d-flex align-items-end">
+        <button class="btn btn-info w-100" id="btnValidar"> <i class="fas fa-calendar"></i> Validar Disponibilidad</button>
+    </div>
 </div>
 
-
-
+<hr>
 <div class="row">
     @foreach ($employeeGroups as $group)
         @php
@@ -39,7 +41,7 @@
             $numHelpers = max(0, $capacity - 1);
         @endphp
 
-        <div class="col-md-6 mb-3 group-card" data-group-id="{{ $group->id }}">
+        <div class="col-md-4 mb-3 group-card" data-group-id="{{ $group->id }}">
             <div class="card border border-black shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <strong class="text-black">{{ $group->name }}</strong>
@@ -82,9 +84,8 @@
             </div>
         </div>
     @endforeach
-
-
 </div>
+
 <div class="row justify-content-end">
     <button type="button" class="btn btn-success" id="submitAll">Registrar Programación</button>
 </div>
@@ -120,6 +121,29 @@
 
         return groupData;
     }
+
+    function getHelpersData() {
+        const data = [];  // Usamos un array para almacenar los datos de todos los grupos
+        
+        // Recorremos todos los grupos
+        $('.group-card').each(function () {
+            const groupId = $(this).data('group-id');
+            
+            // Obtenemos el ID del conductor (driver)
+            const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
+            
+            // Obtenemos los helpers (ayudantes)
+            const helpers = $(this).find(`select[name="helpers[${groupId}][]"]`).map(function () {
+                return $(this).val();
+            }).get();
+            
+            // Empujamos el array helpers con driver_id incluido
+            data.push(driverId, ...helpers);
+        });
+
+        return data;  // Devolvemos el array con los datos
+    }
+
 
 
 
@@ -188,5 +212,70 @@
             }
         })
     });
+
+
+    $('#btnValidar').on('click', function () {
+        const startDate = $('#start_date').val();
+        const endDate = $('#end_date').val();
+        console.log(startDate, endDate);
+
+        if (startDate === '' || startDate === null) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Por favor, selecciona al menos la fecha de inicio para validar.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route('admin.schedulings.validationVacations') }}',
+            type: 'GET',
+            data: {
+                start_date: startDate,
+                end_date: endDate,
+                helpers: getHelpersData(),
+
+            },
+            success: function(response) {
+                console.log(response);
+                const no_disponibles = response.no_disponibles;
+
+                $('.group-card').each(function () {
+                const groupId = $(this).data('group-id');
+                
+                // Marcar al conductor (driver)
+                const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
+                if (no_disponibles.includes(driverId)) {
+                    $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', '2px solid red'); // Borde rojo en conductor
+                } else {
+                    $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', ''); // Quitar borde si no está en no_disponibles
+                }
+
+                // Marcar los ayudantes
+                $(this).find(`select[name="helpers[${groupId}][]"]`).each(function() {
+                    const helperId = $(this).val();
+                    if (no_disponibles.includes(helperId)) {
+                        $(this).css('border', '2px solid red'); // Borde rojo en ayudante
+                    } else {
+                        $(this).css('border', ''); // Quitar borde si no está en no_disponibles
+                    }
+                });
+            });
+            },
+            error: function(xhr) {
+                let res = xhr.responseJSON;
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: res?.message || 'Ocurrió un error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+        });
+    })
 </script>
 

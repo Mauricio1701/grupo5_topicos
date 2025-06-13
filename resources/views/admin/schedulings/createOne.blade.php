@@ -83,8 +83,10 @@
         <!-- Los selects de conductores y ayudantes se generarán aquí -->
     </div>
 
-</div>
-
+    <div class="col-md-12">
+        <div class="form-group d-flex justify-content-end">
+            <button type="button" class="btn btn-success" id="saveSchedulingBtn">Guardar Programación</button>
+        </div>
     </div>
 </div>
 
@@ -205,6 +207,97 @@
     }
 });
 
+$('#saveSchedulingBtn').on('click', function() {
+    // Recoger los datos de la programación
+    const schedulingData = getSchedulingData();
+
+    // Validar que se hayan seleccionado los campos obligatorios
+    if (!schedulingData.start_date || !schedulingData.employee_group_id || !schedulingData.shift_id || !schedulingData.vehicle_id || !schedulingData.zone_id || schedulingData.days.length === 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Por favor, complete todos los campos obligatorios.'
+        });
+        return;
+    }
+
+    console.log('Datos de programación:', schedulingData);
+    schedulingData._token = '{{ csrf_token() }}';
+
+    // Enviar los datos al servidor
+    $.ajax({
+        url: "{{ route('admin.schedulings.storeOne') }}",
+        type: "POST",
+        data: schedulingData,
+        success: function(response) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Programación guardada correctamente.',
+                confirmButtonText: 'Aceptar'
+            }).then(() => {
+                window.location.href = "{{ route('admin.schedulings.index') }}"; // Redirigir a la lista de programaciones
+            });
+        },
+        error: function(xhr) {
+                let res = xhr.responseJSON;
+                console.log(res);
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    text: res.message || 'Ocurrió un error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
+    });
+});
+
+function getSchedulingData() {
+    const schedulingData = {
+        // Recoger los datos de las fechas
+        start_date: $('#start_date').val(),
+        end_date: $('#end_date').val() || null, // Si no hay end_date, lo dejamos como null
+
+        // Recoger el grupo de personal seleccionado
+        employee_group_id: $('#employeegroups_id').val(),
+        
+        // Recoger el turno, vehículo y zona seleccionados
+        shift_id: $('#shift_id').val(),
+        vehicle_id: $('#vehicle_id').val(),
+        zone_id: $('#zone_id').val(),
+
+        // Recoger los días de trabajo seleccionados
+        days: [],
+        
+        // Recoger los datos de conductores y ayudantes
+        helpers: []
+    };
+
+    // Obtener los días seleccionados (checkboxes)
+    $('input[name="days[]"]:checked').each(function() {
+        schedulingData.days.push($(this).val());
+    });
+
+    // Obtener los datos de los conductores y ayudantes
+    const groupId = $('#employeegroups_id').val();
+    
+    const driverId = $('#employee_conductor_id').val();  // Obtener el conductor
+    schedulingData.driver_id = (driverId);
+
+    // Obtener los ayudantes
+    $('select[name^="employee_helper_id"]').each(function() {
+        const helperId = $(this).val();
+        if (helperId) {
+            schedulingData.helpers.push(helperId);
+        }
+    });
+
+    // Imprimir los datos para verificar
+    console.log(schedulingData);
+
+    return schedulingData;
+}
 
 </script>
 @stop
