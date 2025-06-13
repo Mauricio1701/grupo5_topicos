@@ -117,6 +117,54 @@ class SchedulingController extends Controller
         return view('admin.schedulings.create', compact('shifts'));
     }
 
+    public function ValidationContenido(Request $request)
+    {
+        $ListaNoRegistros = [];
+        $start_date = $request->start_date;
+
+
+        if ($request->end_date) {
+            $end_date = $request->end_date;
+        }else {
+            $end_date = $request->start_date; // Si no hay end_date, usamos start_date
+        }
+       
+        foreach ($request->groups as $group) {
+          
+            $vacation = $this->checkVacation($group['driver_id'], $start_date, $end_date);
+
+            if($vacation){
+                if (!in_array($group['employee_group_id'], $ListaNoRegistros)) {
+                    array_push($ListaNoRegistros, $group['employee_group_id']);
+                }
+            }
+
+            $helpers = $group['helpers'] ?? [];
+            
+            foreach ($helpers as $helper) {
+                $vacation = $this->checkVacation($helper, $start_date, $end_date);
+                if ($vacation) {
+                    if (!in_array($group['employee_group_id'], $ListaNoRegistros)) {
+                        array_push($ListaNoRegistros, $group['employee_group_id']);
+                    }
+                }
+            }
+            
+        }
+
+        return $ListaNoRegistros;
+    }
+
+    private function checkVacation($employeeId, $start_date, $end_date)
+    {
+        return Vacation::where('employee_id', $employeeId)
+            ->where('status', 'Approved')
+            ->whereDate('request_date', '<=', $end_date)
+            ->whereDate('end_date', '>=', $start_date)
+            ->first();
+    }
+
+
     public function store(Request $request)
     {
         // Verificamos si start_date y end_date están presentes
@@ -127,12 +175,18 @@ class SchedulingController extends Controller
                 if ($request->end_date) {
                     // Si hay un rango de fechas
                    
+                    $ListaNoRegistros = $this->ValidationContenido($request);
                     
                     // Recorremos todos los grupos
                     foreach ($request->groups as $group) {
+                        if (in_array($group['employee_group_id'], $ListaNoRegistros)) {
+                            // Si el grupo está en la lista de no registros, lo saltamos
+                            continue;
+                        }
                         // Obtenemos los días del grupo desde la base de datos
                         $employeeGroup = EmployeeGroup::find($group['employee_group_id']);
                         $groupDays = $employeeGroup ? explode(',', $employeeGroup->days) : [];
+                        
         
                         // Convertimos los días de la semana en números (1 = Lunes, 2 = Martes, etc.)
                         $daysOfWeek = [
@@ -148,13 +202,21 @@ class SchedulingController extends Controller
                         $startDate = Carbon::parse($request->start_date);  // Convertimos la fecha de inicio
                         $endDate = Carbon::parse($request->end_date);      // Convertimos la fecha de fin
                         
-        
+                        $helpers = $group['helpers'] ?? [];
                         // Iteramos por cada día dentro del rango
                         while ($startDate->lte($endDate)) {
                             // Comprobamos si el día de la semana de startDate está en los días asignados al grupo
                             if (in_array($startDate->dayOfWeek, array_map(function($day) use ($daysOfWeek) {
                                 return $daysOfWeek[$day];
                             }, $groupDays))) {
+                                
+                                $isDuplicate = $this->validationDuplicate($startDate->toDateString(),$employeeGroup->zone_id,$employeeGroup->shift_id );
+                        
+                                if($isDuplicate){
+                                    $startDate->addDay();
+                                    continue;
+                                }
+
                                 // Creamos la programación solo si el día actual está en los días asignados
                                 $scheduling = Scheduling::create([
                                     'date' => $startDate->toDateString(),  // Guardamos solo la fecha (sin la hora)
@@ -171,7 +233,7 @@ class SchedulingController extends Controller
                                     'scheduling_id' => $scheduling->id,
                                 ]);
 
-                                foreach ($group['helpers'] as $helper) {
+                                foreach ($helpers as $helper) {
                                     Groupdetail::create([
                                         'employee_id' => $helper,
                                         'scheduling_id' => $scheduling->id,
@@ -187,9 +249,25 @@ class SchedulingController extends Controller
 
                 } else {
                     // Si solo se pasa start_date (un solo día)
+                    $ListaNoRegistros = $this->ValidationContenido($request);
+
                     foreach ($request->groups as $group) {
+
+                        if (in_array($group['employee_group_id'], $ListaNoRegistros)) {
+                            continue;
+                        }
+
+                        $helpers = $group['helpers'] ?? [];
+
                         $employeeGroup = EmployeeGroup::find($group['employee_group_id']);
                         $startDate = Carbon::parse($request->start_date);
+
+                        $isDuplicate = $this->validationDuplicate($startDate->toDateString(),$employeeGroup->zone_id,$employeeGroup->shift_id );
+                
+                        if($isDuplicate){
+                            continue;
+                        }
+
                         $scheduling = Scheduling::create([
                             'date' => $startDate->toDateString(),  // Solo creamos para el día dado
                             'group_id' => $group['employee_group_id'],
@@ -204,7 +282,7 @@ class SchedulingController extends Controller
                             'scheduling_id' => $scheduling->id,
                         ]);
 
-                        foreach ($group['helpers'] as $helper) {
+                        foreach ($helpers as $helper) {
                             Groupdetail::create([
                                 'employee_id' => $helper,
                                 'scheduling_id' => $scheduling->id,
@@ -214,7 +292,8 @@ class SchedulingController extends Controller
                 }
                 DB::commit();
                 return response()->json([
-                    'success' => 'Programación creada correctamente.'
+                    'success' => 'Programación creada correctamente.',
+                    'noregistros' => $ListaNoRegistros
                 ], 200);
             } else {
                 // Si no se pasa ni start_date ni end_date, puedes manejar un error o retornar alguna respuesta.
@@ -260,17 +339,17 @@ class SchedulingController extends Controller
         s_old.name AS old_shift_name,
         s_new.name AS new_shift_name,
         r.name AS reason_name
-    FROM changes c
-    LEFT JOIN employees e_old ON c.old_employee_id = e_old.id
-    LEFT JOIN employees e_new ON c.new_employee_id = e_new.id
-    LEFT JOIN vehicles v_old ON c.old_vehicle_id = v_old.id
-    LEFT JOIN vehicles v_new ON c.new_vehicle_id = v_new.id
-    LEFT JOIN shifts s_old ON c.old_shift_id = s_old.id
-    LEFT JOIN shifts s_new ON c.new_shift_id = s_new.id
-    LEFT JOIN reasons r ON c.reason_id = r.id
-    WHERE c.scheduling_id = ?
-    ORDER BY c.change_date DESC
-        ", [$id]);
+        FROM changes c
+        LEFT JOIN employees e_old ON c.old_employee_id = e_old.id
+        LEFT JOIN employees e_new ON c.new_employee_id = e_new.id
+        LEFT JOIN vehicles v_old ON c.old_vehicle_id = v_old.id
+        LEFT JOIN vehicles v_new ON c.new_vehicle_id = v_new.id
+        LEFT JOIN shifts s_old ON c.old_shift_id = s_old.id
+        LEFT JOIN shifts s_new ON c.new_shift_id = s_new.id
+        LEFT JOIN reasons r ON c.reason_id = r.id
+        WHERE c.scheduling_id = ?
+        ORDER BY c.change_date DESC
+            ", [$id]);
 
         
     
@@ -744,21 +823,45 @@ class SchedulingController extends Controller
 
     public function validationVacations(Request $request){
         $ListaNoDisponibles = [];
-        foreach($request->helpers as $helper) {
-            $vacation = Vacation::where('employee_id', $helper)
-                ->where('status', 'Approved')
-                ->whereDate('request_date', '<=', $request->start_date)
-                ->whereDate('end_date', '>=', $request->end_date)
-                ->first();
+        $helpers= $request->helpers;
+        $end_date = null;
+        $start_date = $request->start_date;
+
+        if($request->end_date) {
+            $end_date = $request->end_date;
+        } else {
+            $end_date = $request->start_date; // Si no hay end_date, usamos start_date
+        }
+
+
+        foreach( $helpers as $helper) {
+            $vacation = $this->checkVacation($helper, $start_date, $end_date);
+            
             if($vacation){
-                array_push($ListaNoDisponibles, $helper);
+                array_push($ListaNoDisponibles, $vacation->employee_id);
             }
         }
+
         return response()->json([
             'no_disponibles' => $ListaNoDisponibles
         ]);
     }
 
+    public function validationDuplicate($fecha,$zona,$shift){
+        $isDuplicate = false;
+        $scheduling = Scheduling::where('date', $fecha)
+            ->where('zone_id', $zona)
+            ->where('shift_id', $shift)
+            ->first();
+        
+        if ($scheduling) {
+            $isDuplicate = true;
+        }
+
+        return $isDuplicate;
+    }
+
+  
 
 
         

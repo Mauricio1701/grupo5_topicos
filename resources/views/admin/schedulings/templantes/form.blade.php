@@ -25,7 +25,7 @@
         <input type="date" name="end_date" id="end_date" class="form-control">
     </div>
     <div class="col-md-2 mb-3 d-flex align-items-end">
-        <button class="btn btn-info w-100" id="btnValidar"> <i class="fas fa-calendar"></i> Validar Disponibilidad</button>
+        <button class="btn btn-outline-info w-100" id="btnValidar"> <i class="fas fa-calendar"></i> Validar Disponibilidad</button>
     </div>
 </div>
 
@@ -144,14 +144,15 @@
         return data;  // Devolvemos el array con los datos
     }
 
-
-
-
     $(document).on('click', '.remove-card', function () {
         $(this).closest('.group-card').remove();
     });
 
     $('#submitAll').on('click', function () {
+        if (!validarDates()) {
+            return;
+        }
+        if (!validarSelects()) return;
         const data = getGroupData();
         data._token = '{{ csrf_token() }}';
         Swal.fire({
@@ -169,19 +170,51 @@
             type: 'POST',
             data: data,
             success: function(response) {
-                console.log('Datos enviados correctamente');
-                Swal.close();
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: 'Programación registrada correctamente',
-                    confirmButtonColor: '#3085d6',
-                    confirmButtonText: 'Aceptar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '{{ route('admin.schedulings.index') }}';
-                    }
-                });
+                console.log('Datos enviados correctamente', response);
+                const noregistros = response.noregistros;  // Lista de grupos no registrados
+                const failedGroups = data.groups.filter(group =>
+                    noregistros.includes(String(group.employee_group_id))
+                );
+
+                console.log('Tamaño:', noregistros.length);
+
+                // Crear un JSON con los grupos que no se registraron
+                const failedGroupsJson = {
+                    failed_groups: failedGroups,
+                    start_date: data.start_date,
+                    end_date: data.end_date || null,  // Si no hay end_date, lo ponemos como vacío
+                };
+
+                console.log("Grupos no registrados: ", failedGroupsJson);
+
+                if (noregistros.length > 0) {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: '¡Atención!',
+                        text: `Se han registrado programaciones pero no se han podido registrar algunos grupos debido a inconsistencias`,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            localStorage.setItem('failedGroups', JSON.stringify(failedGroupsJson));
+                            window.location.href = '{{ route('admin.schedulings.createOne') }}';
+                        }
+                    });
+                }else{
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: 'Programación registrada correctamente',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route('admin.schedulings.index') }}';
+                        }
+                    });
+                }
 
             },
             error: function(xhr) {
@@ -198,9 +231,9 @@
         });
     });
 
-
     $(document).on('click', '.btn-warning', function () {
         const groupId = $(this).closest('.group-card').data('group-id');
+        console.log(groupId);
         $.ajax({
             url: '{{ route('admin.employee-groups.vehiclechange', 'GROUP_ID') }}'.replace('GROUP_ID', groupId),
             type: "GET",
@@ -217,19 +250,12 @@
     $('#btnValidar').on('click', function () {
         const startDate = $('#start_date').val();
         const endDate = $('#end_date').val();
-        console.log(startDate, endDate);
-
-        if (startDate === '' || startDate === null) {
-            Swal.fire({
-                icon: 'warning',
-                title: '¡Atención!',
-                text: 'Por favor, selecciona al menos la fecha de inicio para validar.',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Aceptar'
-            });
+        
+        if (!validarDates()) {
             return;
         }
 
+        if (!validarSelects()) return;
         $.ajax({
             url: '{{ route('admin.schedulings.validationVacations') }}',
             type: 'GET',
@@ -244,26 +270,34 @@
                 const no_disponibles = response.no_disponibles;
 
                 $('.group-card').each(function () {
-                const groupId = $(this).data('group-id');
-                
-                // Marcar al conductor (driver)
-                const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
-                if (no_disponibles.includes(driverId)) {
-                    $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', '2px solid red'); // Borde rojo en conductor
-                } else {
-                    $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', ''); // Quitar borde si no está en no_disponibles
-                }
-
-                // Marcar los ayudantes
-                $(this).find(`select[name="helpers[${groupId}][]"]`).each(function() {
-                    const helperId = $(this).val();
-                    if (no_disponibles.includes(helperId)) {
-                        $(this).css('border', '2px solid red'); // Borde rojo en ayudante
+                    const groupId = $(this).data('group-id');
+                    
+                    // Marcar al conductor (driver)
+                    const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
+                    if (no_disponibles.includes(parseInt(driverId))) {
+                        $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', '2px solid red'); // Borde rojo en conductor
                     } else {
-                        $(this).css('border', ''); // Quitar borde si no está en no_disponibles
+                        $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', ''); // Quitar borde si no está en no_disponibles
                     }
+
+                    // Marcar los ayudantes
+                    $(this).find(`select[name="helpers[${groupId}][]"]`).each(function() {
+                        const helperId = $(this).val();
+                        if (no_disponibles.includes(parseInt(helperId))) {
+                            $(this).css('border', '2px solid red'); // Borde rojo en ayudante
+                        } else {
+                            $(this).css('border', ''); // Quitar borde si no está en no_disponibles
+                        }
+                    });
                 });
-            });
+                
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Validación Completa',
+                    text: 'Los conductores y ayudantes seleccionados han sido validados. Los que tienen borde rojo no están disponibles.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
             },
             error: function(xhr) {
                 let res = xhr.responseJSON;
@@ -276,6 +310,97 @@
                 });
             }
         });
-    })
+    });
+
+
+    function validarSelects() {
+        let esValido = true;
+        let idsSeleccionados = [];
+
+        // Limpiar estilos previos
+        $('select').css('border', '');
+
+        $('.group-card').each(function () {
+            const groupId = $(this).data('group-id');
+
+            // Validar conductor
+            const driverSelect = $(this).find(`select[name="driver_id[${groupId}]"]`);
+            const driverId = driverSelect.val();
+            if (!driverId) {
+                driverSelect.css('border', '2px solid red');
+                esValido = false;
+            } else if (idsSeleccionados.includes(driverId)) {
+                driverSelect.css('border', '2px solid red');
+                esValido = false;
+            } else {
+                idsSeleccionados.push(driverId);
+            }
+
+            // Validar ayudantes
+            $(this).find(`select[name="helpers[${groupId}][]"]`).each(function () {
+                const helperId = $(this).val();
+                if (!helperId) {
+                    $(this).css('border', '2px solid red');
+                    esValido = false;
+                } else if (idsSeleccionados.includes(helperId)) {
+                    $(this).css('border', '2px solid red');
+                    esValido = false;
+                } else {
+                    idsSeleccionados.push(helperId);
+                }
+            });
+        });
+
+        if (!esValido) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Todos los campos deben estar seleccionados y sin duplicados.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+        return esValido;
+    }
+
+    function validarDates(){
+        let esValido = true;
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+
+        if (startDate === '' || startDate === null) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Por favor, selecciona al menos la fecha de inicio.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+            esValido = false;
+        }
+
+
+
+        if (endDate !== '' ) {
+            
+            if (startDate > endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'La fecha de fin no puede ser menor que la fecha de inicio.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+                 esValido = false;
+            }
+            // Recargar el DataTable con las fechas
+        }
+
+        return esValido;
+
+    }
+
+
 </script>
 

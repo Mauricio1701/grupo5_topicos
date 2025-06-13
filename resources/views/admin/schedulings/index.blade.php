@@ -48,7 +48,7 @@
                 <input type="date" name="end_date" id="end_date" class="form-control">
             </div>
             <div class="col-md-4">
-                <button class="btn btn-info" id="btnFilter">Filtrar</button>
+                <button class="btn btn-outline-info" id="btnFilter">Filtrar</button>
             </div>
         </div>
         <div class=" table-responsive">
