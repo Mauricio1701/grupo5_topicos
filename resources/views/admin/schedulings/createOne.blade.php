@@ -55,6 +55,33 @@
             </div>
         </div>
         <hr>
+        <div id="vacationList" style="
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1050;
+        width: 320px;
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        display: none;
+    ">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0"><i class="fas fa-plane-departure"></i> Vacaciones</h6>
+        <button type="button" class="close text-dark" onclick="$('#vacationList').hide();">
+            <span>&times;</span>
+        </button>
+    </div>
+    <ul class="list-group list-group-flush" id="vacationItems" style="font-size: 16px;">
+        <!-- Aquí se cargará la lista -->
+    </ul>
+</div>
+
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
@@ -122,12 +149,14 @@
     </div>
 
     <div class="col-md-12 employee-selects">
-        <!-- Los selects de conductores y ayudantes se generarán aquí -->
+        <div class="row" id="employeeColumns">
+            <!-- Aquí se generarán las columnas para conductor y ayudantes -->
+        </div>
     </div>
 
     <div class="col-md-12">
         <div class="form-group d-flex justify-content-end">
-            <button type="button" class="btn btn-success" id="saveSchedulingBtn">Guardar Programación</button>
+            <button type="button" disabled=true class="btn btn-success" id="saveSchedulingBtn">Guardar Programación</button>
         </div>
     </div>
 </div>
@@ -178,7 +207,7 @@
                         var peopleCapacity = data.group.vehicle.people_capacity || 0;
 
                         // Limpiar el contenido de los divs dinámicos
-                        $('.employee-selects').empty();
+                        $('#employeeColumns').empty();
 
                         // Siempre 1 conductor, y los demás son ayudantes, restando 1 de la capacidad
                         var numConductores = 1; // Siempre hay 1 conductor
@@ -186,13 +215,14 @@
 
                         // Agregar el select de conductor (si hay conductores)
                         if (numConductores > 0) {
-                            $('.employee-selects').append(`
-                                <div class="form-group">
-                                    <label for="employee_conductor_id">Conductor</label>
-                                    <select class="form-control" id="employee_conductor_id" name="employee_conductor_id[]">
-                                        <option value="">Seleccione un conductor</option>
-                                        <!-- Opciones dinámicas de conductores se agregarán aquí -->
-                                    </select>
+                            $('#employeeColumns').append(`
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="employee_conductor_id">Conductor</label>
+                                        <select class="form-control" id="employee_conductor_id" name="employee_conductor_id[]">
+                                            <option value="">Seleccione un conductor</option>
+                                        </select>
+                                    </div>
                                 </div>
                             `);
 
@@ -205,15 +235,16 @@
 
                         // Agregar los selects de ayudantes (restando 1 para el conductor)
                         for (var i = 0; i < numAyudantes; i++) {
-                            $('.employee-selects').append(`
-                                <div class="form-group">
-                                    <label for="employee_helper_id_${i}">Ayudante ${i+1}</label>
-                                    <select class="form-control" id="employee_helper_id_${i}" name="employee_helper_id[]">
-                                        <option value="">Seleccione un ayudante</option>
-                                        <!-- Opciones dinámicas de ayudantes se agregarán aquí -->
-                                    </select>
-                                </div>
-                            `);
+                                $('#employeeColumns').append(`
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="employee_helper_id_${i}">Ayudante ${i+1}</label>
+                                            <select class="form-control" id="employee_helper_id_${i}" name="employee_helper_id[]">
+                                                <option value="">Seleccione un ayudante</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                `);
 
                             data.employeesAyudantes.forEach(function(ayudante) {
                                 $('#employee_helper_id_' + i).append(`
@@ -404,6 +435,33 @@
                     });
                 });
 
+                // Mostrar vacaciones aprobadas (si hay)
+               const vacaciones = response.vacaciones || [];
+                $('#vacationItems').empty();
+
+                if (vacaciones.length > 0) {
+                    $('#vacationList').show();
+
+                    vacaciones.forEach(v => {
+                        // Convertir fechas a formato local (dd/mm/yyyy)
+                        const requestDate = new Date(v.request_date).toLocaleDateString('es-PE');
+                        const endDate = new Date(v.end_date).toLocaleDateString('es-PE');
+
+                        $('#vacationItems').append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><strong>${v.employee.names}</strong></span>
+                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
+                            </li>
+                        `);
+                    });
+                } else {
+                    $('#vacationList').hide();
+                }
+
+                if(no_disponibles.length == 0){
+                    $('#saveSchedulingBtn').removeAttr('disabled');
+                }
+
                 Swal.fire({
                     icon: 'info',
                     title: 'Validación Completa',
@@ -503,6 +561,16 @@
                 idsSeleccionados.add(helperId);
             }
         });
+
+        if (!esValido) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Todos los campos deben estar seleccionados y sin duplicados.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+        }
 
         return esValido;
     }

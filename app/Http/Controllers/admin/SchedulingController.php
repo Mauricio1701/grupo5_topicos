@@ -157,7 +157,8 @@ class SchedulingController extends Controller
 
     private function checkVacation($employeeId, $start_date, $end_date)
     {
-        return Vacation::where('employee_id', $employeeId)
+        return Vacation::with('employee')
+            ->where('employee_id', $employeeId)
             ->where('status', 'Approved')
             ->whereDate('request_date', '<=', $end_date)
             ->whereDate('end_date', '>=', $start_date)
@@ -718,10 +719,7 @@ class SchedulingController extends Controller
                     // Si no se pasa end_date, significa que es solo un día
                     if ($request->end_date) {
                         // Si hay un rango de fechas
-                    
-                        
-                        // Recorremos todos los grupos
-                        
+
                             // Obtenemos los días del grupo desde la base de datos
                             $employeeGroup = EmployeeGroup::find($request->employee_group_id);
                             $groupDays = $request->days; // Aquí usamos los días seleccionados desde el formulario
@@ -747,6 +745,14 @@ class SchedulingController extends Controller
                                 if (in_array($startDate->dayOfWeek, array_map(function($day) use ($daysOfWeek) {
                                     return $daysOfWeek[$day];
                                 }, $groupDays))) {
+
+                                    $isDuplicate = $this->validationDuplicate($startDate->toDateString(),$employeeGroup->zone_id,$employeeGroup->shift_id );
+                        
+                                    if($isDuplicate){
+                                        $startDate->addDay();
+                                        continue;
+                                    }
+
                                     // Creamos la programación solo si el día actual está en los días asignados
                                     $scheduling = Scheduling::create([
                                         'date' => $startDate->toDateString(),  // Guardamos solo la fecha (sin la hora)
@@ -781,6 +787,15 @@ class SchedulingController extends Controller
                        
                             $employeeGroup = EmployeeGroup::find($request->employee_group_id);
                             $startDate = Carbon::parse($request->start_date);
+
+                            $isDuplicate = $this->validationDuplicate($startDate->toDateString(),$employeeGroup->zone_id,$employeeGroup->shift_id );
+                        
+                            if($isDuplicate){
+                                return response()->json([
+                                    'message' => 'Ya existe una programación para esa fecha con ese grupo y zona.'
+                                ], 400);
+                            }
+                            
                             $scheduling = Scheduling::create([
                                 'date' => $startDate->toDateString(),  // Solo creamos para el día dado
                                 'group_id' =>$employeeGroup->id,
@@ -823,6 +838,7 @@ class SchedulingController extends Controller
 
     public function validationVacations(Request $request){
         $ListaNoDisponibles = [];
+        $ListaVacaciones = [];
         $helpers= $request->helpers;
         $end_date = null;
         $start_date = $request->start_date;
@@ -836,14 +852,18 @@ class SchedulingController extends Controller
 
         foreach( $helpers as $helper) {
             $vacation = $this->checkVacation($helper, $start_date, $end_date);
-            
+           
             if($vacation){
                 array_push($ListaNoDisponibles, $vacation->employee_id);
+                array_push($ListaVacaciones, $vacation);
             }
         }
 
         return response()->json([
-            'no_disponibles' => $ListaNoDisponibles
+            'no_disponibles' => $ListaNoDisponibles,
+            'vacaciones' => $ListaVacaciones
+        ])->setStatusCode(200, 'OK', [
+            'Content-Type' => 'application/json'
         ]);
     }
 
