@@ -9,7 +9,7 @@ class EmployeeType extends Model
 {
     use HasFactory;
 
-    protected $table = 'EmployeeType';
+    protected $table = 'employeetype';
 
     protected $fillable = [
         'name',
