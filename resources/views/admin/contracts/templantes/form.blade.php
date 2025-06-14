@@ -1,4 +1,3 @@
-
 <div class="form-group">
     {!! Form::label('employee_id', 'Empleado:') !!} <span class="text-danger">*</span>
     {!! Form::select('employee_id', $employees->pluck('name_with_last_name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un empleado', 'required', 'id' => 'employee_id']) !!}
@@ -19,7 +18,7 @@
     <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('start_date', 'Fecha de Inicio:') !!} <span class="text-danger">*</span>
-            {!! Form::date('start_date', null, ['class' => 'form-control', 'required', 'id' => 'start_date', 'min' => \Carbon\Carbon::now()->format('Y-m-d')]) !!}
+            {!! Form::date('start_date', null, ['class' => 'form-control', 'required', 'id' => 'start_date']) !!}
             @error('start_date')
             <span class="text-danger">{{ $message }}</span>
             @enderror
@@ -28,7 +27,7 @@
     <div class="col-md-6">
         <div class="form-group" id="end_date_container">
             {!! Form::label('end_date', 'Fecha de Finalización:') !!}
-            {!! Form::date('end_date', null, ['class' => 'form-control', 'id' => 'end_date', 'min' => \Carbon\Carbon::now()->format('Y-m-d')]) !!}
+            {!! Form::date('end_date', null, ['class' => 'form-control', 'id' => 'end_date']) !!}
             <small class="form-text text-muted">Dejar en blanco si es contrato indefinido</small>
             @error('end_date')
             <span class="text-danger">{{ $message }}</span>

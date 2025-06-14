@@ -109,7 +109,7 @@
         });
         var originalVacationDays;
 
-        function initContractForm() {
+        function initContractForm(isEditMode = false) {
             var contractTypeSelect = $('#contract_type');
             var endDateField = $('#end_date');
             var startDateField = $('#start_date');
@@ -121,6 +121,15 @@
             originalVacationDays = vacationDaysField.val();
 
             $('.vacation-days-notice').remove();
+
+            if (!isEditMode) {
+                var today = new Date().toISOString().split('T')[0];
+                startDateField.attr('min', today);
+                endDateField.attr('min', today);
+            } else {
+                startDateField.removeAttr('min');
+                endDateField.removeAttr('min');
+            }
 
             function updateEndDateMinimum() {
                 var startDate = startDateField.val();
@@ -286,7 +295,7 @@
                 type: "GET",
                 success: function(response) {
                     $('#modalContract .modal-body').html(response);
-                    initContractForm();
+                    initContractForm(false); 
                     setupFormSubmit($('#createContractForm'));
                 },
                 error: function(xhr) {
@@ -318,7 +327,7 @@
                     $('#modalContract .modal-body').html(response);
                     $('#modalContract').modal('show');
 
-                    initContractForm();
+                    initContractForm(true); 
                     setupFormSubmit($('#modalContract form'));
                 },
                 error: function(xhr) {
