@@ -249,6 +249,10 @@ class VehicleController extends Controller
                 $image = Storage::url($image);
 
                 $profile = 0;
+                
+                if($request->profile > 0) {
+                    Vehicleimage::where('vehicle_id', $request->vehicle_id)->update(['profile' => 0]);
+                }
 
                 $vehicle = Vehicleimage::create([
                     'profile' => $request->profile ?? $profile,

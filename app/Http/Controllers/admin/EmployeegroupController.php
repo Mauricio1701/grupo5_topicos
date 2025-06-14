@@ -81,8 +81,16 @@ class EmployeegroupController extends Controller
         $vehicles = Vehicle::all();
         $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
         $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
-        $employeesConductor = Employee::where('type_id', $conductor)->get();
-        $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
+        $employeesConductor = Employee::where('type_id', $conductor)
+                            ->whereHas('contracts', function($query) {
+                                $query->where('is_active', 1);
+                            })
+                            ->get();
+        $employeesAyudantes = Employee::where('type_id', $ayudante)
+                                ->whereHas('contracts', function($query) {
+                                                        $query->where('is_active', 1);
+                                                    })
+                                ->get();
         return view('admin.employee-groups.create', compact('zones', 'shifts', 'vehicles', 'employeesConductor', 'employeesAyudantes'));
     }
 
@@ -161,9 +169,20 @@ class EmployeegroupController extends Controller
         $helperType = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first();
     
         // Todos los conductores y ayudantes disponibles (para el select)
-        $employeesConductor = $conductorType ? Employee::where('type_id', $conductorType->id)->get() : collect();
-        $employeesAyudantes = $helperType ? Employee::where('type_id', $helperType->id)->get() : collect();
-    
+        $employeesConductor = $conductorType
+            ? Employee::where('type_id', $conductorType->id)
+                ->whereHas('contracts', function($query) {
+                    $query->where('is_active', 1);
+                })->get()
+            : collect();
+
+        $employeesAyudantes = $helperType
+            ? Employee::where('type_id', $helperType->id)
+                ->whereHas('contracts', function($query) {
+                    $query->where('is_active', 1);
+                })->get()
+            : collect();
+       
         // El grupo con sus empleados asociados filtrados por tipo
         $employeeGroup = EmployeeGroup::with(['conductors', 'helpers'])->findOrFail($id);
         $driverId = optional($employeeGroup->conductors->first())->id;

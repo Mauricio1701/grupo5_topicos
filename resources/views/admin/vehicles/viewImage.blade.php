@@ -11,7 +11,7 @@
             </div>
 
             <div class="form-check mb-3">
-                {!! Form::checkbox('profile', 1, false, ['class' => 'form-check-input', 'id' => 'profile']) !!}
+                {!! Form::checkbox('profile', 1, true, ['class' => 'form-check-input', 'id' => 'profile']) !!}
                 <label class="form-check-label" for="profile">Establecer como imagen principal</label>
             </div>
 

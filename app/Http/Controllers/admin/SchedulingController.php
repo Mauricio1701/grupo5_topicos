@@ -371,7 +371,10 @@ class SchedulingController extends Controller
         $personal = Groupdetail::where('scheduling_id', $id)
         ->with('employee','employee.employeeType')
         ->get();
-        $personalDisponible = Employee::all();
+        $personalDisponible = Employee::whereHas('contracts', function ($query) {
+                $query->where('is_active', 1);
+            })
+            ->get();
         
         return view('admin.schedulings.edit', compact('scheduling', 'reasons', 'shifts', 'vehicles', 'personal', 'employeeGroup', 'personalDisponible'));
     }
@@ -470,8 +473,19 @@ class SchedulingController extends Controller
     
         $conductorType = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first();
         $helperType = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first();
-        $employeesConductor = $conductorType ? Employee::where('type_id', $conductorType->id)->get() : collect();
-        $employeesAyudantes = $helperType ? Employee::where('type_id', $helperType->id)->get() : collect();
+        $employeesConductor = $conductorType
+            ? Employee::where('type_id', $conductorType->id)
+                ->whereHas('contracts', function($query) {
+                    $query->where('is_active', 1);
+                })->get()
+            : collect();
+
+        $employeesAyudantes = $helperType
+            ? Employee::where('type_id', $helperType->id)
+                ->whereHas('contracts', function($query) {
+                    $query->where('is_active', 1);
+                })->get()
+            : collect();
     
         return view('admin.schedulings.templantes.form', compact(
             'shiftId',
@@ -692,8 +706,16 @@ class SchedulingController extends Controller
             $group = EmployeeGroup::with('shift','vehicle','zone','configgroup','configgroup.employee','configgroup.employee.employeeType')->find($groupId);
             $conductor = EmployeeType::whereRaw('LOWER(name) = ?', ['conductor'])->first()?->id ?? null;
             $ayudante = EmployeeType::whereRaw('LOWER(name) = ?', ['ayudante'])->first()?->id ?? null;
-            $employeesConductor = Employee::where('type_id', $conductor)->get();
-            $employeesAyudantes = Employee::where('type_id', $ayudante)->get();
+            $employeesConductor = Employee::where('type_id', $conductor)
+                                ->whereHas('contracts', function($query) {
+                                    $query->where('is_active', 1);
+                                })
+                                ->get();
+            $employeesAyudantes = Employee::where('type_id', $ayudante)
+                                    ->whereHas('contracts', function($query) {
+                                                            $query->where('is_active', 1);
+                                                        })
+                                    ->get();
             // Parsear los días de trabajo del grupo
             $diasTrabajo = $group ? explode(',', $group->days) : [];
 
