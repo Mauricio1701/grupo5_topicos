@@ -58,22 +58,13 @@ class VacationSeeder extends Seeder
         $V4->save();
 
         $V5 = new Vacation();
-        $V5->employee_id = $employeeIds[1];
-        $V5->request_date = Carbon::now()->addDays(25); 
-        $V5->requested_days = 8;
+        $V5->employee_id = $employeeIds[2];
+        $V5->request_date = Carbon::now()->subDays(90); 
+        $V5->requested_days = 12;
         $V5->end_date = Carbon::parse($V5->request_date)->addDays($V5->requested_days);
-        $V5->status = 'Pending';
-        $V5->notes = 'Vacaciones programadas para el próximo mes';
+        $V5->status = 'Completed';
+        $V5->notes = 'Vacaciones completadas exitosamente';
         $V5->save();
-
-        $V6 = new Vacation();
-        $V6->employee_id = $employeeIds[2];
-        $V6->request_date = Carbon::now()->subDays(90); 
-        $V6->requested_days = 12;
-        $V6->end_date = Carbon::parse($V6->request_date)->addDays($V6->requested_days);
-        $V6->status = 'Completed';
-        $V6->notes = 'Vacaciones completadas exitosamente';
-        $V6->save();
 
     }
 }
