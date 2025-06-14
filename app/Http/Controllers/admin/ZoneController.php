@@ -17,15 +17,19 @@ class ZoneController extends Controller
     {
         $zone->load(['coords' => function ($query) {
             $query->orderBy('coord_index');
-        }]);
+        }, 'department']);
 
         return response()->json($zone);
     }
+
     public function map()
     {
-        $zones = Zone::with('coords')->get();
+        $zones = Zone::with(['coords', 'department'])->get();
+        foreach ($zones as $zone) {
+        }
         return view('admin.zones.map', compact('zones'));
     }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {

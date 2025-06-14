@@ -19,11 +19,11 @@
     <div class="row">
         <div class="col-md-4">
             <div class="form-group">
-                {!! Form::label('average_waste', 'Residuos promedio (kg):') !!}
+                {!! Form::label('average_waste', 'Residuos promedio (Tb):') !!}
                 <div class="input-group">
                     {!! Form::number('average_waste', null, ['class' => 'form-control', 'placeholder' => 'Ingrese residuos promedio', 'step' => '0.01']) !!}
                     <div class="input-group-append">
-                        <span class="input-group-text">kg</span>
+                        <span class="input-group-text">Tb</span>
                     </div>
                 </div>
                 <span class="text-danger error-text average_waste_error"></span>

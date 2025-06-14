@@ -64,14 +64,25 @@ class ContractController extends Controller
     public function create()
     {
         $employees = Employee::select('id', 'names', 'lastnames')
+            ->whereDoesntHave('contracts', function ($query) {
+                $query->where('is_active', 1);
+            })
+            ->where(function ($query) {
+                $query->whereDoesntHave('contracts', function ($subQuery) {
+                    $subQuery->where('contract_type', 'Temporal')
+                        ->where('is_active', 0)
+                        ->whereNotNull('end_date')
+                        ->where('end_date', '>', now()->subMonths(4));
+                });
+            })
             ->get()
             ->map(function ($employee) {
                 $employee->name_with_last_name = $employee->names . ' ' . $employee->lastnames;
                 return $employee;
             });
 
-        $positions = EmployeeType::pluck('name', 'id'); 
-        $departments = Department::pluck('name', 'id'); 
+        $positions = EmployeeType::pluck('name', 'id');
+        $departments = Department::pluck('name', 'id');
 
         return view('admin.contracts.create', compact('employees', 'positions', 'departments'));
     }
@@ -95,21 +106,45 @@ class ContractController extends Controller
 
             $request->validate($rules);
 
+            // Validación adicional: período de enfriamiento de 4 meses para contratos temporales
+            $lastTemporalContract = Contract::where('employee_id', $request->employee_id)
+                ->where('contract_type', 'Temporal')
+                ->where('is_active', 0)
+                ->whereNotNull('end_date')
+                ->orderBy('end_date', 'desc')
+                ->first();
+
+            if ($lastTemporalContract) {
+                $endDate = \Carbon\Carbon::parse($lastTemporalContract->end_date);
+                $fourMonthsLater = $endDate->addMonths(4);
+
+                if (now() < $fourMonthsLater) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Este empleado tuvo un contrato temporal que terminó el ' .
+                            $lastTemporalContract->end_date->format('d/m/Y') .
+                            '. Debe esperar hasta el ' .
+                            $fourMonthsLater->format('d/m/Y') .
+                            ' para poder tener un nuevo contrato (período de enfriamiento de 4 meses).'
+                    ], 422);
+                }
+            }
+
             $data = $request->all();
             if (empty($data['position_id'])) {
                 try {
                     $employee = Employee::findOrFail($data['employee_id']);
                     $data['position_id'] = $employee->type_id ?? 1;
                 } catch (\Exception $e) {
-                    $data['position_id'] = 1; 
+                    $data['position_id'] = 1;
                 }
             }
 
             if (in_array($request->contract_type, ['Nombrado', 'Contrato permanente'])) {
                 $data['end_date'] = null;
-                $data['vacation_days_per_year'] = 30; 
+                $data['vacation_days_per_year'] = 30;
             } else if ($request->contract_type === 'Temporal') {
-                $data['vacation_days_per_year'] = 0; 
+                $data['vacation_days_per_year'] = 0;
             } else {
                 $data['vacation_days_per_year'] = $request->filled('vacation_days_per_year') ? $request->vacation_days_per_year : 15;
             }
@@ -151,16 +186,16 @@ class ContractController extends Controller
             if (empty($data['position_id'])) {
                 try {
                     $employee = Employee::findOrFail($data['employee_id']);
-                    
+
                     $data['position_id'] = $employee->type_id ?? 1;
                 } catch (\Exception $e) {
-                    $data['position_id'] = 1; 
+                    $data['position_id'] = 1;
                 }
             }
 
             if (in_array($request->contract_type, ['Nombrado', 'Contrato permanente'])) {
                 $data['end_date'] = null;
-                $data['vacation_days_per_year'] = 30; 
+                $data['vacation_days_per_year'] = 30;
             } else if ($request->contract_type === 'Temporal') {
                 $data['vacation_days_per_year'] = 0;
             } else {
@@ -196,7 +231,7 @@ class ContractController extends Controller
             });
 
         $positions = EmployeeType::pluck('name', 'id');
-        $departments = Department::pluck('name', 'id'); 
+        $departments = Department::pluck('name', 'id');
 
         return view('admin.contracts.edit', compact('contract', 'employees', 'positions', 'departments'));
     }

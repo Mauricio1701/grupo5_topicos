@@ -37,4 +37,6 @@ class Contract extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    
 }
