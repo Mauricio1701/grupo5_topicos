@@ -48,14 +48,18 @@ class Employee extends Model
     {
         return $this->hasMany(Vacation::class);
     }
-    
+
     public function employeeType()
     {
         return $this->belongsTo(EmployeeType::class, 'type_id', 'id');
     }
-    
+
     public function groupDetails()
     {
         return $this->hasMany(Groupdetail::class);
+    }
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
     }
 }

@@ -179,7 +179,7 @@
                                 <div class="zone-department"><strong>Departamento:</strong> {{ $zone->department->name }}</div>
                             @endif
                             @if($zone->average_waste)
-                                <div class="zone-waste"><strong>Residuos promedio:</strong> {{ $zone->average_waste }} kg</div>
+                                <div class="zone-waste"><strong>Residuos promedio:</strong> {{ $zone->average_waste }} Tb</div>
                             @endif
                             <div class="zone-description">{{ $zone->description ?: 'Sin descripción' }}</div>
                             <div class="zone-coords">{{ $zone->coords->count() }} puntos</div>
@@ -216,7 +216,7 @@
                     success: function(response) {
                         $('#zone-name').text(response.name);
                         $('#zone-department').text(response.department ? response.department.name : 'N/A');
-                        $('#zone-waste').text(response.average_waste ? response.average_waste + ' kg' : 'No especificado');
+                        $('#zone-waste').text(response.average_waste ? response.average_waste + ' Tb' : 'No especificado');
                         $('#zone-description').text(response.description || 'Sin descripción');
                         $('#zone-points').text(response.coords.length);
                         

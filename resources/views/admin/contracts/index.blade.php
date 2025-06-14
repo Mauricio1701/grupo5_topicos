@@ -112,6 +112,7 @@
         function initContractForm() {
             var contractTypeSelect = $('#contract_type');
             var endDateField = $('#end_date');
+            var startDateField = $('#start_date');
             var endDateContainer = $('#end_date_container');
             var vacationDaysField = $('#vacation_days_per_year');
             var vacationDaysContainer = $('#vacation_days_container');
@@ -120,6 +121,13 @@
             originalVacationDays = vacationDaysField.val();
 
             $('.vacation-days-notice').remove();
+
+            function updateEndDateMinimum() {
+                var startDate = startDateField.val();
+                if (startDate) {
+                    endDateField.attr('min', startDate);
+                }
+            }
 
             function updateEndDateField() {
                 var contractsWithoutEndDate = ['Nombrado', 'Contrato permanente'];
@@ -131,6 +139,7 @@
                 } else {
                     endDateContainer.removeClass('d-none');
                     endDateField.prop('required', true);
+                    updateEndDateMinimum();
                 }
             }
 
@@ -141,7 +150,7 @@
                     vacationDaysField.val(0);
                     vacationDaysField.prop('readonly', true);
                     vacationDaysInfo.text('Los contratos temporales no tienen días de vacaciones');
-                    vacationDaysContainer.addClass('d-none'); 
+                    vacationDaysContainer.addClass('d-none');
                 } else if (['Nombrado', 'Contrato permanente'].includes(contractType)) {
                     vacationDaysField.val(30);
                     vacationDaysField.prop('readonly', true);
@@ -198,6 +207,10 @@
             contractTypeSelect.on('change', function() {
                 updateEndDateField();
                 updateVacationDays();
+            });
+
+            startDateField.on('change', function() {
+                updateEndDateMinimum();
             });
 
             $('#is_active').on('change', function() {
