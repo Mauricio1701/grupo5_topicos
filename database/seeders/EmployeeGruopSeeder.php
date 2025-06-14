@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\EmployeeGroup;
+use App\Models\Employeegroup;
 
 class EmployeeGruopSeeder extends Seeder
 {
@@ -13,7 +13,7 @@ class EmployeeGruopSeeder extends Seeder
      */
     public function run(): void
     {
-        $employeeGroup = new EmployeeGroup();
+        $employeeGroup = new Employeegroup();
         $employeeGroup->name = 'MERCMOSHMÑN01';
         $employeeGroup->zone_id = 1;
         $employeeGroup->shift_id = 1;
@@ -22,7 +22,7 @@ class EmployeeGruopSeeder extends Seeder
         $employeeGroup->status = 1;
         $employeeGroup->save();
 
-        $employeeGroup = new EmployeeGroup();
+        $employeeGroup = new Employeegroup();
         $employeeGroup->name = 'URBLATMÑN01';
         $employeeGroup->zone_id = 2;
         $employeeGroup->shift_id = 1;
