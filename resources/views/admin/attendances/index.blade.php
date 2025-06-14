@@ -27,6 +27,7 @@
     <div class="card-header">
         <h3 class="card-title">Lista de Asistencias</h3>
         <div class="card-tools">
+            <a href="{{route('attendances.indexAttendance')}}" target="_blank" class="btn btn-outline-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
             <button id="btnNewAttendance" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nueva Asistencia</button> 
         </div>
     </div>
