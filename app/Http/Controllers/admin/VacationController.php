@@ -118,8 +118,13 @@ class VacationController extends Controller
             ->pluck('employee_id')
             ->toArray();
 
+        $employeesWithPendingVacations = Vacation::where('status', 'Pending')
+            ->pluck('employee_id')
+            ->toArray();
+
         $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
             ->whereIn('id', $employeesWithEligibleContract)
+            ->whereNotIn('id', $employeesWithPendingVacations)
             ->where('status', true)
             ->get()
             ->map(function ($employee) {
@@ -151,6 +156,17 @@ class VacationController extends Controller
             ];
 
             $request->validate($rules);
+
+            $existingPendingVacation = Vacation::where('employee_id', $request->employee_id)
+                ->where('status', 'Pending')
+                ->first();
+
+            if ($existingPendingVacation) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este empleado ya tiene una solicitud de vacaciones pendiente. No puede crear otra hasta que la actual sea procesada.'
+                ], 422);
+            }
 
             $contract = Contract::where('employee_id', $request->employee_id)
                 ->where('is_active', true)
@@ -201,8 +217,17 @@ class VacationController extends Controller
             ->pluck('employee_id')
             ->toArray();
 
+        $employeesWithPendingVacations = Vacation::where('status', 'Pending')
+            ->where('id', '!=', $id) 
+            ->pluck('employee_id')
+            ->toArray();
+
         $employees = Employee::select('id', 'names as name', 'lastnames as last_name')
             ->whereIn('id', $employeesWithEligibleContract)
+            ->where(function ($query) use ($employeesWithPendingVacations, $vacation) {
+                $query->whereNotIn('id', $employeesWithPendingVacations)
+                    ->orWhere('id', $vacation->employee_id);
+            })
             ->where('status', true)
             ->get()
             ->map(function ($employee) {
@@ -229,6 +254,20 @@ class VacationController extends Controller
             $oldStatus = $vacation->status;
             $oldRequestedDays = $vacation->requested_days;
             $oldEmployeeId = $vacation->employee_id;
+
+            if ($request->employee_id != $oldEmployeeId) {
+                $existingPendingVacation = Vacation::where('employee_id', $request->employee_id)
+                    ->where('status', 'Pending')
+                    ->where('id', '!=', $id)
+                    ->first();
+
+                if ($existingPendingVacation) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El empleado seleccionado ya tiene una solicitud de vacaciones pendiente.'
+                    ], 422);
+                }
+            }
 
             if ($vacation->status != 'Pending') {
                 $rules = [
