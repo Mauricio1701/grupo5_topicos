@@ -1,31 +1,45 @@
-FROM php:8.2-fpm-alpine
+# Utilizar la imagen de PHP 8.2 con Apache
+FROM php:8.2-apache
 
-RUN apk update && apk add --no-cache \
-    bash \
-    libpng \
-    libjpeg-turbo \
-    freetype \
-    libzip \
-    libxml2 \
-    libxslt \
-    libjpeg-turbo-dev \
-    freetype-dev \
+# Instalar dependencias del sistema para PHP y Vite
+RUN apt-get update && apt-get install -y \
     libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    git \
+    unzip \
     libzip-dev \
-    libxml2-dev \
-    libxslt-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd zip exif pcntl bcmath pdo pdo_mysql \
-    && apk del libjpeg-turbo-dev freetype-dev libpng-dev libzip-dev libxml2-dev libxslt-dev
+    curl \
+    libicu-dev \
+    zlib1g-dev \
+    nodejs \
+    npm \
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install gd zip intl pdo pdo_mysql
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Instalar Composer (gestor de dependencias PHP)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-WORKDIR /var/www
+# Establecer el directorio de trabajo
+WORKDIR /var/www/html
 
+# Copiar los archivos del proyecto Laravel al contenedor
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# Instalar las dependencias de PHP (Laravel)
+RUN composer install --no-interaction --prefer-dist
 
-EXPOSE 9000
+# Instalar las dependencias de JavaScript (Vite y otros paquetes npm)
+RUN npm install
 
-CMD ["php-fpm"]
+# Configurar Vite para producción (opcional)
+RUN npm run build
+
+# Exponer el puerto 80
+EXPOSE 80
+
+# Habilitar el módulo de Apache para la reescritura de URL
+RUN a2enmod rewrite
+
+# Iniciar Apache
+CMD ["apache2-foreground"]

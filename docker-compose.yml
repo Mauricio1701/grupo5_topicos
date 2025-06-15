@@ -1,6 +1,6 @@
 services:
 
-  app:
+  web:
     image: rsu_project:latest
     container_name: rsu_project
     ports:
@@ -24,6 +24,7 @@ services:
     container_name: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=12345
+      - MYSQL_DATABASE=rsu_project
     networks:
       - rsu_network
     volumes:

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\Attendance;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Hash;
 use Exception;
 
 class AttendanceController extends Controller
@@ -158,10 +159,10 @@ class AttendanceController extends Controller
     {
         $employee = Employee::where('dni', $request->dni)->first();
         if (!$employee) {
-            return redirect()->back()->with('error', 'Datos incorrectos');
+           return redirect()->back()->with('error', 'Datos incorrectos');
         }
 
-        if ($employee->password != $request->password) {
+        if (!Hash::check($request->password, $employee->password)) {
             return redirect()->back()->with('error', 'Datos incorrectos');
         }
 
