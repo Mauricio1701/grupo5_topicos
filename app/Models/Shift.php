@@ -11,26 +11,28 @@ class Shift extends Model
 
     protected $fillable = [
         'name',
-        'description'
+        'description',
+        'hour_in',    
+        'hour_out'    
     ];
 
-    // Relación con grupos de empleados
     public function employeeGroups()
     {
         return $this->hasMany(EmployeeGroup::class, 'shift_id');
     }
 
-    // Relación con cambios
     public function changes()
     {
         return $this->hasMany(Change::class, 'shift_id');
     }
 
-    // Accessor para mostrar información del turno
     public function getDisplayInfoAttribute()
     {
         return $this->description ?? 'Sin descripción';
     }
 
-    
+    public function getFullScheduleAttribute()
+    {
+        return $this->hour_in . ' - ' . $this->hour_out;
+    }
 }
