@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use App\Models\Color;
 use App\Models\Brand;
-use App\Models\VehicleType;
+use App\Models\Vehicletype;
 use App\Models\Brandmodel;
 use App\Models\Vehicleimage;
 use Illuminate\Http\Request;
@@ -86,7 +86,7 @@ class VehicleController extends Controller
     {
         $colors = Color::all()->pluck('name', 'id');
         $brands = Brand::all()->pluck('name', 'id');
-        $types = VehicleType::all()->pluck('name', 'id');
+        $types = Vehicletype::all()->pluck('name', 'id');
         $models = Brandmodel::all()->pluck('name', 'id');
 
         return view('admin.vehicles.create', compact('colors', 'brands', 'types', 'models'));
@@ -153,7 +153,7 @@ class VehicleController extends Controller
         $vehicle = Vehicle::findOrFail($id);
         $colors = Color::all()->pluck('name', 'id');
         $brands = Brand::all()->pluck('name', 'id');
-        $types = VehicleType::all()->pluck('name', 'id');
+        $types = Vehicletype::all()->pluck('name', 'id');
         $models = Brandmodel::all()->pluck('name', 'id');
 
         return view('admin.vehicles.edit', compact('vehicle', 'colors', 'brands', 'types', 'models'));

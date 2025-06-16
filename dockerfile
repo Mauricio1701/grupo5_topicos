@@ -32,14 +32,24 @@ RUN composer install --no-interaction --prefer-dist
 # Instalar las dependencias de JavaScript (Vite y otros paquetes npm)
 RUN npm install
 
-# Configurar Vite para producción (opcional)
+# Configurar Vite para producción
 RUN npm run build
+
+RUN chown -R www-data:www-data /var/www/html/public && \
+    chmod -R 755 /var/www/html/public
+
+RUN chown -R www-data:www-data /var/www/html/storage && \
+    chmod -R 755 /var/www/html/storage
+
+RUN php artisan storage:link
 
 # Exponer el puerto 80
 EXPOSE 80
 
 # Habilitar el módulo de Apache para la reescritura de URL
 RUN a2enmod rewrite
+
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
 # Iniciar Apache
 CMD ["apache2-foreground"]
