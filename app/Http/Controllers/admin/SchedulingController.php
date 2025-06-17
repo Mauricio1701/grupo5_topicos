@@ -736,6 +736,7 @@ class SchedulingController extends Controller
             // Verificamos si start_date y end_date están presentes
             try {
                 if ($request->start_date) {
+                    $helpers = $request->helpers ?? [];
                     
                     DB::beginTransaction();
                     // Si no se pasa end_date, significa que es solo un día
@@ -760,7 +761,7 @@ class SchedulingController extends Controller
                             $startDate = Carbon::parse($request->start_date);  // Convertimos la fecha de inicio
                             $endDate = Carbon::parse($request->end_date);      // Convertimos la fecha de fin
                             
-            
+                           
                             // Iteramos por cada día dentro del rango
                             while ($startDate->lte($endDate)) {
                                 // Comprobamos si el día de la semana de startDate está en los días asignados al grupo
@@ -791,7 +792,7 @@ class SchedulingController extends Controller
                                         'scheduling_id' => $scheduling->id,
                                     ]);
 
-                                    foreach ($request->helpers as $helper) {
+                                    foreach ($helpers as $helper) {
                                         Groupdetail::create([
                                             'employee_id' => $helper,
                                             'scheduling_id' => $scheduling->id,
@@ -832,7 +833,7 @@ class SchedulingController extends Controller
                                 'scheduling_id' => $scheduling->id,
                             ]);
 
-                            foreach ($request->helpers as $helper) {
+                            foreach ($helpers as $helper) {
                                 Groupdetail::create([
                                     'employee_id' => $helper,
                                     'scheduling_id' => $scheduling->id,
