@@ -216,10 +216,23 @@ class ZoneController extends Controller
         try {
             $employeeGroupsCount = $zone->employeeGroups()->count();
 
+            $schedulingsCount = $zone->schedulings()->count();
+
+            $dependencies = [];
+
             if ($employeeGroupsCount > 0) {
+                $dependencies[] = "{$employeeGroupsCount} grupo(s) de empleados";
+            }
+
+            if ($schedulingsCount > 0) {
+                $dependencies[] = "{$schedulingsCount} programación(es)";
+            }
+
+            if (!empty($dependencies)) {
+                $dependenciesText = implode(' y ', $dependencies);
                 return response()->json([
                     'success' => false,
-                    'message' => "No se puede eliminar esta zona porque tiene {$employeeGroupsCount} grupo(s) de empleados asignados. Primero debe reasignar o eliminar los grupos de empleados de esta zona."
+                    'message' => "No se puede eliminar esta zona porque tiene {$dependenciesText} asignados. Primero debe eliminar o reasignar estos elementos."
                 ], 400);
             }
 
@@ -239,10 +252,9 @@ class ZoneController extends Controller
             if ($e->getCode() == 23000 || strpos($e->getMessage(), 'foreign key constraint') !== false) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No se puede eliminar esta zona porque está siendo utilizada por otros registros del sistema. Verifique que no haya grupos de empleados u otros datos asociados a esta zona.'
+                    'message' => 'No se puede eliminar esta zona porque está siendo utilizada por otros registros del sistema. Verifique que no haya grupos de empleados, programaciones u otros datos asociados a esta zona.'
                 ], 400);
             }
-
 
 
             return response()->json([

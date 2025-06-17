@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,13 +17,13 @@ class Zone extends Model
         'status'
     ];
 
-    
+
     public function coords()
     {
         return $this->hasMany(Coord::class, 'zone_id');
     }
 
-   
+
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
@@ -31,5 +32,10 @@ class Zone extends Model
     public function employeeGroups()
     {
         return $this->hasMany(Employeegroup::class, 'zone_id');
+    }
+
+    public function schedulings()
+    {
+        return $this->hasManyThrough(Scheduling::class, Employeegroup::class, 'zone_id', 'group_id');
     }
 }
