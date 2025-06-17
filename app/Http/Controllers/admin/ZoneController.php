@@ -214,6 +214,15 @@ class ZoneController extends Controller
     {
         DB::beginTransaction();
         try {
+            $employeeGroupsCount = $zone->employeeGroups()->count();
+
+            if ($employeeGroupsCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No se puede eliminar esta zona porque tiene {$employeeGroupsCount} grupo(s) de empleados asignados. Primero debe reasignar o eliminar los grupos de empleados de esta zona."
+                ], 400);
+            }
+
             $zone->coords()->delete();
 
             $zone->delete();
@@ -223,12 +232,29 @@ class ZoneController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Zona eliminada exitosamente.'
-            ]);
-        } catch (\Exception $e) {
+            ], 200);
+        } catch (\Illuminate\Database\QueryException $e) {
             DB::rollback();
+
+            if ($e->getCode() == 23000 || strpos($e->getMessage(), 'foreign key constraint') !== false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar esta zona porque está siendo utilizada por otros registros del sistema. Verifique que no haya grupos de empleados u otros datos asociados a esta zona.'
+                ], 400);
+            }
+
+
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar la zona: ' . $e->getMessage()
+                'message' => 'Error interno del servidor al eliminar la zona. Por favor, contacte al administrador.'
+            ], 500);
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ha ocurrido un error inesperado. Por favor, inténtelo nuevamente.'
             ], 500);
         }
     }
