@@ -27,4 +27,9 @@ class Zone extends Model
     {
         return $this->belongsTo(Department::class, 'department_id');
     }
+
+    public function employeeGroups()
+    {
+        return $this->hasMany(Employeegroup::class, 'zone_id');
+    }
 }
