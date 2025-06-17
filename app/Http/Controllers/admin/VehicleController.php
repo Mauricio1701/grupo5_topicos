@@ -208,15 +208,33 @@ class VehicleController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy($id)
-    {
-        try {
-            $vehicle = Vehicle::findOrFail($id);
-            $vehicle->delete();
-            return response()->json(['success' => true, 'message' => 'Vehículo eliminado exitosamente'], 200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar el vehículo: ' . $th->getMessage()], 500);
+{
+    try {
+        $vehicle = Vehicle::findOrFail($id);
+
+        // Verificamos si tiene relaciones activas
+        if ($vehicle->employeegroups()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar el vehículo porque está asociado a uno o más grupos de empleados.'
+            ]);
         }
+
+        $vehicle->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vehículo eliminado exitosamente.'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Ocurrió un error al intentar eliminar el vehículo.'
+        ]);
     }
+}
+
+
 
     public function byType($typeId)
     {

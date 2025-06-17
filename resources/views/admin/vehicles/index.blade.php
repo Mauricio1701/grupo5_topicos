@@ -214,9 +214,14 @@ $(document).ready(function() {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        table.ajax.reload(null, false);
-                        Swal.fire('¡Éxito!', response.message, 'success');
+                        if (response.success) {
+                            table.ajax.reload(null, false);
+                            Swal.fire('¡Éxito!', response.message, 'success');
+                        } else {
+                            Swal.fire('¡Error!', response.message, 'error');
+                        }
                     },
+
                     error: function(xhr) {
                         let res = xhr.responseJSON;
                         Swal.fire('¡Error!', res?.message || 'Ocurrió un error', 'error');

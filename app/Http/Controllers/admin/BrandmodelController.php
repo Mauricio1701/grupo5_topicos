@@ -31,13 +31,13 @@ class BrandmodelController extends Controller
                                     <i class="fas fa-edit"></i>
                                 </button>';
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $model->id) . '" method="POST">
-                                    ' . csrf_field() . '
-                                    ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>';
+                    $deleteBtn = '<form id="delete-form-' . $model->id . '" class="delete d-inline" action="' . route('admin.models.destroy', $model->id) . '" method="POST">
+                        ' . csrf_field() . '
+                        ' . method_field('DELETE') . '
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(' . $model->id . ')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>';
                     
                     return $editBtn . ' ' . $deleteBtn;
                 })
@@ -110,15 +110,26 @@ class BrandmodelController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        try {
-            $model = Brandmodel::find($id);
-            $model->delete();
-            return response()->json(['success'=>true,'message' => 'Modelo eliminado exitosamente'],200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar el modelo: '.$th->getMessage()]);
-        }
+{
+    try {
+        $model = Brandmodel::findOrFail($id);
+
+        // Verifica si hay vehículos asociados
+        if ($model->vehicles()->exists()) {
+    return response()->json([
+        'success' => false,
+        'message' => 'No se puede eliminar el modelo porque está asociado a uno o más vehículos.'
+    ], 400);
+}
+
+
+        $model->delete();
+        return response()->json(['success' => true, 'message' => 'Modelo eliminado exitosamente.'], 200);
+
+    } catch (\Throwable $th) {
+        return response()->json(['success' => false, 'message' => 'Error al eliminar el modelo: ' . $th->getMessage()], 500);
     }
+}
 
     public function getModelsByBrand($brand_id)
 {

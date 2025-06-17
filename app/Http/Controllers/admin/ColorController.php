@@ -30,13 +30,14 @@ class ColorController extends Controller
                                     <i class="fas fa-edit"></i>
                                 </button>';
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $color->id) . '" method="POST">
-                                    ' . csrf_field() . '
-                                    ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>';
+                    $deleteBtn = '<form id="delete-form-' . $color->id . '" class="delete d-inline" action="' . route('admin.colors.destroy', $color->id) . '" method="POST">
+                        ' . csrf_field() . '
+                        ' . method_field('DELETE') . '
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(' . $color->id . ')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>';
+
                     
                     return $editBtn . ' ' . $deleteBtn;
                 })
@@ -114,13 +115,25 @@ class ColorController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        try {
-            $color = Color::find($id);
-            $color->delete();
-            return response()->json(['success'=>true,'message' => 'Motivo eliminado exitosamente'],200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar el motivo: '.$th->getMessage()]);
-        }
+{
+    try {
+        $color = Color::findOrFail($id);
+
+        // Verifica si hay vehículos asociados
+        if ($color->vehicles()->exists()) {
+    return response()->json([
+        'success' => false,
+        'message' => 'No se puede eliminar el color porque está asociado a uno o más vehículos.'
+    ], 400);
+}
+
+
+        $color->delete();
+        return response()->json(['success' => true, 'message' => 'Color eliminado exitosamente.'], 200);
+
+    } catch (\Throwable $th) {
+        return response()->json(['success' => false, 'message' => 'Error al eliminar el color: ' . $th->getMessage()], 500);
     }
+}
+
 }

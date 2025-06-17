@@ -38,13 +38,13 @@ class BrandController extends Controller
                                     <i class="fas fa-edit"></i>
                                 </button>';
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $brand->id) . '" method="POST">
-                                    ' . csrf_field() . '
-                                    ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>';
+                $deleteBtn = '<form id="delete-form-' . $brand->id . '" class="delete d-inline" action="' . route('admin.brands.destroy', $brand->id) . '" method="POST">
+                        ' . csrf_field() . '
+                        ' . method_field('DELETE') . '
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(' . $brand->id . ')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>';
                     
                     return $editBtn . ' ' . $deleteBtn;
                 })
@@ -161,19 +161,40 @@ class BrandController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
-    {
-        try {
-            $brand = Brand::find($id);
-            
-            if($brand->logo != null){
-                Storage::delete($brand->logo); // borrar la imagen anterior
-            }
+  public function destroy(string $id)
+{
+    try {
+        $brand = Brand::findOrFail($id);
 
-            $brand->delete();
-            return response()->json(['success'=>true,'message' => 'Marca eliminada exitosamente'],200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar la marca: '.$th->getMessage()]);
+        // Verifica si hay modelos asociados
+        if ($brand->brandmodels()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar la marca porque está asociada a uno o más modelos.'
+            ], 400);
         }
-    }                       
+
+        // Verifica si hay vehículos asociados
+        if ($brand->vehicles()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede eliminar la marca porque está asociada a uno o más vehículos.'
+            ], 400);
+        }
+
+        $brand->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Marca eliminada exitosamente.'
+        ], 200);
+
+    } catch (\Throwable $th) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al eliminar la marca: ' . $th->getMessage()
+        ], 500);
+    }
+}
+
+         
 }

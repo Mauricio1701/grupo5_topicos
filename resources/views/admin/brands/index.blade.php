@@ -200,7 +200,8 @@
     });
 
     $(document).ready(function() {
-    $('#datatable').DataTable({
+        refreshTable();
+    table = $('#datatable').DataTable({
         language: {
             url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
         },
@@ -219,10 +220,7 @@
                 render: function(data) {
                     if (!data) return '';
                     let fecha = new Date(data);
-                    let dia = ('0' + fecha.getDate()).slice(-2);
-                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
-                    let anio = fecha.getFullYear();
-                    return `${dia}-${mes}-${anio}`;
+                    return fecha.toLocaleDateString('es-PE');
                 }
             },
             {
@@ -230,10 +228,7 @@
                 render: function(data) {
                     if (!data) return '';
                     let fecha = new Date(data);
-                    let dia = ('0' + fecha.getDate()).slice(-2);
-                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
-                    let anio = fecha.getFullYear();
-                    return `${dia}-${mes}-${anio}`;
+                    return fecha.toLocaleDateString('es-PE');
                 }
             },
             { data: 'action', orderable: false, searchable: false }
@@ -242,25 +237,28 @@
 });
 
 
-    $(document).on('submit','.formDelete',function(e){
-        e.preventDefault();
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡Este cambio no se puede deshacer!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var form = $(this);
-                $.ajax({
-                    url: form.attr('action'),
-                    type: form.attr('method'),
-                    data: form.serialize(),
-                    success: function(response) {
-                        refreshTable();
+
+
+    function confirmDelete(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Este cambio no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: $("#delete-form-" + id).attr('action'),
+                type: 'POST',
+                data: $("#delete-form-" + id).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        table.ajax.reload(null, false); // 🔁 Actualiza sin recargar la página
+                        $('#miModalExito').modal('show');
+
                         Swal.fire({
                             icon: 'success',
                             title: '¡Éxito!',
@@ -268,27 +266,34 @@
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });
-                    },
-                    error: function(xhr, status, error) {
-                    var response = xhr.responseJSON;
-                    Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: response.message,
-                            confirmButtonColor: '#3085d6',
-                            confirmButtonText: 'Aceptar'
-                        });
                     }
-                });
-            }
-        });
-    });
-       
 
-    function refreshTable() {
-        var table = $('#datatable').DataTable();
-        table.ajax.reload(null, false);
+                },
+                error: function(xhr) {
+                    let res = xhr.responseJSON;
+                    let message = res && res.message
+                        ? res.message
+                        : 'Ha ocurrido un error al eliminar el color.';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: message,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+}
+       
+function refreshTable() {
+    if (typeof table !== 'undefined') {
+        table.ajax.reload(null, false); // recarga sin mover de página
     }
+}
+
 </script>
 
 @stop

@@ -10,4 +10,9 @@ class Color extends Model
     use HasFactory;
     
     protected $guarded = [];
+    
+    public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'color_id');
+    }
 }

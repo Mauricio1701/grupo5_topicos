@@ -221,55 +221,86 @@
             { data: 'action', orderable: false, searchable: false }
         ]
     });
+
+
+    setInterval(function () {
+        refreshTable();
+    }, 5000);
 });
 
 
-    $(document).on('submit','.formDelete',function(e){
-        e.preventDefault();
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡Este cambio no se puede deshacer!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var form = $(this);
-                $.ajax({
-                    url: form.attr('action'),
-                    type: form.attr('method'),
-                    data: form.serialize(),
-                    success: function(response) {
-                        refreshTable();
+
+    function refreshTable() {
+        var table = $('#datatable').DataTable();
+        table.ajax.reload(null, false);
+    }
+
+  function confirmDelete(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Este cambio no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.getElementById("delete-form-" + id);
+            const formData = new FormData(form); // Incluye CSRF y _method
+
+            $.ajax({
+                url: form.action,
+                type: 'POST', // Laravel entiende DELETE por el campo _method
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
                         Swal.fire({
                             icon: 'success',
                             title: '¡Éxito!',
                             text: response.message,
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            // 🔁 Aquí va la recarga de la tabla
+                            if (typeof table !== 'undefined') {
+                                table.ajax.reload(null, false);
+                            }
                         });
-                    },
-                    error: function(xhr, status, error) {
-                    var response = xhr.responseJSON;
-                    Swal.fire({
+                    } else {
+                        Swal.fire({
                             icon: 'error',
-                            title: '¡Error!',
+                            title: '¡Advertencia!',
                             text: response.message,
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });
                     }
-                });
-            }
-        });
-    });
+                },
+                error: function(xhr) {
+                    let res = xhr.responseJSON;
+                    let message = res && res.message
+                        ? res.message
+                        : 'Ha ocurrido un error al eliminar el modelo.';
 
-    function refreshTable() {
-        var table = $('#datatable').DataTable();
-        table.ajax.reload(null, false);
-    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: message,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+}
+
+
+   
+
 </script>
 
 @stop

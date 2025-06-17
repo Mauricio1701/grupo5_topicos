@@ -204,46 +204,56 @@
         });
     });
 
-    function confirmDelete(id) {
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡Este cambio no se puede deshacer!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: $("#delete-form-" + id).attr('action'),
-                    type: 'POST',
-                    data: $("#delete-form-" + id).serialize(),
-                    success: function(response) {
-                        if(response.success){
-                            table.ajax.reload();
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: response.message,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    },
-                    error: function(xhr) {
+   function confirmDelete(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Este cambio no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: $("#delete-form-" + id).attr('action'),
+                type: 'POST',
+                data: $("#delete-form-" + id).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        // 🔁 Recarga la tabla sin cambiar de página
+                        table.ajax.reload(null, false);
+
                         Swal.fire({
-                            icon: 'error',
-                            title: '¡Error!',
-                            text: 'Ha ocurrido un error al eliminar el Color.',
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: response.message,
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });
                     }
-                });
-            }
-        });
-    }
+                },
+                error: function(xhr) {
+                    let res = xhr.responseJSON;
+                    let message = res && res.message
+                        ? res.message
+                        : 'Ha ocurrido un error al eliminar el color.';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: '¡Error!',
+                        text: message,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+    });
+}
+
+
+
 </script>
 
 @stop

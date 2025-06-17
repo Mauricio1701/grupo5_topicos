@@ -33,6 +33,9 @@ class Vehicle extends Model
     {
         return $this->belongsTo(Brandmodel::class);
     }
-
+    public function employeegroups()
+    {
+        return $this->hasMany(Employeegroup::class);
+    }
     
 }
