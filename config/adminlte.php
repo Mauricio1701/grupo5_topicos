@@ -352,7 +352,7 @@ return [
             'submenu'=>[
                 [
                     'text'=>'Tipo de Empleados',
-                    'route'=>'admin.employeetypes.index',
+                    'route'=>'admin.employee-types.index',
                     'icon'=>'fas fa-fw fa-user-tie',
                 ],
                 [

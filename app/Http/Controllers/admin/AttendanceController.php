@@ -48,16 +48,9 @@ class AttendanceController extends Controller
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $attendance->id . '">
                                     <i class="fas fa-edit"></i>
                                 </button>';
+                
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.attendances.destroy', $attendance->id) . '" method="POST">
-                                    ' . csrf_field() . '
-                                    ' . method_field('DELETE') . '
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>';
-                    
-                    return $editBtn . ' ' . $deleteBtn;
+                    return $editBtn ;
                 })
                 ->rawColumns(['action', 'status_badge'])
                 ->make(true);

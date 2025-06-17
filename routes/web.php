@@ -37,11 +37,6 @@ Route::post('/set-profile/{image_id}', [VehicleController::class, 'setProfile'])
 Route::delete('/delete-image/{image_id}', [VehicleController::class, 'deleteImage'])->name('admin.vehicles.deleteImage');
 Route::post('/store-image', [VehicleController::class, 'storeImages'])->name('admin.vehicles.storeImages');
 
-
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
-});
-
 // Rutas para Turnos
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('shifts', App\Http\Controllers\Admin\ShiftController::class);
@@ -64,7 +59,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 // Rutas para el módulo de Tipos de Empleados  
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
     Route::post('employee-types/check-unique', [App\Http\Controllers\Admin\EmployeeTypeController::class, 'checkUnique']);
 });
 

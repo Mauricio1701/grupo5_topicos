@@ -26,7 +26,6 @@ Route::resource('reasons', ReasonController::class)->names('admin.reasons');
 Route::resource('colors', ColorController::class)->names('admin.colors');
 Route::resource('vehiclestypes', VehicletypeController::class)->names('admin.vehiclestypes');
 Route::resource('vehicles', VehicleController::class)->names('admin.vehicles');
-Route::resource('employeetypes', EmployeeTypeController::class)->names('admin.employeetypes');
 Route::resource('employees', EmployeeController::class)->names('admin.employees');
 Route::resource('shifts', ShiftController::class)->names('admin.shifts');
 Route::resource('contracts', ContractController::class)->names('admin.contracts');
@@ -44,6 +43,7 @@ Route::patch('vacations/{vacation}/change-status', [VacationController::class, '
 
 Route::resource('attendances', AttendanceController::class)->names('admin.attendances');
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
+Route::resource('employee-types', EmployeeTypeController::class)->names('admin.employee-types');
 Route::resource('changes', ChangeController::class)->names('admin.changes');
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');

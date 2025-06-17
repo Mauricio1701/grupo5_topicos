@@ -9,8 +9,9 @@ use App\Models\Employee;
 use App\Models\Zone;
 use App\Models\Shift;
 use App\Models\Vehicle;
-use App\Models\EmployeeGroup;
+use App\Models\Employeegroup;
 use App\Models\EmployeeType;
+use App\Models\Scheduling;
 use App\Models\Vehicletype;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -23,7 +24,7 @@ class EmployeegroupController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $employeeGroups = EmployeeGroup::with('shift', 'vehicle', 'zone')
+            $employeeGroups = Employeegroup::with('shift', 'vehicle', 'zone')
             ->withCount('configgroup')
             ->get();
             
@@ -109,7 +110,7 @@ class EmployeegroupController extends Controller
 
                 $days = substr($days, 0, -1);
 
-                $employeegroup = EmployeeGroup::create([
+                $employeegroup = Employeegroup::create([
                     'zone_id' => $request->zone_id,
                     'shift_id' => $request->shift_id,
                     'vehicle_id' => $request->vehicle_id,
@@ -151,7 +152,7 @@ class EmployeegroupController extends Controller
      */
     public function show(string $id)
     {
-        $employeeGroup = EmployeeGroup::with(['conductors', 'helpers'])->findOrFail($id);
+        $employeeGroup = Employeegroup::with(['conductors', 'helpers'])->findOrFail($id);
         return view('admin.employee-groups.show', compact('employeeGroup'));
     }
 
@@ -184,7 +185,7 @@ class EmployeegroupController extends Controller
             : collect();
        
         // El grupo con sus empleados asociados filtrados por tipo
-        $employeeGroup = EmployeeGroup::with(['conductors', 'helpers'])->findOrFail($id);
+        $employeeGroup = Employeegroup::with(['conductors', 'helpers'])->findOrFail($id);
         $driverId = optional($employeeGroup->conductors->first())->id;
 
         return view('admin.employee-groups.edit', compact(
@@ -200,7 +201,7 @@ class EmployeegroupController extends Controller
     
 
     public function data(){
-        $employeeGroups = EmployeeGroup::with('shift', 'vehicle', 'zone')
+        $employeeGroups = Employeegroup::with('shift', 'vehicle', 'zone')
             ->withCount('configgroup')
             ->get();
         
@@ -214,7 +215,7 @@ class EmployeegroupController extends Controller
     {
         try {
             DB::transaction(function() use($request, $id){
-                $employeeGroup = EmployeeGroup::findOrFail($id);
+                $employeeGroup = Employeegroup::findOrFail($id);
                 $days = '';
 
                 foreach ($request->days as $day) {
@@ -268,7 +269,13 @@ class EmployeegroupController extends Controller
     public function destroy(string $id)
     {
         try {
-            $employeeGroup = EmployeeGroup::findOrFail($id);
+            $employeeGroup = Employeegroup::findOrFail($id);
+            $schedulings = Scheduling::where('group_id', $id)->first();
+            if ($schedulings) {
+                return response()->json([
+                    'message' => 'No se puede eliminar el grupo de personal porque tiene asignaciones de programación.'
+                ], 400);
+            }
             DB::beginTransaction();
             Configgroup::where('employeegroup_id', $id)->delete();
             $employeeGroup->delete();
@@ -287,13 +294,13 @@ class EmployeegroupController extends Controller
     public function vehiclechange(string $id){
         $vehicletypes = Vehicletype::all();
         $vehicles = Vehicle::all();
-        $employeeGroup = EmployeeGroup::findOrFail($id);        
+        $employeeGroup = Employeegroup::findOrFail($id);        
         return view('admin.employee-groups.vehiclechange', compact('vehicletypes', 'employeeGroup', 'vehicles'));
     }
 
     public function vehiclechangeupdate(Request $request, string $id){
         try {
-            $employeeGroup = EmployeeGroup::findOrFail($id);
+            $employeeGroup = Employeegroup::findOrFail($id);
             $employeeGroup->update([
                 'vehicle_id' => $request->vehicle_id,
             ]);
