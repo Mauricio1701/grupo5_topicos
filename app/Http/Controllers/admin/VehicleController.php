@@ -61,7 +61,7 @@ class VehicleController extends Controller
                                 </button>';
                     
                     
-                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.shifts.destroy', $vehicle->id) . '" method="POST">
+                    $deleteBtn = '<form class="delete d-inline" action="' . route('admin.vehicles.destroy', $vehicle->id) . '" method="POST">
                                     ' . csrf_field() . '
                                     ' . method_field('DELETE') . '
                                     <button type="submit" class="btn btn-danger btn-sm">
@@ -154,7 +154,8 @@ class VehicleController extends Controller
         $colors = Color::all()->pluck('name', 'id');
         $brands = Brand::all()->pluck('name', 'id');
         $types = Vehicletype::all()->pluck('name', 'id');
-        $models = Brandmodel::all()->pluck('name', 'id');
+        $models = Brandmodel::where('brand_id', $vehicle->brand_id)->pluck('name', 'id');
+
 
         return view('admin.vehicles.edit', compact('vehicle', 'colors', 'brands', 'types', 'models'));
     }

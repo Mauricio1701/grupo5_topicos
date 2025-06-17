@@ -94,7 +94,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             {!! Form::label('model_id', 'Modelo *') !!}
-                            {!! Form::select('model_id', [], null, ['class' => 'form-control','placeholder' => 'Seleccione un modelo','required','id' => 'modelSelect'
+                            {!! Form::select('model_id', $models, null, ['class' => 'form-control','placeholder' => 'Seleccione un modelo','required','id' => 'modelSelect'
                             ]) !!}
                         </div>
                     </div>
