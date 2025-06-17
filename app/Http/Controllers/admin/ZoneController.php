@@ -52,11 +52,10 @@ class ZoneController extends Controller
                 ->addColumn('action', function ($zone) {
                     $viewBtn = '<button id="' . $zone->id . '" class="btn btn-sm btn-info btnVer mr-1"><i class="fas fa-eye"></i></button>';
                     $editBtn = '<button id="' . $zone->id . '" class="btn btn-sm btn-warning btnEditar mr-1"><i class="fas fa-edit"></i></button>';
-                    $deleteBtn = '<form id="delete-form-' . $zone->id . '" action="' . route('admin.zones.destroy', $zone->id) . '" method="POST" style="display:inline">
-                                ' . csrf_field() . '
-                                ' . method_field('DELETE') . '
-                                <button type="button" onclick="confirmDelete(' . $zone->id . ')" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                            </form>';
+                    $deleteBtn = '<button type="button" onclick="confirmDelete(' . $zone->id . ')" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i>
+                  </button>';
+
                     return $viewBtn . $editBtn . $deleteBtn;
                 })
                 ->rawColumns(['action', 'status_badge'])
