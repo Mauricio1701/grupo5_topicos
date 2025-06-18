@@ -68,9 +68,9 @@ class ColorController extends Controller
             ]);
             
             Color::create($request->all());
-            return response()->json(['success'=>true,'message' => 'Motivo creado exitosamente'],200);
+            return response()->json(['success'=>true,'message' => 'Color creado exitosamente'],200);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al crear el motivo: '.$th->getMessage()]);
+            return response()->json(['message' => 'Error al crear el color: '.$th->getMessage()]);
         }
     }
 
@@ -105,9 +105,9 @@ class ColorController extends Controller
             
             $Color = Color::find($id);
             $Color->update($request->all());
-            return response()->json(['success'=>true,'message' => 'Motivo actualizado exitosamente'],200);
+            return response()->json(['success'=>true,'message' => 'Color actualizado exitosamente'],200);
         } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al actualizar el motivo: '.$th->getMessage()]);
+            return response()->json(['message' => 'Error al actualizar el color: '.$th->getMessage()]);
         }
     }
 

@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Hash;
 use Exception;
+use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
@@ -17,8 +18,9 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
+        $fechaActual = Carbon::now()->format('Y-m-d');
         if ($request->ajax()) {
-            $attendances = Attendance::with('employee')->select([
+            $query = Attendance::with('employee')->select([
                 'id',
                 'employee_id',
                 'attendance_date',
@@ -27,6 +29,20 @@ class AttendanceController extends Controller
                 'created_at',
                 'updated_at',
             ]);
+
+            if($request->filled('start_date') && !$request->filled('end_date')){
+                    $query->whereDate('attendance_date', '=', $request->start_date);
+            }else{
+                if ($request->filled('start_date')) {
+                    $query->whereDate('attendance_date', '>=', $request->start_date);
+                }
+
+                if ($request->filled('end_date')) {
+                    $query->whereDate('attendance_date', '<=', $request->end_date);
+                }
+            }
+
+            $attendances = $query->get();
 
             return DataTables::of($attendances)
                 ->addColumn('employee_dni', function ($attendance) {
@@ -56,7 +72,7 @@ class AttendanceController extends Controller
                 ->make(true);
         }
 
-        return view('admin.attendances.index');
+        return view('admin.attendances.index', compact('fechaActual'));
     }
 
     /**

@@ -32,6 +32,19 @@
         </div>
     </div>
     <div class="card-body table-responsive">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
+                <input type="date" value="{{$fechaActual}}" name="start_date" id="start_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">Fecha de fin: </label>
+                <input type="date" name="end_date" id="end_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-outline-info" id="btnFilter">Filtrar</button>
+            </div>
+        </div>
         <table class="table table-striped" id="datatableAttendances" style="width:100%">
             <thead>
                 <tr>
@@ -40,7 +53,6 @@
                     <th>FECHA</th>
                     <th>ESTADO</th>
                     <th>NOTAS</th>
-                    <th>CREADO</th>
                     <th>ACCIÓN</th>
                 </tr>
             </thead>
@@ -65,17 +77,22 @@ $(document).ready(function() {
         },
         processing: true,
         serverSide: true,
-        ajax: "{{ route('admin.attendances.index') }}",
+        ajax: {
+            url: "{{ route('admin.attendances.index') }}",
+            data: function(d) {
+                d.start_date = $('#start_date').val();
+                d.end_date = $('#end_date').val();
+            }
+        },
         columns: [
             { data: 'employee_dni', name: 'employee_dni' },
             { data: 'employee_name', name: 'employee_name', orderable: false, searchable: false },
             { data: 'attendance_date', name: 'attendance_date' },
             { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
             { data: 'notes', name: 'notes' },
-            { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[6, 'desc']]
+        order: [[2, 'desc']]
     });
 
     // Nuevo empleado - abrir modal
@@ -236,6 +253,46 @@ $(document).ready(function() {
                 });
             }
         });
+    });
+
+    $('#btnFilter').on('click', function() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+
+        if (startDate === '' || startDate === null) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Por favor, selecciona al menos la fecha de inicio para filtrar.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        console.log('Fecha de inicio:', startDate);
+        console.log('Fecha de fin:', endDate);
+
+
+        if (endDate !== '' ) {
+            
+            if (startDate > endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'La fecha de fin no puede ser menor que la fecha de inicio.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            // Recargar el DataTable con las fechas
+            table.ajax.reload();
+            return;
+        }
+
+        table.ajax.reload();
+       
     });
 });
 </script>
