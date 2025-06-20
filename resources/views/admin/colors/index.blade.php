@@ -34,8 +34,8 @@
             <button id="btnNewColor" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Nuevo Color</button> 
         </div>
     </div>
-    <div class="card-body">
-            <table class="table table-striped" id="datatable">
+    <div class="card-body table-responsive">
+            <table class="table table-striped" id="datatable" style="width:100%">
                 <thead >
                     <tr>
                         <th>NOMBRE</th>
@@ -54,6 +54,16 @@
 
 @section('css')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+    <style>
+        #datatableVehicles {
+            text-transform: uppercase;
+        }
+    
+        .card-body.table-responsive {
+            max-height: 630px;
+            overflow-y: auto;
+        }
+    </style>
 @stop
 
 @section('js')

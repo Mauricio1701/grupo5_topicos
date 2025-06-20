@@ -29,8 +29,8 @@
             <button id="btnNewEmployeeType" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nuevo Tipo</button> 
         </div>
     </div>
-    <div class="card-body">
-        <table class="table" id="datatableEmployeeTypes">
+    <div class="card-body table-responsive">
+        <table class="table" id="datatableEmployeeTypes" style="width:100%">
             <thead>
                 <tr>
                     <th>NOMBRE</th>

@@ -31,8 +31,8 @@
             </button> 
         </div>
     </div>
-    <div class="card-body">
-        <table class="table" id="datatableEmployees">
+    <div class="card-body table-responsive">
+        <table class="table" id="datatableEmployees" style="width:100%">
             <thead>
                 <tr>
                     <th>FOTO</th>

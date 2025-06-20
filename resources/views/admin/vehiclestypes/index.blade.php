@@ -34,8 +34,8 @@
             <button id="btnNewVehiclestype" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Nuevo Tipo de Vehiculo</button> 
         </div>
     </div>
-    <div class="card-body">
-            <table class="table table-striped" id="datatable">
+    <div class="card-body table-responsive">
+            <table class="table table-striped" id="datatable" style="width:100%">
                 <thead >
                     <tr>
                         <th>NOMBRE</th>
