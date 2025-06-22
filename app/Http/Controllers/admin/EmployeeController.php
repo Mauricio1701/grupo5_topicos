@@ -8,6 +8,7 @@ use App\Models\EmployeeType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
@@ -289,6 +290,11 @@ class EmployeeController extends Controller
         try {
             DB::beginTransaction();
 
+            // Eliminar la foto si existe
+            if ($employee->photo && \Storage::exists('public/employees/' . $employee->photo)) {
+                \Storage::delete('public/employees/' . $employee->photo);
+            }
+
             $employee->delete();
 
             DB::commit();
@@ -297,6 +303,22 @@ class EmployeeController extends Controller
                 'success' => true,
                 'message' => 'Empleado eliminado exitosamente.'
             ]);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            // Verificar si es un error de constraint de foreign key (código 23000)
+            if ($e->getCode() == 23000) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar el empleado porque está asociado a uno o más contratos.'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar el empleado.'
+            ], 500);
 
         } catch (\Exception $e) {
             DB::rollBack();

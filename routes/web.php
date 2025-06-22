@@ -60,6 +60,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // Rutas para el módulo de Tipos de Empleados  
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('employee-types/check-unique', [App\Http\Controllers\Admin\EmployeeTypeController::class, 'checkUnique']);
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('employee-types', App\Http\Controllers\Admin\EmployeeTypeController::class);
+    Route::post('employee-types/check-unique', [App\Http\Controllers\Admin\EmployeeTypeController::class, 'checkUnique']);
+});
 });
 
 // Rutas para el módulo de Turnos

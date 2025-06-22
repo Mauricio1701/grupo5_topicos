@@ -7,6 +7,7 @@ use App\Http\Requests\EmployeeTypeRequest;
 use App\Models\EmployeeType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -156,31 +157,46 @@ class EmployeeTypeController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(EmployeeType $employeeType)
-    {
-        try {
-            DB::beginTransaction();
+ * Remove the specified resource from storage.
+ */
+public function destroy(EmployeeType $employeeType)
+{
+    try {
+        DB::beginTransaction();
 
-            $employeeType->delete();
+        $employeeType->delete();
 
-            DB::commit();
+        DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Tipo de empleado eliminado exitosamente.'
-            ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Tipo de empleado eliminado exitosamente.'
+        ]);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+    } catch (\Illuminate\Database\QueryException $e) {
+        DB::rollBack();
+        
+        // Verificar si es un error de constraint de foreign key (código 23000)
+        if ($e->getCode() == 23000) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al eliminar el tipo de empleado: ' . $e->getMessage()
-            ], 500);
+                'message' => 'No se puede eliminar el tipo de empleado porque está asociado a uno o más empleados.'
+            ], 400);
         }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al eliminar el tipo de empleado.'
+        ], 500);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al eliminar el tipo de empleado: ' . $e->getMessage()
+        ], 500);
     }
-
+}
     /**
      * Verificar unicidad de nombre para validación dinámica
      */
