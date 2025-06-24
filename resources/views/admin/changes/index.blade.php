@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Marcas')
+@section('title', 'Cambios')
 
 @section('content_header')
     
@@ -29,52 +29,44 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Marcas</h3>
+        <h3 class="card-title">Lista de Cambios</h3>
         <div class="card-tools">
-            <button id="btnNewBrand" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Nueva Marca</button>    
+            <button id="btnNewBrand" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Cambio</button>    
         </div>
     </div>
     <div class="card-body">
-            <table class="table table-striped" id="datatable">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Fecha de inicio: <span class="text-danger">*</span></label>
+                <input type="date" value="{{$fechaActual}}" name="start_date" id="start_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">Fecha de fin: </label>
+                <input type="date" name="end_date" id="end_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-outline-info" id="btnFilter">Filtrar</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped" id="datatable" style="width:100%">
                 <thead >
                     <tr>
-                        <th>LOGO</th>
-                        <th>NOMBRE</th>
-                        <th>DESCRIPCIÓN</th>
-                        <th>CREADO</th>
-                        <th>ACTUALIZADO</th>
+                        <th>FECHA CAMBIO</th>
+                        <th>PROGRAMACIÓN</th>
+                        <th>GRUPO</th>
+                        <th>TIPO</th>
+                        <th>VALOR ANTERIOR</th>
+                        <th>VALOR NUEVO</th>
                         <th>ACCIÓN</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($brands as $brand)
-                        <tr>
-                            <td>
-                                <img src="{{ $brand->logo == '' ? asset('storage/brand_logo/producto_var.webp') : asset($brand->logo) }}" alt="Logo" width="50">
-                            </td>
-                            <td>{{ $brand->name }}</td>
-                            <td>{{ $brand->description }}</td>
-                            <td>{{ \Carbon\Carbon::parse($brand->created_at)->format('d-m-Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($brand->updated_at)->format('d-m-Y') }}</td>
-
-
-
-
-                            <td>
-                                <button type="button" class="btn btn-warning btnEditar" id="{{ $brand->id }}"> <i class="fas fa-edit"></i></button>
-                                <form action="{{ route('admin.brands.destroy', $brand->id) }}" id="delete-form-{{ $brand->id }}" method="POST" class="d-inline formDelete">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger"> <i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
                     
-                    @endforeach
                 </tbody>
             </table>
-        
-       
+        </div>
+    </div>
     
 </div>
 @stop
@@ -92,7 +84,7 @@
 
     $('#btnNewBrand').click(function() {
         $.ajax({
-            url: "{{ route('admin.brands.create') }}",
+            url: "{{ route('admin.changes.create') }}",
             type: 'GET',
             success: function(response) {
                 $('#ModalLongTitle').text('Agregar Nueva Marca');
@@ -149,10 +141,10 @@
     $(document).on('click', '.btnEditar', function() {
         var brandId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.brands.edit', 'id') }}".replace('id', brandId),
+            url: "{{ route('admin.changes.edit', 'id') }}".replace('id', brandId),
             type: 'GET',
             success: function(response) {
-                $('#ModalLongTitle').text('Editar Marca');
+                $('#ModalLongTitle').text('Editar Cambio');
                 $('#modalBrand .modal-body').html(response);
                 $('#modalBrand').modal('show');
 
@@ -200,49 +192,38 @@
     });
 
     $(document).ready(function() {
-    $('#datatable').DataTable({
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
-        },
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "{{ route('admin.brands.index') }}",
-            type: "GET"
-        },
-        columns: [
-            { data: 'logo' },
-            { data: 'name' },
-            { data: 'description' },
-            {
-                data: 'created_at',
-                render: function(data) {
-                    if (!data) return '';
-                    let fecha = new Date(data);
-                    let dia = ('0' + fecha.getDate()).slice(-2);
-                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
-                    let anio = fecha.getFullYear();
-                    return `${dia}-${mes}-${anio}`;
-                }
+        $('#datatable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
-            {
-                data: 'updated_at',
-                render: function(data) {
-                    if (!data) return '';
-                    let fecha = new Date(data);
-                    let dia = ('0' + fecha.getDate()).slice(-2);
-                    let mes = ('0' + (fecha.getMonth() + 1)).slice(-2);
-                    let anio = fecha.getFullYear();
-                    return `${dia}-${mes}-${anio}`;
-                }
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('admin.changes.index') }}",
+                data: function (d) {
+                    d.start_date = $('#start_date').val();
+                    d.end_date = $('#end_date').val();
+                },
+                type: "GET"
             },
-            { data: 'action', orderable: false, searchable: false }
-        ]
+            columns: [
+                { data: 'change_date' },
+                { data: 'scheduled_date' },
+                { data: 'group_employees' },
+                { data: 'type' },
+                { data: 'old_value' },
+                { data: 'new_value' },
+                {
+                    data: 'action',
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
     });
-});
 
 
-    $(document).on('submit','.formDelete',function(e){
+    $(document).on('submit','.delete',function(e){
         e.preventDefault();
         Swal.fire({
             title: '¿Estás seguro?',
@@ -289,6 +270,47 @@
         var table = $('#datatable').DataTable();
         table.ajax.reload(null, false);
     }
+
+    $('#btnFilter').on('click', function() {
+        var startDate = $('#start_date').val();
+        var endDate = $('#end_date').val();
+
+        if (startDate === '' || startDate === null) {
+            Swal.fire({
+                icon: 'warning',
+                title: '¡Atención!',
+                text: 'Por favor, selecciona al menos la fecha de inicio para filtrar.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar'
+            });
+            return;
+        }
+
+        console.log('Fecha de inicio:', startDate);
+        console.log('Fecha de fin:', endDate);
+
+
+        if (endDate !== '' ) {
+            
+            if (startDate > endDate) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'La fecha de fin no puede ser menor que la fecha de inicio.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Aceptar'
+                });
+                return;
+            }
+            // Recargar el DataTable con las fechas
+            refreshTable();
+            return;
+        }
+
+        refreshTable();
+       
+    });
+
 </script>
 
 @stop
