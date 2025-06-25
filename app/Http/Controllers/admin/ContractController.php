@@ -106,7 +106,6 @@ class ContractController extends Controller
 
             $request->validate($rules);
 
-            // Validación adicional: período de enfriamiento de 4 meses para contratos temporales
             $lastTemporalContract = Contract::where('employee_id', $request->employee_id)
                 ->where('contract_type', 'Temporal')
                 ->where('is_active', 0)
@@ -241,6 +240,25 @@ class ContractController extends Controller
     {
         try {
             $contract = Contract::findOrFail($id);
+
+            $hasVacations = \App\Models\Vacation::where('employee_id', $contract->employee_id)->exists();
+            if ($hasVacations) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar el contrato porque el empleado tiene vacaciones registradas.'
+                ], 422);
+            }
+            $hasSchedulings = \App\Models\Scheduling::whereHas('groupdetail', function ($q) use ($contract) {
+                $q->where('employee_id', $contract->employee_id);
+            })->exists();
+
+            if ($hasSchedulings) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar el contrato porque el empleado tiene programaciones registradas.'
+                ], 422);
+            }
+
             $contract->delete();
             return response()->json(['success' => true, 'message' => 'Contrato eliminado exitosamente'], 200);
         } catch (\Throwable $th) {
