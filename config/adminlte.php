@@ -343,6 +343,11 @@ return [
                     'text' => 'Vehículo',
                     'route' => 'admin.vehicles.index',
                     'icon'  => 'fas fa-car-side',
+                ], 
+                [
+                    'text' => 'Mantenimiento',
+                    'route' => 'admin.maintenance.index',
+                    'icon'  => 'fas fa-car-side',
                 ],
             ]
         ],

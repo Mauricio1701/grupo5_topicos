@@ -17,6 +17,9 @@ use App\Http\Controllers\admin\EmployeegroupController;
 use App\Http\Controllers\admin\ZoneController;
 use App\Http\Controllers\admin\SchedulingController;
 use App\Http\Controllers\admin\ChangeController;
+use App\Http\Controllers\admin\MaintenanceController;
+use App\Http\Controllers\admin\MaintenancescheduleController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -45,6 +48,25 @@ Route::resource('attendances', AttendanceController::class)->names('admin.attend
 Route::resource('employeegroups', EmployeegroupController::class)->names('admin.employeegroups');
 Route::resource('employee-types', EmployeeTypeController::class)->names('admin.employee-types');
 Route::resource('changes', ChangeController::class)->names('admin.changes');
+Route::resource('maintenance', MaintenanceController::class)->names('admin.maintenance');
+Route::get('maintenanceschedule/{id}/getSchedule', [MaintenancescheduleController::class, 'getSchedule'])
+    ->name('admin.maintenanceschedule.getSchedule');
+
+Route::get('maintenanceschedule/create', [MaintenancescheduleController::class, 'create'])
+    ->name('admin.maintenanceschedule.create');
+
+Route::get('maintenanceschedule/{id}/edit', [MaintenancescheduleController::class, 'edit'])
+    ->name('admin.maintenanceschedule.edit');
+
+Route::post('maintenanceschedule/store', [MaintenancescheduleController::class, 'store'])
+    ->name('admin.maintenanceschedule.store');
+
+Route::put('maintenanceschedule/update/{id}', [MaintenancescheduleController::class, 'update'])
+    ->name('admin.maintenanceschedule.update');
+
+Route::delete('maintenanceschedule/destroy/{id}', [MaintenancescheduleController::class, 'destroy'])
+    ->name('admin.maintenanceschedule.destroy');
+
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');
 Route::get('data', [EmployeegroupController::class, 'data'])->name('admin.data');
