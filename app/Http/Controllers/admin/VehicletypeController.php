@@ -108,14 +108,27 @@ class VehicletypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
+
     public function destroy(string $id)
-    {
-        try {
-            $vehiclestype = Vehicletype::find($id);
-            $vehiclestype->delete();
-            return response()->json(['success'=>true,'message' => 'Tipo de vehiculo eliminado exitosamente'],200);
-        } catch (\Throwable $th) {
-            return response()->json(['message' => 'Error al eliminar el Tipo de vehiculo: '.$th->getMessage()]);
-        }
+{
+    try {
+        $vehiclestype = Vehicletype::find($id);
+
+        // Verifica si hay vehículos asociados
+        if ($vehiclestype->vehicles()->exists()) {
+        return response()->json([
+        'success' => false,
+        'message' => 'No se puede eliminar el tipo vehiculo porque está asociado a uno o más vehículos.'
+    ], 400);
+}
+
+
+        $vehiclestype->delete();
+        return response()->json(['success' => true, 'message' => 'Tipo vehiculo eliminado exitosamente.'], 200);
+
+    } catch (\Throwable $th) {
+        return response()->json(['success' => false, 'message' => 'Error al eliminar el tipo vehiculo: ' . $th->getMessage()], 500);
     }
+}
 }

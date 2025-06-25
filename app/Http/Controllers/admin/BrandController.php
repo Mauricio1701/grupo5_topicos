@@ -166,7 +166,7 @@ class BrandController extends Controller
     try {
         $brand = Brand::findOrFail($id);
 
-        // Verifica si hay modelos asociados
+ 
         if ($brand->brandmodels()->exists()) {
             return response()->json([
                 'success' => false,
@@ -174,7 +174,7 @@ class BrandController extends Controller
             ], 400);
         }
 
-        // Verifica si hay vehículos asociados
+
         if ($brand->vehicles()->exists()) {
             return response()->json([
                 'success' => false,

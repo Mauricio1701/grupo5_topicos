@@ -1,7 +1,7 @@
 
 @extends('adminlte::page')
 
-@section('title', 'Colors')
+@section('title', 'Color')
 
 @section('content_header')
     
