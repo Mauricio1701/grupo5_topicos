@@ -1,10 +1,24 @@
+@php
+    $isEdit = isset($contract);
+@endphp
+
 <div class="form-group">
     {!! Form::label('employee_id', 'Empleado:') !!} <span class="text-danger">*</span>
-    {!! Form::select('employee_id', $employees->pluck('name_with_last_name', 'id'), null, ['class' => 'form-control', 'placeholder' => 'Seleccione un empleado', 'required', 'id' => 'employee_id']) !!}
+    {!! Form::select('employee_id', $employees->pluck('name_with_last_name', 'id'), null, [
+        'class' => 'form-control',
+        'placeholder' => 'Seleccione un empleado',
+        'required',
+        'id' => 'employee_id',
+        $isEdit ? 'disabled' : null // Deshabilita si es edición
+    ]) !!}
+    @if($isEdit)
+        <input type="hidden" name="employee_id" value="{{ $contract->employee_id }}">
+    @endif
     @error('employee_id')
     <span class="text-danger">{{ $message }}</span>
     @enderror
 </div>
+
 <div class="form-group">
     {!! Form::label('contract_type', 'Tipo de Contrato') !!}
     {!! Form::select('contract_type', [
