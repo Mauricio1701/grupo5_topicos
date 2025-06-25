@@ -9,6 +9,10 @@ class Vehicletype extends Model
 {
     use HasFactory;
     protected $guarded = [];
-    
+
+     public function vehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'type_id'); 
+    }
     
 }
