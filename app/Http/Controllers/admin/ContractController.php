@@ -222,7 +222,7 @@ class ContractController extends Controller
     {
         $contract = Contract::findOrFail($id);
 
-        $employees = Employee::select('id', 'names', 'lastnames')
+        $employees = Employee::where('id', $contract->employee_id)
             ->get()
             ->map(function ($employee) {
                 $employee->name_with_last_name = $employee->names . ' ' . $employee->lastnames;
