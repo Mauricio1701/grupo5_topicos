@@ -295,7 +295,7 @@
                 type: "GET",
                 success: function(response) {
                     $('#modalContract .modal-body').html(response);
-                    initContractForm(false); 
+                    initContractForm(false);
                     setupFormSubmit($('#createContractForm'));
                 },
                 error: function(xhr) {
@@ -327,7 +327,7 @@
                     $('#modalContract .modal-body').html(response);
                     $('#modalContract').modal('show');
 
-                    initContractForm(true); 
+                    initContractForm(true);
                     setupFormSubmit($('#modalContract form'));
                 },
                 error: function(xhr) {
@@ -375,10 +375,14 @@
                         }
                     },
                     error: function(xhr) {
+                        let errorMessage = 'Ha ocurrido un error al eliminar el contrato.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
                         Swal.fire({
                             icon: 'error',
                             title: '¡Error!',
-                            text: 'Ha ocurrido un error al eliminar el contrato.',
+                            text: errorMessage,
                             confirmButtonColor: '#3085d6',
                             confirmButtonText: 'Aceptar'
                         });
