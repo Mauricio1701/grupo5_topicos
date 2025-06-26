@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Prog. Mantenimientos')
+@section('title', 'Prog. Actividades')
 
 @section('content_header')
     
@@ -30,22 +30,19 @@
 <div class="card">
   
     <div class="card-header">
-        <h3 class="card-title">Lista de Programación - {{$maintenance->name}}</h3>
+        <h3 class="card-title">Lista de Actividades - {{$maintenance->name}} - {{$maintenanceschedule->day_of_week}}</h3>
         <div class="card-tools">
-            <a href="{{route('admin.maintenance.index')}}" class="btn btn-info">Volver</a>
-            <button id="btnNewMaintenance" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Programación</button>    
+            <a href="{{route('admin.maintenanceschedule.getSchedule', ['id' => $maintenance->id])}}" class="btn btn-info">Volver</a>
+            <button id="btnNewMaintenance" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Actividad</button>    
         </div>
     </div>
     <div class="card-body table-responsive">
             <table class="table table-striped" id="datatable" style="width:100%">
                 <thead >
                     <tr>
-                        <th>DÍA</th>
-                        <th>VEHÍCULO</th>
-                        <th>CONDUCTOR</th>
-                        <th>TIPO</th>
-                        <th>INICIO</th>
-                        <th>FIN</th>
+                        <th>FECHA</th>
+                        <th>DESCRIPCION</th>
+                        <th>IMAGEN</th>
                         <th>ACCIÓN</th>
                     </tr>
                 </thead>
@@ -53,7 +50,7 @@
                     
                 </tbody>
             </table>
-    </div>
+        
        
     
 </div>
@@ -78,33 +75,72 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('admin.maintenanceschedule.getSchedule', ['id' => $maintenance->id]) }}",
+            url: "{{ route('admin.maintenancerecord.getSchedule', ['id' => $maintenanceschedule->id]) }}",
         },
         columns: [
-            { data: 'day_of_week', name: 'day_of_week' },
-            { data: 'vehicle_name', name: 'vehicle_name' },
-            { data: 'employee_name', name:'employee_name'},
-            { data: 'maintenance_type', name:'maintenance_type'},
-            { data: 'formatted_start_time', name: 'formatted_start_time', orderable: false, searchable: false },
-            { data: 'formatted_end_time', name: 'formatted_end_time' },
+            { data: 'maintenance_date', name: 'maintenance_date' },
+            { data: 'description', name: 'description' },
+            { data: 'image_url', name:'image_url'},
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
         order: [[2, 'desc']]
     });
 
-    const id = '{{ $maintenance->id }}';  
+    const id = '{{ $maintenanceschedule->id }}';  
+
+    function setMaintenanceDateRange() {
+        const startDate = '{{ $maintenance->start_date }}';  
+        const endDate = '{{ $maintenance->end_date }}';     
+        const maintenanceDateInput = document.getElementById('maintenance_date');
+        
+        maintenanceDateInput.setAttribute('min', startDate);  
+        maintenanceDateInput.setAttribute('max', endDate);    
+    }
+
+    function validateAllowedDay(input) {
+        const selectedDate = new Date(input.value);
+        const dayOfWeek = selectedDate.getDay();
+
+        const allowedDayText = '{{ $maintenanceschedule->day_of_week }}'.toLowerCase();
+
+        const dias = {
+            'domingo': 6,
+            'lunes': 0,
+            'martes': 1,
+            'miércoles': 2,
+            'miercoles': 2,
+            'jueves': 3,
+            'viernes': 4,
+            'sábado': 5,
+        };
+
+        const allowedDayNumber = dias[allowedDayText];
+
+        if (dayOfWeek !== allowedDayNumber) {
+            $('#maintenance_date_error').show();
+            $('#maintenance_date_error').text(`Solo se permiten fechas que caen en ${allowedDayText.charAt(0).toUpperCase() + allowedDayText.slice(1)}.`);
+            input.value = ''; 
+        }else{
+            $('#maintenance_date_error').hide();
+        }
+    }
+
 
     
 
     // Nuevo empleado - abrir modal
-    $('#btnNewMaintenance').click(function() { 
+    $('#btnNewMaintenance').click(function() {
         $.ajax({
-            url: "{{ route('admin.maintenanceschedule.create') }}",
+            url: "{{ route('admin.maintenancerecord.create') }}",
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Nuevo Mantenimiento');
+                $('#ModalLongTitle').text('Nueva Actividad');
                 $('#modalMaintenance .modal-body').html(response);
                 $('#modalMaintenance').modal('show');
+                setMaintenanceDateRange();
+                $('#maintenance_date').on('change', function () {
+                    validateAllowedDay(this);
+                });
 
                 // Enviar formulario AJAX para crear
                 $('#modalMaintenance form').submit(function(e) {
@@ -112,10 +148,8 @@ $(document).ready(function() {
                     e.preventDefault();
                     var form = $(this);
                     var formData = new FormData(this);
-                    formData.append('maintenance_id', id);
-                    for (let i = 0; i < formData.length; i++) {
-                        console.log(formData[i]);
-                    }
+                    formData.append('schedule_id', id);
+
                     $.ajax({
                         url: form.attr('action'),
                         type: form.attr('method'),
@@ -160,12 +194,16 @@ $(document).ready(function() {
     $(document).on('click', '.btnEditar', function() {
         var attendanceId = $(this).attr('id');
         $.ajax({
-            url: "{{ route('admin.maintenanceschedule.edit', ':id') }}".replace(':id', attendanceId),
+            url: "{{ route('admin.maintenancerecord.edit', ':id') }}".replace(':id', attendanceId),
             type: "GET",
             success: function(response) {
-                $('#ModalLongTitle').text('Editar Mantenimiento');
+                $('#ModalLongTitle').text('Editar Actividad');
                 $('#modalMaintenance .modal-body').html(response);
                 $('#modalMaintenance').modal('show');
+                setMaintenanceDateRange();
+                $('#maintenance_date').on('change', function () {
+                    validateAllowedDay(this);
+                });
                 // Enviar formulario AJAX para actualizar
                 $('#modalMaintenance form').submit(function(e) {
                     e.preventDefault();

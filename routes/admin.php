@@ -18,6 +18,7 @@ use App\Http\Controllers\admin\ZoneController;
 use App\Http\Controllers\admin\SchedulingController;
 use App\Http\Controllers\admin\ChangeController;
 use App\Http\Controllers\admin\MaintenanceController;
+use App\Http\Controllers\admin\MaintenancerecordController;
 use App\Http\Controllers\admin\MaintenancescheduleController;
 
 use Illuminate\Support\Facades\Route;
@@ -66,6 +67,26 @@ Route::put('maintenanceschedule/update/{id}', [MaintenancescheduleController::cl
 
 Route::delete('maintenanceschedule/destroy/{id}', [MaintenancescheduleController::class, 'destroy'])
     ->name('admin.maintenanceschedule.destroy');
+
+
+Route::get('maintenancerecord/{id}/getSchedule', [MaintenancerecordController::class, 'getSchedule'])
+    ->name('admin.maintenancerecord.getSchedule');
+
+Route::get('maintenancerecord/create', [MaintenancerecordController::class, 'create'])
+    ->name('admin.maintenancerecord.create');
+
+Route::get('maintenancerecord/{id}/edit', [MaintenancerecordController::class, 'edit'])
+    ->name('admin.maintenancerecord.edit');
+
+Route::post('maintenancerecord/store', [MaintenancerecordController::class, 'store'])
+    ->name('admin.maintenancerecord.store');
+
+Route::put('maintenancerecord/update/{id}', [MaintenancerecordController::class, 'update'])
+    ->name('admin.maintenancerecord.update');
+
+Route::delete('maintenancerecord/destroy/{id}', [MaintenancerecordController::class, 'destroy'])
+    ->name('admin.maintenancerecord.destroy');
+
 
 Route::get('zones/map', [ZoneController::class, 'map'])->name('admin.zones.map');
 Route::resource('zones', ZoneController::class)->names('admin.zones');

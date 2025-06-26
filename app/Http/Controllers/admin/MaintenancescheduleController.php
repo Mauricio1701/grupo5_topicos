@@ -29,16 +29,27 @@ class MaintenancescheduleController extends Controller
     public function create()
     {
         $vehicles = Vehicle::all();
-        $drivers = Employee::where('type_id',1)->get();
+        $drivers = Employee::all();
         return view('admin.maintenanceschedule.create',compact('vehicles','drivers'));
         
     }
 
-    private function checkSolapacion($maintenance_Id, $start_time, $end_time,$date)
+    private function checkSolapacion($id,$maintenance_Id,$day_of_week, $start_time, $end_time,$vehicleId)
     {
+        if($id){
+            return Maintenanceschedule::with('records')
+            ->where('id', '!=', $id)
+            ->where('vehicle_id', $vehicleId)
+            ->where('maintenance_id',$maintenance_Id)
+            ->where('day_of_week',$day_of_week)
+            ->where('start_time', '<=', $end_time)
+            ->where('end_time', '>=', $start_time)
+            ->first();
+        }
         return Maintenanceschedule::with('records')
             ->where('vehicle_id', $vehicleId)
             ->where('maintenance_id',$maintenance_Id)
+            ->where('day_of_week',$day_of_week)
             ->where('start_time', '<=', $end_time)
             ->where('end_time', '>=', $start_time)
             ->first();
@@ -50,13 +61,14 @@ class MaintenancescheduleController extends Controller
     public function store(Request $request)
     {
         try {
-            $logo = "";
+
             $validation = $this->checkSolapacion(
+                null,
                 $request->maintenance_id,
-                $request->vehicle_id,
+                $request->day_of_week,
                 $request->start_time,
                 $request->end_time,
-                $request->maintenance_date
+                $request->vehicle_id
             );
 
             if($validation){
@@ -65,10 +77,6 @@ class MaintenancescheduleController extends Controller
                 ], 400);
             }
 
-            if($request->image_url !=""){
-                $image  = $request->file('image_url')->store('public/brand_logo'); 
-                $logo = Storage::url($image);
-            }
 
 
             DB::beginTransaction();
@@ -80,13 +88,6 @@ class MaintenancescheduleController extends Controller
                 'end_time'=> $request->end_time,
                 'day_of_week'=> $request->day_of_week,
                 'maintenance_type'=> $request->maintenance_type,
-            ]);
-
-            $maintenancerecord = Maintenancerecord::create([
-                'schedule_id' => $maintenanceschedule->id,
-                'maintenance_date' => $request->maintenance_date,
-                'description' => $request->description,
-                'image_url' => $request->logo,
             ]);
 
             DB::commit();
@@ -121,7 +122,7 @@ class MaintenancescheduleController extends Controller
         $maintenanceschedule = Maintenanceschedule::find($id);
         $maintenancerecords = Maintenancerecord::find($maintenanceschedule->id);
         $vehicles = Vehicle::all();
-        $drivers = Employee::where('type_id',1)->get();
+        $drivers = Employee::all();
         return view('admin.maintenanceschedule.edit',compact('vehicles','drivers','maintenanceschedule','maintenancerecords'));
         
     }
@@ -136,7 +137,13 @@ class MaintenancescheduleController extends Controller
 
             DB::beginTransaction();
             $maintenanceschedule = Maintenanceschedule::find($id);
-            $maintenancerecord = Maintenancerecord::find($maintenanceschedule->id);
+            $validation = $this->checkSolapacion($id,$maintenanceschedule->maintenance_id,$request->day_of_week, $request->start_time, $request->end_time,$request->vehicle_id);
+            
+            if($validation){
+                return response()->json([
+                    'message' => 'No se puede programar el mantenimiento. Ya existe un mantenimiento programado para este vehículo en el mismo rango de tiempo.',
+                ], 400);
+            }
             $maintenanceschedule->update([
                 'vehicle_id'=> $request->vehicle_id,
                 'driver_id'=> $request->driver_id,
@@ -146,12 +153,7 @@ class MaintenancescheduleController extends Controller
                 'maintenance_type'=> $request->maintenance_type,
             ]);
 
-            $maintenancerecord->update([
-                'maintenance_date' => $request->maintenance_date,
-                'description' => $request->description,
-                'image_url' => $request->image_url,
-            ]);
-
+            
             DB::commit();
 
             return response()->json([
@@ -170,7 +172,26 @@ class MaintenancescheduleController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            DB::beginTransaction();
+            $maintenanceschedule = Maintenanceschedule::find($id);
+            $records = Maintenancerecord::where('schedule_id',$id)->get();
+
+            if($records->count() > 0){
+                return response()->json([
+                    'message' => 'No se puede eliminar la programacion. Existen registros de actividades.'
+                ], 400);
+            }
+
+            $maintenanceschedule->delete();
+            DB::commit();
+            return response()->json([
+                'message' => 'Programacion eliminada exitosamente.'
+            ], 200);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            return response()->json(['message' => 'Error al eliminar la programacion: '.$th->getMessage()]);
+        }
     }
 
     public function getSchedule(Request $request,string $id)
@@ -197,9 +218,9 @@ class MaintenancescheduleController extends Controller
                 return Carbon::parse($maintenanceschedule->end_time)->format('h:i a');
             })
             ->addColumn('action', function ($maintenanceschedule) {
-                    $showBtn = '<a href="' . route('admin.maintenanceschedule.getSchedule',  $maintenanceschedule->id) . '" 
+                    $showBtn = '<a href="' . route('admin.maintenancerecord.getSchedule',  $maintenanceschedule->id) . '" 
                                         class="btn btn-info btn-sm">
-                                        <i class="fas fa-car"></i>
+                                        <i class="fas fa-hammer"></i>
                                     </a>';
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $maintenanceschedule->id . '">
                                     <i class="fas fa-edit"></i>

@@ -60,12 +60,33 @@ class MaintenanceController extends Controller
 
     }
 
+    private function checkSolapacion($id,$start_date, $end_date)
+    {
+        if($id){
+            return Maintenance::where('id', '!=', $id)
+                ->where('start_date', '<=', $end_date)
+                ->where('end_date', '>=', $start_date)
+                ->first();
+        }   
+        return Maintenance::where('start_date', '<=', $end_date)
+            ->where('end_date', '>=', $start_date)
+            ->first();
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         try {
+
+            $validation = $this->checkSolapacion(null,$request->start_date, $request->end_date);
+
+            if($validation){
+                return response()->json([
+                    'message' => 'No se puede programar el mantenimiento. Ya existe un mantenimiento programado para este rango de tiempo.',
+                ], 400);
+            }
            
             Maintenance::create($request->all());
             return response()->json([
@@ -102,6 +123,14 @@ class MaintenanceController extends Controller
         try {
 
             $maintenance = Maintenance::find($id);
+
+            $validation = $this->checkSolapacion($id,$request->start_date, $request->end_date);
+            
+            if($validation){
+                return response()->json([
+                    'message' => 'No se puede programar el mantenimiento. Ya existe un mantenimiento programado para este rango de tiempo.',
+                ], 400);
+            }
 
             $maintenance->update([
                 'name' => $request->name,
