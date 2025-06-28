@@ -29,7 +29,10 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Cambios</h3>
+        <h3 class="card-title">
+            <i class="fas fa-exchange-alt"></i> Cambios de Programaciones
+        </h3>
+
         <div class="card-tools">
             <button id="btnNewBrand" class="btn btn-primary" ><i class="fas fa-plus"></i> Agregar Cambio</button>    
         </div>

@@ -1,4 +1,24 @@
 <!-- Modal -->
+<style>
+    /* Modificar la altura del contenedor de selección */
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px) !important; /* Asegúrate de usar !important si es necesario */
+        padding: 6px 12px;
+    }
+
+    /* Cambiar el color de fondo del dropdown */
+    .select2-container--default .select2-dropdown {
+        background-color: #f8f9fa !important;  /* Fondo claro */
+        border-radius: 4px;
+    }
+
+    /* Cambiar el color de texto del ítem seleccionado */
+    .select2-container--default .select2-selection__rendered {
+        color: #333 !important;  /* Cambiar el color del texto */
+    }
+</style>
+
+
 <div class="modal fade" id="modalForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -147,6 +167,15 @@
     $(document).on('click', '.remove-card', function () {
         $(this).closest('.group-card').remove();
     });
+
+    initializeDynamicSelects();
+
+    function initializeDynamicSelects() {
+         $('select').select2({
+            placeholder: 'Seleccione una opción',
+        });
+    }
+
 
     $('#submitAll').on('click', function () {
         if (!validarDates()) {

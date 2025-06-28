@@ -29,6 +29,22 @@
     color: white; /* Texto blanco cuando está seleccionado */
 }
 
+/* Modificar la altura del contenedor de selección */
+.select2-container--default .select2-selection--single {
+    height: calc(2.25rem + 2px) !important; /* Asegúrate de usar !important si es necesario */
+    padding: 6px 12px;
+}
+
+/* Cambiar el color de fondo del dropdown */
+.select2-container--default .select2-dropdown {
+    background-color: #f8f9fa !important;  /* Fondo claro */
+    border-radius: 4px;
+}
+
+/* Cambiar el color de texto del ítem seleccionado */
+.select2-container--default .select2-selection__rendered {
+    color: #333 !important;  /* Cambiar el color del texto */
+}
 </style>
 @stop
 @section('content')
@@ -270,8 +286,9 @@
                                 }
                             }
                         });
+                        
                     }
-
+                    initializeDynamicSelects();
                 },
                 error: function(xhr, status, error) {
                     console.error("Error al cargar los datos: " + error);
@@ -526,6 +543,20 @@
     $(document).ready(function() {
         loadFailedGroups(); // Cargar los datos almacenados en localStorage si existen
     });
+
+    function initializeDynamicSelects() {
+         $('select[name="employee_conductor_id[]').select2({
+            placeholder: 'Seleccione un conductor',
+            
+        });
+
+        $('select[name="employee_helper_id[]"]').select2({
+            placeholder: 'Seleccione un ayudante',
+            
+        });
+    }
+
+   
 
     function validarCamposDeSeleccion() {
         let esValido = true;

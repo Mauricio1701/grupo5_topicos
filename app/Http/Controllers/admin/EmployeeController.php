@@ -239,7 +239,7 @@ class EmployeeController extends Controller
 
         try {
             DB::beginTransaction();
-
+           
             $data = [
                 'dni' => trim($request->dni),
                 'names' => trim($request->names),
@@ -264,6 +264,10 @@ class EmployeeController extends Controller
                 $photoName = time() . '_' . $photo->getClientOriginalName();
                 $photo->storeAs('public/employees', $photoName);
                 $data['photo'] = $photoName;
+            }
+
+            if ($request->password) {
+                $data['password'] = Hash::make($request->password);  // Usamos la clave 'password' para almacenar la contraseña hasheada
             }
 
             $employee->update($data);

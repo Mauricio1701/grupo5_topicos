@@ -2,6 +2,27 @@
 
 @section('title', 'Asistencias')
 
+@section('css')
+<style>
+    /* Modificar la altura del contenedor de selección */
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px) !important; /* Asegúrate de usar !important si es necesario */
+        padding: 6px 12px;
+    }
+
+    /* Cambiar el color de fondo del dropdown */
+    .select2-container--default .select2-dropdown {
+        background-color: #f8f9fa !important;  /* Fondo claro */
+        border-radius: 4px;
+    }
+
+    /* Cambiar el color de texto del ítem seleccionado */
+    .select2-container--default .select2-selection__rendered {
+        color: #333 !important;  /* Cambiar el color del texto */
+    }
+</style>
+
+@stop
 
 @section('content')
 <div class="p-2"></div>
@@ -25,7 +46,9 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Asistencias</h3>
+        <h3 class="card-title">
+            <i style="color:green;" class="fas fa-check-circle"></i> Asistencias
+        </h3>        
         <div class="card-tools">
             <a href="{{route('attendances.indexAttendance')}}" target="_blank" class="btn btn-outline-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
             <button id="btnNewAttendance" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nueva Asistencia</button> 
@@ -51,6 +74,7 @@
                     <th>DNI</th>
                     <th>EMPLEADO</th>
                     <th>FECHA</th>
+                    <th>TIPO</th>
                     <th>ESTADO</th>
                     <th>NOTAS</th>
                     <th>ACCIÓN</th>
@@ -86,13 +110,14 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'employee_dni', name: 'employee_dni' },
-            { data: 'employee_name', name: 'employee_name', orderable: false, searchable: false },
-            { data: 'attendance_date', name: 'attendance_date' },
+            { data: 'employee_name', name: 'employee_name', orderable: true, searchable: true },
+            { data: 'created_at', name: 'created_at'},
+            { data: 'status_period', name: 'status_period', orderable: true, searchable: true },
             { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false },
             { data: 'notes', name: 'notes' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
-        order: [[2, 'desc']]
+        order: [[1, 'desc']]
     });
 
     // Nuevo empleado - abrir modal
