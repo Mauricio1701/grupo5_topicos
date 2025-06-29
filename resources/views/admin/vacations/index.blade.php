@@ -8,7 +8,8 @@
 @section('content')
 <div class="p-2"></div>
 
-<!-- Modal -->
+
+
 <div class="modal fade" id="modalVacation" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
@@ -31,7 +32,25 @@
             <button id="btnNewVacation" class="btn btn-primary"><i class="fas fa-plus"></i> Agregar Nueva Solicitud</button>
         </div>
     </div>
+
+
+
     <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="filter_start_date">Fecha de inicio:</label>
+                <input type="date" id="filter_start_date" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label for="filter_end_date">Fecha de fin:</label>
+                <input type="date" id="filter_end_date" class="form-control">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button id="btnFilter" class="btn btn-outline-info" style="width: 42px; height: 38px;">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-striped table-sm" id="datatable" style="width:100%">
                 <thead>
@@ -78,7 +97,11 @@
             "autoWidth": false,
             "ajax": {
                 "url": "{{ route('admin.vacations.index') }}",
-                "type": "GET"
+                "type": "GET",
+                "data": function(d) {
+                    d.start_date = $('#filter_start_date').val();
+                    d.end_date = $('#filter_end_date').val();
+                }
             },
             "columns": [{
                     "data": "employee_name",
@@ -302,7 +325,6 @@
             form.off('submit').on('submit', function(e) {
                 e.preventDefault();
 
-                // VALIDACIÓN ADICIONAL ANTES DE ENVIAR
                 var requestedDays = parseInt($('#requested_days').val());
                 var availableDays = parseInt($('#available_days').val());
                 var status = $('#status').val();
@@ -398,12 +420,14 @@
         $('#btnRefresh').click(function() {
             table.ajax.reload(null, false);
         });
+        $('#btnFilter').click(function() {
+            table.ajax.reload();
+        });
     });
 
 
 
     function confirmDelete(id) {
-        // Primero verificar si la vacación está aprobada
         var row = table.row($('#delete-form-' + id).closest('tr')).data();
         var isApproved = row && row.status === 'Approved';
 

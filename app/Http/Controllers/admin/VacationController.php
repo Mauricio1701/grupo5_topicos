@@ -22,8 +22,17 @@ class VacationController extends Controller
                 ->pluck('employee_id')
                 ->toArray();
 
-            $vacations = Vacation::with(['employee'])
-                ->whereIn('employee_id', $employeesWithEligibleContract)
+            $vacationsQuery = Vacation::with(['employee'])
+                ->whereIn('employee_id', $employeesWithEligibleContract);
+
+            if ($request->filled('start_date')) {
+                $vacationsQuery->whereDate('request_date', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $vacationsQuery->whereDate('request_date', '<=', $request->end_date);
+            }
+
+            $vacations = $vacationsQuery
                 ->select(
                     'id',
                     'employee_id',
@@ -218,7 +227,7 @@ class VacationController extends Controller
             ->toArray();
 
         $employeesWithPendingVacations = Vacation::where('status', 'Pending')
-            ->where('id', '!=', $id) 
+            ->where('id', '!=', $id)
             ->pluck('employee_id')
             ->toArray();
 
