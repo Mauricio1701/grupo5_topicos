@@ -2,15 +2,31 @@
 
 @section('title', 'Cambios')
 
-@section('content_header')
-    
+
+@section('css')
+<style>
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px) !important; 
+        padding: 6px 12px;
+    }
+
+    .select2-container--default .select2-dropdown {
+        background-color: #f8f9fa !important;  
+        border-radius: 4px;
+    }
+
+    .select2-container--default .select2-selection__rendered {
+        color: #333 !important; 
+    }
+
+</style>
 @stop
 
 @section('content')
 <div class="p-2"></div>
 
 <!-- Modal -->
-<div class="modal fade " id="modalBrand" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
+<div class="modal fade " id="modalChange" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -84,118 +100,8 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
    
    <script>
-
-    $('#btnNewBrand').click(function() {
-        $.ajax({
-            url: "{{ route('admin.changes.create') }}",
-            type: 'GET',
-            success: function(response) {
-                $('#ModalLongTitle').text('Agregar Nueva Marca');
-                $('#modalBrand .modal-body').html(response);
-                $('#modalBrand').modal('show');
-
-                $('#modalBrand form').submit(function(e) {
-                    e.preventDefault();
-                    var form = $(this);
-                    var formData = new FormData(this);
-
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            $('#modalBrand').modal('hide');
-                            console.log(response);
-
-                            refreshTable();
-
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: response.message,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
-                            
-                        },
-                        error: function( xhr) {
-                            var response = xhr.responseJSON;
-                            Swal.fire({
-                                icon: 'error',
-                                title: '¡Error!',
-                                text: response.message,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    })
-                    
-                })
-
-            },
-            error: function(xhr, status, error) {
-                console.log(error);
-            }
-        });
-    });
-
-    $(document).on('click', '.btnEditar', function() {
-        var brandId = $(this).attr('id');
-        $.ajax({
-            url: "{{ route('admin.changes.edit', 'id') }}".replace('id', brandId),
-            type: 'GET',
-            success: function(response) {
-                $('#ModalLongTitle').text('Editar Cambio');
-                $('#modalBrand .modal-body').html(response);
-                $('#modalBrand').modal('show');
-
-                $('#modalBrand form').submit(function(e){
-                    e.preventDefault();
-                    var form = $(this);
-                    var formData = new FormData(this);
-
-                    $.ajax({
-                        url: form.attr('action'),
-                        type: form.attr('method'),
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: function(response) {
-                            
-                            $('#modalBrand').modal('hide');
-                            refreshTable();
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: response.message,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
-                            
-                        },
-                       error: function( xhr) {
-                            var response = xhr.responseJSON;
-                            Swal.fire({
-                                icon: 'error',
-                                title: '¡Error!',
-                                text: response.message,
-                                confirmButtonColor: '#3085d6',
-                                confirmButtonText: 'Aceptar'
-                            });
-                        }
-                    })
-                })
-            },
-            error: function(xhr, status, error) {
-                console.log(error);
-            }
-        });
-    });
-
-    $(document).ready(function() {
-        $('#datatable').DataTable({
+  $(document).ready(function() {
+        var table = $('#datatable').DataTable({
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },
@@ -225,6 +131,185 @@
         });
     });
 
+   $('#btnNewBrand').click(function() {
+    $.ajax({
+        url: "{{ route('admin.changes.create') }}",
+        type: 'GET',
+        success: function(response) {
+            $('#ModalLongTitle').text('Agregar Nuevo Cambio');
+            $('#modalChange .modal-body').html(response);
+            $('#modalChange').modal('show');
+
+            $('#modalChange form').submit(function(e) {
+                e.preventDefault(); 
+
+                console.log('Formulario enviado'); 
+                var form = $(this);
+                const changeTypeInput = document.getElementById('change_type');
+
+                if(changeTypeInput.value === ''){
+                    changeTypeInput.style.borderColor = 'red';
+                    return
+                }
+
+                Swal.fire({
+                    title: '¿Confirmar cambios?',
+                    text: "Se aplicarán los cambios registrados.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, guardar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
+                }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                            title: 'Cargando...',
+                            text: 'Por favor espera...',
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading(); // Muestra el loading spinner
+                            }
+                        });
+                        var startDate = $('#start_date').val(); // Obtener valor del input Fecha de Inicio
+                        var endDate = $('#end_date').val(); // Obtener valor del input Fecha de Fin
+                        var changeType = $('#change_type').val(); // Obtener valor del select Tipo de Cambio
+                        var select_group_turno = $('#select_group_turno').val();
+                        var selectShift = $('#selectShift').val();
+                        var selectGroupVehicle = $('#selectGroupVehicle').val();
+                        var selectVehicle = $('#selectVehicle').val();
+                        var selectCurrentEmployee = $('#selectCurrentEmployee').val();
+                        var selectNewEmployee = $('#selectNewEmployee').val();
+                       
+                        if(changeType=='personal'){
+                            var reason_id = 1 
+                        }else if(changeType=='turno'){
+                            var reason_id = 2
+                        }else{
+                            var reason_id = 3
+                        }
+                        
+                        const data = {
+                            startDate:startDate,
+                            endDate:endDate,
+                            group_turno:select_group_turno,
+                            new_shift_id:selectShift,
+                            groupvehicle:selectGroupVehicle,
+                            new_vehicle_id:selectVehicle,
+                            old_employee:selectCurrentEmployee,
+                            new_employee:selectNewEmployee,
+                            reason_id:reason_id,
+                        }
+                        
+                        
+
+                        console.log('Data:', data);
+                        $.ajax({
+                            url: form.attr('action'),
+                            type: form.attr('method'),
+                            data: data,
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(response) {
+                                $('#modalChange').modal('hide');
+                                Swal.close();
+                                console.log(response);
+
+                                table.ajax.reload(null, false);
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '¡Éxito!',
+                                    text: response.message,
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'Aceptar'
+                                });
+                                
+                            },
+                            error: function( xhr) {
+                                Swal.close(); 
+                                var response = xhr.responseJSON;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: '¡Error!',
+                                    text: response.message,
+                                    confirmButtonColor: '#3085d6',
+                                    confirmButtonText: 'Aceptar'
+                                });
+                            }
+                        })
+
+
+
+                        
+                    }
+                });
+            });
+        },
+        error: function(xhr, status, error) {
+            console.log('Error al cargar formulario', error);
+        }
+    });
+});
+
+    $(document).on('click', '.btnEditar', function() {
+        var brandId = $(this).attr('id');
+        $.ajax({
+            url: "{{ route('admin.changes.edit', 'id') }}".replace('id', brandId),
+            type: 'GET',
+            success: function(response) {
+                $('#ModalLongTitle').text('Editar Cambio');
+                $('#modalBrand .modal-body').html(response);
+                $('#modalBrand').modal('show');
+
+                $('#modalBrand form').submit(function(e){
+                    e.preventDefault();
+                    var form = $(this);
+                    var formData = new FormData(this);
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        type: form.attr('method'),
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            
+                            $('#modalBrand').modal('hide');
+                            
+                            table.ajax.reload(null, false);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: response.message,
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'Aceptar'
+                            });
+                   
+                            
+                        },
+                       error: function( xhr) {
+                            var response = xhr.responseJSON;
+                            Swal.fire({
+                                icon: 'error',
+                                title: '¡Error!',
+                                text: response.message,
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'Aceptar'
+                            });
+                        }
+                    })
+                })
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            }
+        });
+    });
+
+  
 
     $(document).on('submit','.delete',function(e){
         e.preventDefault();
@@ -244,7 +329,8 @@
                     type: form.attr('method'),
                     data: form.serialize(),
                     success: function(response) {
-                        refreshTable();
+                        table.ajax.reload(null, false);
+
                         Swal.fire({
                             icon: 'success',
                             title: '¡Éxito!',
@@ -268,11 +354,6 @@
         });
     });
        
-
-    function refreshTable() {
-        var table = $('#datatable').DataTable();
-        table.ajax.reload(null, false);
-    }
 
     $('#btnFilter').on('click', function() {
         var startDate = $('#start_date').val();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\Contract;
 use App\Models\Attendance;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Hash;
@@ -91,8 +92,18 @@ class AttendanceController extends Controller
      */
     public function create()
     {
-        $employees = Employee::all();
+       $employees = Employee::whereHas('contracts', function($query) {
+            $query->where('is_active', 1); // Filtra contratos activos
+        })
+        ->get();
         return view('admin.attendances.create', compact('employees'));
+    }
+
+    public function checkContract($id){
+        return Contract::where('employee_id',$id)
+        ->where('is_active',1)
+        ->latest()
+        ->first();;
     }
 
     /**
@@ -101,11 +112,19 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
        try{
+            $contract = $this->checkContract($request->employee_id);
+            
+            if($contract){
+                return response()->json([
+                    'message' => 'La persona no cuenta con un contrato activo.'
+                ], 400);
+            }
+
             $attendance = Attendance::where('employee_id', $request->employee_id)->where('attendance_date', $request->attendance_date)->count();
             
             if($attendance >=4){
                 return response()->json([
-                    'message' => 'Limite de asistencias alcanzadas.'
+                    'message' => 'Limite de asistencias diarias alcanzadas.'
                 ], 400);
             }
             
@@ -114,7 +133,7 @@ class AttendanceController extends Controller
                     'employee_id'=>$request->employee_id,
                     'attendance_date'=>$request->attendance_date,
                     'period'=>0,
-                    'status'=>$request->status,
+                    'status'=>1,
                     'notes'=>$request->notes,
                 ]);
             }else{
@@ -122,7 +141,7 @@ class AttendanceController extends Controller
                     'employee_id'=>$request->employee_id,
                     'attendance_date'=>$request->attendance_date,
                     'period'=>1,
-                    'status'=>$request->status,
+                    'status'=>1,
                     'notes'=>$request->notes,
                 ]);
             }
@@ -159,6 +178,7 @@ class AttendanceController extends Controller
     public function update(Request $request, string $id)
     {
         try{
+            
             $attendance = Attendance::findOrFail($id);
             $attendance->update($request->all());
             return response()->json([
@@ -207,7 +227,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::where('employee_id', $employee->id)->where('attendance_date', now()->toDateString())->count();
             
         if($attendance >=4){
-            return redirect()->back()->with('error', 'Limite de asistencias alcanzadas');
+            return redirect()->back()->with('error', 'Limite de asistencias diarias alcanzadas');
         }
         
         if($attendance % 2 == 0){
