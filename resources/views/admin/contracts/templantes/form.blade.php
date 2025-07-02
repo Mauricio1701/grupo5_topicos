@@ -120,3 +120,38 @@
         </div>
     </div>
 </div>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        if (!$('#employee_id').prop('disabled')) {
+            $('#employee_id').select2({
+                placeholder: 'Seleccione un empleado',
+                dropdownParent: $('#modalContract')
+            });
+        }
+    });
+</script>
+<style>
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px) !important;
+        padding: 6px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: #fff;
+        font-size: 1rem;
+        line-height: 1.5;
+        box-sizing: border-box;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 2.25rem !important;
+        color: #495057;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 2.25rem !important;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+</style>

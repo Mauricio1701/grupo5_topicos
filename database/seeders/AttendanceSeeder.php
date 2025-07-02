@@ -17,36 +17,42 @@ class AttendanceSeeder extends Seeder
         $attendance->employee_id = 1;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
 
         $attendance = new Attendance();
         $attendance->employee_id = 2;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
 
         $attendance = new Attendance();
         $attendance->employee_id = 3;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
         
         $attendance = new Attendance();
         $attendance->employee_id = 4;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
 
         $attendance = new Attendance();
         $attendance->employee_id = 5;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
 
         $attendance = new Attendance();
         $attendance->employee_id = 7;
         $attendance->attendance_date = now();
         $attendance->status = 1;
+        $attendance->period = 0;
         $attendance->save();
     }
 }

@@ -5,3 +5,8 @@
 [x-cloak] {
     display: none;
 }
+
+/* Aumentando la especificidad */
+.select2S {
+    height: 38px !important;
+}

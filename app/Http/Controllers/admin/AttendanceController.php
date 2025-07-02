@@ -5,6 +5,7 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
+use App\Models\Contract;
 use App\Models\Attendance;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Hash;
@@ -25,10 +26,12 @@ class AttendanceController extends Controller
                 'employee_id',
                 'attendance_date',
                 'status',
+                'period',
                 'notes',
                 'created_at',
                 'updated_at',
-            ]);
+            ])
+            ->orderBy('employee_id');
 
             if($request->filled('start_date') && !$request->filled('end_date')){
                     $query->whereDate('attendance_date', '=', $request->start_date);
@@ -43,6 +46,7 @@ class AttendanceController extends Controller
             }
 
             $attendances = $query->get();
+            
 
             return DataTables::of($attendances)
                 ->addColumn('employee_dni', function ($attendance) {
@@ -60,6 +64,14 @@ class AttendanceController extends Controller
                         return '<span class="badge badge-danger">Ausente</span>';
                     }
                 })
+                ->addColumn('status_period', function ($attendance) {
+                   return $attendance->period == 0
+                    ? '<span class="badge badge-info">Entrada</span>'
+                    : '<span class="badge badge-danger">Salida</span>';
+                })
+                ->addColumn('created_at', function ($attendance) {
+                    return Carbon::parse($attendance->created_at)->format('d/m/Y H:i:s');  // Cambia el formato según lo necesites
+                })
                 ->addColumn('action', function ($attendance) {
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $attendance->id . '">
                                     <i class="fas fa-edit"></i>
@@ -68,7 +80,7 @@ class AttendanceController extends Controller
                     
                     return $editBtn ;
                 })
-                ->rawColumns(['action', 'status_badge'])
+                ->rawColumns(['action','status_period','status_badge'])
                 ->make(true);
         }
 
@@ -80,8 +92,18 @@ class AttendanceController extends Controller
      */
     public function create()
     {
-        $employees = Employee::all();
+       $employees = Employee::whereHas('contracts', function($query) {
+            $query->where('is_active', 1); // Filtra contratos activos
+        })
+        ->get();
         return view('admin.attendances.create', compact('employees'));
+    }
+
+    public function checkContract($id){
+        return Contract::where('employee_id',$id)
+        ->where('is_active',1)
+        ->latest()
+        ->first();;
     }
 
     /**
@@ -90,14 +112,40 @@ class AttendanceController extends Controller
     public function store(Request $request)
     {
        try{
-            $attendance = Attendance::where('employee_id', $request->employee_id)->where('attendance_date', $request->attendance_date)->first();
-            if($attendance){
+            $contract = $this->checkContract($request->employee_id);
+            
+            if($contract){
                 return response()->json([
-                    'message' => 'Asistencia ya registrada.'
+                    'message' => 'La persona no cuenta con un contrato activo.'
+                ], 400);
+            }
+
+            $attendance = Attendance::where('employee_id', $request->employee_id)->where('attendance_date', $request->attendance_date)->count();
+            
+            if($attendance >=4){
+                return response()->json([
+                    'message' => 'Limite de asistencias diarias alcanzadas.'
                 ], 400);
             }
             
-            Attendance::create($request->all());
+            if($attendance % 2 == 0){
+                Attendance::create([
+                    'employee_id'=>$request->employee_id,
+                    'attendance_date'=>$request->attendance_date,
+                    'period'=>0,
+                    'status'=>1,
+                    'notes'=>$request->notes,
+                ]);
+            }else{
+                Attendance::create([
+                    'employee_id'=>$request->employee_id,
+                    'attendance_date'=>$request->attendance_date,
+                    'period'=>1,
+                    'status'=>1,
+                    'notes'=>$request->notes,
+                ]);
+            }
+            
             return response()->json([
                 'message' => 'Asistencia creada exitosamente.'
             ], 200);
@@ -130,6 +178,7 @@ class AttendanceController extends Controller
     public function update(Request $request, string $id)
     {
         try{
+            
             $attendance = Attendance::findOrFail($id);
             $attendance->update($request->all());
             return response()->json([
@@ -175,11 +224,29 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'Datos incorrectos');
         }
 
-        $attendance = new Attendance();
-        $attendance->employee_id = $employee->id;
-        $attendance->attendance_date = now();
-        $attendance->status = 1;
-        $attendance->save();
+        $attendance = Attendance::where('employee_id', $employee->id)->where('attendance_date', now()->toDateString())->count();
+            
+        if($attendance >=4){
+            return redirect()->back()->with('error', 'Limite de asistencias diarias alcanzadas');
+        }
+        
+        if($attendance % 2 == 0){
+            Attendance::create([
+                'employee_id'=>$employee->id,
+                'attendance_date'=>now(),
+                'period'=>0,
+                'status'=>1
+            ]);
+        }else{
+            Attendance::create([
+                'employee_id'=>$employee->id,
+                'attendance_date'=>now(),
+                'period'=>1,
+                'status'=>1
+            ]);
+        }
+
+
 
         return redirect()->back()->with('success', 'Asistencia registrada correctamente');
 

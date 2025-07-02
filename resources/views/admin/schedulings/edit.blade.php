@@ -3,41 +3,43 @@
     <input type="hidden" name="scheduling_id" value="{{ $scheduling->id }}">
 
     <div class="row">
-        {{-- CAMBIO DE TURNO --}}
-    <div class="col-md-6">
-        <label>Cambio de Turno</label>
-        <div class="row align-items-end">
-            <div class="col-md-4">
-                <label>Turno Actual</label>
-                <input type="text" class="form-control" value="{{ $scheduling->employeegroup->shift->name ?? 'No asignado' }}" readonly>
-            </div>
-            <div class="col-md-6">
-                <label>Nuevo Turno</label>
-                <select id="selectShift" class="form-control">
-                    <option value="">Seleccione un nuevo turno</option>
-                    @foreach($shifts as $shift)
-                        <option value="{{ $shift->id }}">{{ $shift->name }}</option>
-                    @endforeach 
-                </select>
-            </div>
-            <div class="col-md-2 text-right">
-                <button type="button" id="addShiftChange" class="btn btn-success btn-block"><i class="fas fa-plus"></i></button>
+            {{-- CAMBIO DE TURNO --}}
+        <div class="col-md-12">
+            <label style="font-weight: 600">Cambio de Turno</label>
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label>Turno Actual</label>
+                    <input type="text" class="form-control" value="{{ $scheduling->employeegroup->shift->name ?? 'No asignado' }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label>Nuevo Turno</label>
+                    <select id="selectShift" class="form-control">
+                        <option value="">Seleccione un nuevo turno</option>
+                        @foreach($shifts as $shift)
+                            <option value="{{ $shift->id }}">{{ $shift->name }}</option>
+                        @endforeach 
+                    </select>
+                </div>
+                <div class="col-md-2 text-right">
+                    <button type="button" id="addShiftChange" class="btn btn-success btn-block"><i class="fas fa-plus"></i></button>
+                </div>
             </div>
         </div>
     </div>
-  
-
+    <hr>
     {{-- CAMBIO DE VEHÍCULO --}}
-    <div class="col-md-6">
-        <label>Cambio de Vehículo</label>
+    <div class="col-md-12">
+        <label style="font-weight: 600">Cambio de Vehículo</label>
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label>Vehículo Actual</label>
                 <input type="text" class="form-control" value="{{ $scheduling->employeegroup->vehicle->plate ?? 'No asignado' }}" readonly>
             </div>
             <div class="col-md-6">
-                <label>Nuevo Vehículo</label>
-                <select id="selectVehicle" class="form-control">
+                <div class="col-md-12">
+                    <label>Nuevo Vehículo</label>
+                </div>
+                <select id="selectVehicle" class="form-control" style="width: 100%">
                     <option value="">Seleccione un nuevo vehiculo</option>
                     @foreach($vehicles as $vehicle)
                         <option value="{{ $vehicle->id }}">{{ $vehicle->plate }}</option>
@@ -54,10 +56,10 @@
 
     {{-- CAMBIO DE PERSONAL --}}
 <div class="form-group">
-    <label>Cambio de Personal</label>
+    <label style="font-weight: 600">Cambio de Personal</label>
     <div class="row">
         {{-- Personal Actual --}}
-        <div class="col-md-4">
+        <div class="col-md-5">
             <label>Personal Actual</label>
             <select id="selectCurrentEmployee" class="form-control">
                 <option value="">Seleccione un personal</option>
@@ -69,17 +71,21 @@
 
         {{-- Nuevo Personal Disponible --}}
         <div class="col-md-6">
-            <label>Nuevo Personal</label>
-            <select id="selectNewEmployee" class="form-control">
+            <div class="col-md-12">
+                <label>Nuevo Personal</label>
+            </div>
+           <div class="col-md-12">
+             <select id="selectNewEmployee" class="form-control" style="width: 100%">
                 <option value="">Seleccione un nuevo personal</option>
                 @foreach($personalDisponible as $employee)
                     <option value="{{ $employee->id }}">{{ $employee->names }} {{ $employee->lastnames }} ({{ $employee->employeeType->name }})</option>
                 @endforeach
             </select>
+           </div>
         </div>
 
         {{-- Botón de agregar cambio --}}
-        <div class="col-md-2 text-right align-self-end">
+        <div class="col-md-1 text-right align-self-end">
             <button type="button" id="addEmployeeChange" class="btn btn-success btn-block"><i class="fas fa-plus"></i></button>
         </div>
     </div>
@@ -114,6 +120,14 @@
 
 <script>
     $(document).ready(function () {
+        $('#selectNewEmployee').select2({
+            placeholder: 'Seleccione una opción',
+            dropdownParent: $('#modalScheduling'),
+        });
+         $('#selectVehicle').select2({
+            placeholder: 'Seleccione un nuevo vehiculo',
+            dropdownParent: $('#modalScheduling'),
+        });
         let cambios = [];
     
         function getTextoSelect(id, selector) {

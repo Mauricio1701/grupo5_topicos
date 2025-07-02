@@ -2,6 +2,27 @@
 
 @section('title', 'Programaciones')
 
+@section('css')
+<style>
+    /* Modificar la altura del contenedor de selección */
+    .select2-container--default .select2-selection--single {
+        height: calc(2.25rem + 2px) !important; /* Asegúrate de usar !important si es necesario */
+        padding: 6px 12px;
+    }
+
+    /* Cambiar el color de fondo del dropdown */
+    .select2-container--default .select2-dropdown {
+        background-color: #f8f9fa !important;  /* Fondo claro */
+        border-radius: 4px;
+    }
+
+    /* Cambiar el color de texto del ítem seleccionado */
+    .select2-container--default .select2-selection__rendered {
+        color: #333 !important;  /* Cambiar el color del texto */
+    }
+</style>
+
+@stop
 
 @section('content')
 <div class="p-2"></div>
@@ -26,7 +47,9 @@
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Lista de Programaciones</h3>
+        <h3 class="card-title">
+            <i class="fas fa-calendar"></i> Programaciones
+        </h3>
       
         <div class="card-tools">
             <a href="{{route('admin.module')}}" target="_blank" class="btn btn-outline-success"><i class="fas fa-calendar"></i> Ir al modulo</a> 
