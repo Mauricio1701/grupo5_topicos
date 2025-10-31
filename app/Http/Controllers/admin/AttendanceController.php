@@ -114,7 +114,7 @@ class AttendanceController extends Controller
        try{
             $contract = $this->checkContract($request->employee_id);
             
-            if($contract){
+            if(!$contract){
                 return response()->json([
                     'message' => 'La persona no cuenta con un contrato activo.'
                 ], 400);

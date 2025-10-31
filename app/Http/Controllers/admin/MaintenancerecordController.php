@@ -162,7 +162,7 @@ class MaintenancerecordController extends Controller
             
             return DataTables::of($maintenancerecord)
                 ->addColumn('image_url', function($maintenancerecord){
-                    return "<img src='" . ($maintenancerecord->image_url == '' ? asset('storage/brand_logo/producto_var.webp') : $maintenancerecord->image_url) . "' width='50'>";
+                    return "<img src='" . ($maintenancerecord->image_url == '' ? asset('storage/brand_logo/producto_var.png') : $maintenancerecord->image_url) . "' width='50'>";
                 })
                 ->addColumn('action', function ($maintenancerecord) {
                     $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $maintenancerecord->id . '">

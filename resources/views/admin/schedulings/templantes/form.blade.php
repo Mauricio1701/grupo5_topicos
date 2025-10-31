@@ -143,26 +143,25 @@
     }
 
     function getHelpersData() {
-        const data = [];  // Usamos un array para almacenar los datos de todos los grupos
-        
-        // Recorremos todos los grupos
+        const data = [];
+
         $('.group-card').each(function () {
             const groupId = $(this).data('group-id');
-            
-            // Obtenemos el ID del conductor (driver)
             const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
-            
-            // Obtenemos los helpers (ayudantes)
             const helpers = $(this).find(`select[name="helpers[${groupId}][]"]`).map(function () {
                 return $(this).val();
             }).get();
-            
-            // Empujamos el array helpers con driver_id incluido
-            data.push(driverId, ...helpers);
+
+            // Empuja un objeto con el grupo y sus empleados
+            data.push({
+                group_id: groupId,
+                employees: [driverId, ...helpers].filter(Boolean) // quita nulls/vacíos
+            });
         });
 
-        return data;  // Devolvemos el array con los datos
+        return data;
     }
+
 
     $(document).on('click', '.remove-card', function () {
         $(this).closest('.group-card').remove();
@@ -279,6 +278,7 @@
     $('#btnValidar').on('click', function () {
         const startDate = $('#start_date').val();
         const endDate = $('#end_date').val();
+
         
         if (!validarDates()) {
             return;
@@ -295,30 +295,59 @@
 
             },
             success: function(response) {
-                console.log(response);
                 const no_disponibles = response.no_disponibles;
 
                 $('.group-card').each(function () {
                     const groupId = $(this).data('group-id');
-                    
-                    // Marcar al conductor (driver)
-                    const driverId = $(this).find(`select[name="driver_id[${groupId}]"]`).val();
-                    if (no_disponibles.includes(parseInt(driverId))) {
-                        $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', '2px solid red'); // Borde rojo en conductor
+                    console.log('Validando grupo ID:', groupId);
+
+                    // === CONDUCTOR ===
+                    const $driverSelect = $(this).find(`select[name="driver_id[${groupId}]"]`);
+                    const driverId = $driverSelect.val();
+
+                    if (no_disponibles.includes(driverId)) {
+                        if ($driverSelect.hasClass('select2-hidden-accessible')) {
+                            $driverSelect.next('.select2-container')
+                                .find('.select2-selection')
+                                .css('border', '2px solid red');
+                        } else {
+                            $driverSelect.css('border', '2px solid red');
+                        }
                     } else {
-                        $(this).find(`select[name="driver_id[${groupId}]"]`).css('border', ''); // Quitar borde si no está en no_disponibles
+                        if ($driverSelect.hasClass('select2-hidden-accessible')) {
+                            $driverSelect.next('.select2-container')
+                                .find('.select2-selection')
+                                .css('border', '');
+                        } else {
+                            $driverSelect.css('border', '');
+                        }
                     }
 
-                    // Marcar los ayudantes
-                    $(this).find(`select[name="helpers[${groupId}][]"]`).each(function() {
-                        const helperId = $(this).val();
-                        if (no_disponibles.includes(parseInt(helperId))) {
-                            $(this).css('border', '2px solid red'); // Borde rojo en ayudante
+                    // === AYUDANTES ===
+                    $(this).find(`select[name="helpers[${groupId}][]"]`).each(function () {
+                        const $helperSelect = $(this);
+                        const helperId = $helperSelect.val();
+
+                        if (no_disponibles.includes(helperId)) {
+                            if ($helperSelect.hasClass('select2-hidden-accessible')) {
+                                $helperSelect.next('.select2-container')
+                                    .find('.select2-selection')
+                                    .css('border', '2px solid red');
+                            } else {
+                                $helperSelect.css('border', '2px solid red');
+                            }
                         } else {
-                            $(this).css('border', ''); // Quitar borde si no está en no_disponibles
+                            if ($helperSelect.hasClass('select2-hidden-accessible')) {
+                                $helperSelect.next('.select2-container')
+                                    .find('.select2-selection')
+                                    .css('border', '');
+                            } else {
+                                $helperSelect.css('border', '');
+                            }
                         }
                     });
                 });
+
                 
                 Swal.fire({
                     icon: 'info',

@@ -16,7 +16,7 @@
         <div class="form-group">
             <div id="imageButton" style="cursor: pointer; width: 100%; text-align: center; padding: 10px;">
                 <img style="cursor: pointer; width: 100%; height: 180px;" 
-                src="{{ isset($brand) && $brand->logo != '' ? asset($brand->logo) : asset('storage/brand_logo/producto_var.webp') }}" 
+                src="{{ isset($brand) && $brand->logo != '' ? asset($brand->logo) : asset('storage/brand_logo/producto_var.png') }}" 
                 alt="Logo" width="50">
                 <p>Haga click para seleccionar un imagen</p>
             </div>

@@ -35,7 +35,7 @@
         <div class="form-group">
             <div id="imageButton" style="cursor: pointer; width: 100%; text-align: center; padding: 10px;">
                 <img style="cursor: pointer; width: 100%; height: 180px;" 
-                src="{{ isset($maintenancerecord) && $maintenancerecord->image_url != '' ? asset($maintenancerecord->image_url) : asset('storage/brand_logo/producto_var.webp') }}" 
+                src="{{ isset($maintenancerecord) && $maintenancerecord->image_url != '' ? asset($maintenancerecord->image_url) : asset('storage/brand_logo/producto_var.png') }}" 
                 alt="Logo" width="50">
                 <p>Haga click para seleccionar un imagen</p>
             </div>

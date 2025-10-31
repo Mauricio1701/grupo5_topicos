@@ -86,7 +86,7 @@ $(document).ready(function() {
                 data: 'image',
                 name: 'image',
                 render: function(data) {
-                    const defaultImage = '{{ asset("storage/brand_logo/producto_var.webp") }}';
+                    const defaultImage = '{{ asset("storage/brand_logo/producto_var.png") }}';
                     const imageUrl = data && data.trim() !== '' ? data : defaultImage;
 
                     return `<img src="${imageUrl}" alt="Imagen del Vehículo" class="img-fluid" style="width: 50px; height: 50px; object-fit: cover;">`;

@@ -50,7 +50,7 @@
                     @foreach ($brands as $brand)
                         <tr>
                             <td>
-                                <img src="{{ $brand->logo == '' ? asset('storage/brand_logo/producto_var.webp') : asset($brand->logo) }}" alt="Logo" width="50">
+                                <img src="{{ $brand->logo == '' ? asset('storage/brand_logo/producto_var.png') : asset($brand->logo) }}" alt="Logo" width="50">
                             </td>
                             <td>{{ $brand->name }}</td>
                             <td>{{ $brand->description }}</td>

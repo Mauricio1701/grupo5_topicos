@@ -194,7 +194,6 @@
                     employeegroups_id: groupId
                 },
                 success: function(data) {
-                    console.log(data);
 
                     // Actualizar el input de Turnos
                     $('#shift_id_text').val(data.group.shift.name || '');  
@@ -396,26 +395,32 @@
     }
 
     function getHelpersData() {
-       const data = { helpers: [] };   // Usamos un array para almacenar los datos de todos los grupos
-        const driverId = $('#employee_conductor_id').val();  // Obtener el conductor
-        data.helpers.push(driverId);
+        const data = [];
+
+        // Obtener el ID del conductor
+        const driverId = $('#employee_conductor_id').val();
 
         // Obtener los ayudantes
-        $('select[name^="employee_helper_id"]').each(function() {
-            const helperId = $(this).val();
-            if (helperId) {
-                data.helpers.push(helperId);
-            }
+        const helpers = $('select[name^="employee_helper_id"]').map(function() {
+            return $(this).val();
+        }).get();
+
+        // Usamos un "group_id" genérico (por ejemplo 1 o null)
+        data.push({
+            group_id: null, // o null si no tienes un grupo real
+            employees: [driverId, ...helpers].filter(Boolean) // filtra vacíos
         });
-        
-        return data;  // Devolvemos el array con los datos
+
+        return data;
     }
+
 
 
     $('#btnValidar').on('click', function () {
         const startDate = $('#start_date').val();
         const endDate = $('#end_date').val();
-        console.log(startDate, endDate);
+        const shiftId =  $('#shift_id').val();
+        const zoneId = $('#zone_id').val();
 
         if (!validarDates()) {
             return;
@@ -426,30 +431,46 @@
         const data ={
             start_date: startDate,
             end_date: endDate,
+            shift_id: shiftId,
+            zone_id: zoneId,
             helpers: getHelpersData(),
 
         }
 
-        console.log(data);
 
         $.ajax({
             url: '{{ route('admin.schedulings.validationVacations') }}',
             type: 'GET',
             data: data ,
             success: function(response) {
-                console.log(response);
                 const no_disponibles = response.no_disponibles;
                 no_disponibles.forEach(id => {
                     // Marcar el campo correspondiente como inválido (borde rojo)
-                    if ($('#employee_conductor_id').val() == id) {
-                        $('#employee_conductor_id').css('border', '2px solid red'); // Conductor
+                    if ($('#employee_conductor_id').val() === id) {
+                       const selectEl = $('#employee_conductor_id');
+
+                        if (selectEl.hasClass('select2-hidden-accessible')) {
+                            selectEl.next('.select2-container')
+                                .find('.select2-selection')
+                                .css('border', '2px solid red');
+                        } else {
+                            selectEl.css('border', '2px solid red');
+                        }
+
                     }
 
-                    $('select[name^="employee_helper_id"]').each(function() {
-                        if ($(this).val() == id) {
-                            $(this).css('border', '2px solid red'); // Ayudantes
-                        }
-                    });
+                        $('select[name^="employee_helper_id"]').each(function() {
+                            if ($(this).val() === id) {
+                                if ($(this).hasClass('select2-hidden-accessible')) {
+                                    $(this).next('.select2-container')
+                                        .find('.select2-selection')
+                                        .css('border', '2px solid red');
+                                } else {
+                                    $(this).css('border', '2px solid red');
+                                }
+                            }
+                        });
+
                 });
 
                 // Mostrar vacaciones aprobadas (si hay)

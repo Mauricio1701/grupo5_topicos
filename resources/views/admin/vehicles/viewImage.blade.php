@@ -5,7 +5,7 @@
         <div class="col-md-12">
             {!! Form::file('image', ['id' => 'logo', 'accept' => 'image/*', 'class' => 'd-none']) !!}
             <div id="imageButton" class="border border-secondary rounded-lg shadow-sm text-center p-3 mb-3" style="cursor: pointer; background-color: #f8f9fa;">
-                <img src="{{ asset('storage/brand_logo/producto_var.webp') }}" 
+                <img src="{{ asset('storage/brand_logo/producto_var.png') }}" 
                      alt="Logo" class="img-thumbnail mb-2" style="height: 180px; object-fit: contain;">
                 <p class="mb-0 text-secondary"><i class="fas fa-upload"></i> Haz clic para seleccionar una imagen</p>
             </div>

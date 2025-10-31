@@ -31,7 +31,7 @@ class BrandController extends Controller
         if($request->ajax()){
             return DataTables::of($brands)
             ->addColumn('logo', function($brand){
-                return "<img src='" . ($brand->logo == '' ? asset('storage/brand_logo/producto_var.webp') : $brand->logo) . "' width='50'>";
+                return "<img src='" . ($brand->logo == '' ? asset('storage/brand_logo/producto_var.png') : $brand->logo) . "' width='50'>";
             })
             ->addColumn('action', function($brand){
                $editBtn = '<button class="btn btn-warning btn-sm btnEditar" id="' . $brand->id . '">

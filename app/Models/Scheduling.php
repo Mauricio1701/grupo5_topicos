@@ -19,6 +19,11 @@ class Scheduling extends Model
         return $this->belongsTo(Employeegroup::class,'group_id');
     }
 
+        public function groupdetails()
+    {
+        return $this->hasMany(Groupdetail::class, 'scheduling_id');
+    }
+
     public function shift()
     {
         return $this->belongsTo(Shift::class,'shift_id');

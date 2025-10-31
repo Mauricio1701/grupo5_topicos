@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Change;
 use App\Models\Attendance;
 use App\Models\Vacation;
-
 use Egulias\EmailValidator\EmailValidator;
 use Egulias\EmailValidator\Result\Reason\Reason as ReasonReason;
 
@@ -859,41 +858,63 @@ class SchedulingController extends Controller
             }
     }
 
-    public function validationVacations(Request $request){
-        $ListaNoDisponibles = [];
-        $ListaVacaciones = [];
-        $helpers= $request->helpers;
-        $end_date = null;
-        $start_date = $request->start_date;
+public function validationVacations(Request $request)
+{
+    $ListaNoDisponibles = [];
+    $ListaVacaciones = [];
+    $listboolean = [];
+    $helpersData = $request->helpers;
+    $start_date = $request->start_date;
+    $end_date = $request->end_date ?? $start_date;
 
-        if($request->end_date) {
-            $end_date = $request->end_date;
-        } else {
-            $end_date = $request->start_date; // Si no hay end_date, usamos start_date
-        }
+    foreach ($helpersData as $groupData) {
+        $groupId = $groupData['group_id'] ?? null;
+        $employees = $groupData['employees'] ?? [];
 
+        // Obtenemos zona y turno si están en el request o desde el grupo
+        $zone_id = $request->zone_id;
+        $shift_id = $request->shift_id;
 
-        foreach( $helpers as $helper) {
-            $vacation = $this->checkVacation($helper, $start_date, $end_date);
-           
-            if($vacation){
-                array_push($ListaNoDisponibles, $vacation->employee_id);
-                array_push($ListaVacaciones, $vacation);
+        if (!$zone_id || !$shift_id) {
+            $group = \App\Models\EmployeeGroup::find($groupId);
+            if ($group) {
+                $zone_id = $zone_id ?? $group->zone_id;
+                $shift_id = $shift_id ?? $group->shift_id;
             }
         }
 
-        return response()->json([
-            'no_disponibles' => $ListaNoDisponibles,
-            'vacaciones' => $ListaVacaciones
-        ])->setStatusCode(200, 'OK', [
-            'Content-Type' => 'application/json'
-        ]);
+        // Recorremos los empleados de este grupo
+        foreach ($employees as $employeeId) {
+            $vacation = $this->checkVacation($employeeId, $start_date, $end_date);
+            $hasSchedule = $this->checkEmployeeHasSchedule($employeeId, $zone_id, $shift_id, $start_date, $end_date);
+
+            if ($vacation) {
+                $ListaNoDisponibles[] = $vacation->employee_id;
+                $ListaVacaciones[] = $vacation;
+            }
+
+            $listboolean [] = $hasSchedule;
+
+            if ($hasSchedule) {
+                $ListaNoDisponibles[] = $employeeId;
+            }
+        }
+        
     }
+
+    // Quitar duplicados
+    $ListaNoDisponibles = array_unique($ListaNoDisponibles);
+
+    return response()->json([
+        'no_disponibles' => $ListaNoDisponibles,
+        'vacaciones' => $ListaVacaciones,
+    ]);
+}
+
 
     public function validationDuplicate($fecha,$zona,$shift){
         $isDuplicate = false;
         $scheduling = Scheduling::where('date', $fecha)
-            ->where('zone_id', $zona)
             ->where('shift_id', $shift)
             ->first();
         
@@ -903,6 +924,18 @@ class SchedulingController extends Controller
 
         return $isDuplicate;
     }
+
+    private function checkEmployeeHasSchedule($employeeId, $zoneId, $shiftId, $startDate, $endDate)
+    {
+        return Scheduling::whereBetween('date', [$startDate, $endDate])
+            ->where('shift_id', $shiftId)
+            ->whereHas('groupdetails', function ($q) use ($employeeId) {
+                $q->where('employee_id', $employeeId);
+            })
+            ->exists();
+    }
+
+
 
   
 
