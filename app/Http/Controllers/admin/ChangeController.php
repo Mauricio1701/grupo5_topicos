@@ -128,16 +128,18 @@ class ChangeController extends Controller
     {
         if($request->reason_id == 1){
             // Primer Query: Con INNER JOIN y condición en `employee_id`
-            $schedulings = Scheduling::join('groupdetails as gd', 'schedulings.id', '=', 'gd.scheduling_id')
-                ->where('gd.employee_id', $request->old_employee)
-                ->where('schedulings.date', '>=', $request->startDate)
-                ->where('schedulings.date', '<=',  $request->endDate)
-                ->get();
+          $schedulings = Scheduling::whereHas('groupdetails', function($q) use ($request) {
+                $q->where('employee_id', $request->old_employee);
+            })
+            ->whereBetween('date', [$request->startDate, $request->endDate])
+            ->get();
+
             
             if ($schedulings->isEmpty()) {
                 // No hay registros
                 return response()->json(['message' => 'No hay registros disponibles.'], 404);
             }
+
 
             foreach ($schedulings as $scheduling) {
 

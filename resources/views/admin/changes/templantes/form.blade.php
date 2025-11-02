@@ -81,7 +81,7 @@
         {{-- Personal Actual --}}
         <div class="col-md-6">
             <label>Personal Actual</label>
-            <select id="selectCurrentEmployee" name="selectCurrentEmployee" class="form-control">
+            <select id="selectCurrentEmployee" name="selectCurrentEmployee" class="form-control" style="width: 100%;">
                 <option value="">Seleccione un personal</option>
                 @foreach($employees as $employee)
                     <option value="{{ $employee->id }}">{{ $employee->lastnames }} {{ $employee->names }}</option>
@@ -106,6 +106,10 @@
 
 <script>
     $(document).ready(function () {
+         $('#selectCurrentEmployee').select2({
+            placeholder: 'Seleccione una opción',
+            dropdownParent: $('#modalChange'),
+        });
         // Inicialización select2
         $('#selectNewEmployee').select2({
             placeholder: 'Seleccione una opción',

@@ -270,23 +270,25 @@
 
                 
 
-                    if (data.group.configgroup && data.group.configgroup.length > 0) {
-                        $.each(data.group.configgroup, function(index, config) {
-                            // Verificar el tipo de empleado (conductor o ayudante)
-                            if (config.employee.employee_type.name === 'Conductor') {
-                                // Si es conductor, pre-seleccionar el conductor en el select
-                                $('#employee_conductor_id').val(config.employee_id);
-                            } else if (config.employee.employee_type.name === 'Ayudante') {
-                                // Si es ayudante, pre-seleccionar el ayudante en el select correspondiente
-                                for (var i = 0; i < numAyudantes; i++) {
-                                    if ($('#employee_helper_id_' + i).length) { // Verificar si el select existe
-                                        $('#employee_helper_id_' + i).val(config.employee_id);
-                                    }
+                    if (Array.isArray(data.group.configgroup) && data.group.configgroup.length > 0) {
+                    const ayudantesAsignados = [];
+
+                    data.group.configgroup.forEach((config, index) => {
+                        if (config.employee.employee_type.name === 'Conductor') {
+                            $('#employee_conductor_id').val(config.employee_id);
+                        } else if (config.employee.employee_type.name === 'Ayudante') {
+                            // Buscar el primer select de ayudante vacío
+                            for (let i = 0; i < numAyudantes; i++) {
+                                const selectEl = $(`#employee_helper_id_${i}`);
+                                if (selectEl.length && !selectEl.val()) {
+                                    selectEl.val(config.employee_id);
+                                    ayudantesAsignados.push(config.employee_id);
+                                    break;
                                 }
                             }
-                        });
-                        
-                    }
+                        }
+                    });
+                }
                     initializeDynamicSelects();
                 },
                 error: function(xhr, status, error) {
@@ -315,8 +317,6 @@
 
         const schedulingData = getSchedulingData();
 
-
-        console.log('Datos de programación:', schedulingData);
         schedulingData._token = '{{ csrf_token() }}';
 
         // Enviar los datos al servidor
@@ -414,6 +414,11 @@
         return data;
     }
 
+    function formatDate(dateString) {
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
+    }
+
 
 
     $('#btnValidar').on('click', function () {
@@ -444,34 +449,35 @@
             data: data ,
             success: function(response) {
                 const no_disponibles = response.no_disponibles;
-                no_disponibles.forEach(id => {
-                    // Marcar el campo correspondiente como inválido (borde rojo)
-                    if ($('#employee_conductor_id').val() === id) {
-                       const selectEl = $('#employee_conductor_id');
+               if(Array.isArray(no_disponibles)){
+                     no_disponibles.forEach(id => {
+                        // Marcar el campo correspondiente como inválido (borde rojo)
+                        if (parseInt($('#employee_conductor_id').val()) === parseInt(id)) {
+                            const selectEl = $('#employee_conductor_id');
 
-                        if (selectEl.hasClass('select2-hidden-accessible')) {
-                            selectEl.next('.select2-container')
-                                .find('.select2-selection')
-                                .css('border', '2px solid red');
-                        } else {
-                            selectEl.css('border', '2px solid red');
-                        }
-
-                    }
-
-                        $('select[name^="employee_helper_id"]').each(function() {
-                            if ($(this).val() === id) {
-                                if ($(this).hasClass('select2-hidden-accessible')) {
-                                    $(this).next('.select2-container')
+                                if (selectEl.hasClass('select2-hidden-accessible')) {
+                                    selectEl.next('.select2-container')
                                         .find('.select2-selection')
                                         .css('border', '2px solid red');
                                 } else {
-                                    $(this).css('border', '2px solid red');
+                                    selectEl.css('border', '2px solid red');
                                 }
                             }
-                        });
 
-                });
+                            $('select[name^="employee_helper_id"]').each(function() {
+                                if (parseInt($(this).val()) === parseInt(id)) {
+                                    if ($(this).hasClass('select2-hidden-accessible')) {
+                                        $(this).next('.select2-container')
+                                            .find('.select2-selection')
+                                            .css('border', '2px solid red');
+                                    } else {
+                                        $(this).css('border', '2px solid red');
+                                    }
+                                }
+                            });
+
+                    });
+               }
 
                 // Mostrar vacaciones aprobadas (si hay)
                const vacaciones = response.vacaciones || [];
@@ -482,8 +488,9 @@
 
                     vacaciones.forEach(v => {
                         // Convertir fechas a formato local (dd/mm/yyyy)
-                        const requestDate = new Date(v.request_date).toLocaleDateString('es-PE');
-                        const endDate = new Date(v.end_date).toLocaleDateString('es-PE');
+    
+                        const requestDate = formatDate(v.request_date);
+                        const endDate = formatDate(v.end_date);
 
                         $('#vacationItems').append(`
                             <li class="list-group-item d-flex justify-content-between align-items-center">

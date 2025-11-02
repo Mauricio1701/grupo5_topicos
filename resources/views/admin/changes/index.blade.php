@@ -100,8 +100,9 @@
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
    
    <script>
+    var table 
   $(document).ready(function() {
-        var table = $('#datatable').DataTable({
+         table = $('#datatable').DataTable({
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.10.16/i18n/Spanish.json"
             },

@@ -896,14 +896,14 @@ public function validationVacations(Request $request)
             $listboolean [] = $hasSchedule;
 
             if ($hasSchedule) {
-                $ListaNoDisponibles[] = $employeeId;
+                $ListaNoDisponibles[] = (int) $employeeId;
             }
         }
         
     }
 
     // Quitar duplicados
-    $ListaNoDisponibles = array_unique($ListaNoDisponibles);
+    $ListaNoDisponibles = array_values(array_unique($ListaNoDisponibles));
 
     return response()->json([
         'no_disponibles' => $ListaNoDisponibles,
