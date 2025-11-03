@@ -19,7 +19,7 @@
 #localData button:hover {
     background-color: #ffc107; /* Fondo amarillo en hover */
     border: 1px solid #ffc107; /* Borde amarillo en hover */
-    color: white; /* Texto blanco en hover */
+    color: 000; /* Texto blanco en hover */
 }
 
 /* Estilo para los botones en estado seleccionado (si es necesario) */
