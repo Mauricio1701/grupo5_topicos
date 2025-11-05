@@ -60,43 +60,78 @@
     
 
     <div class="card-body">
-        <div class="row">
-            <div class="col-md-10" id="localData">
+            <div class="row">
+                <div class="col-md-10" id="localData">
 
+                </div>
+                <div class="col-md-2" >
+                    <button type="button" style="display: none;" class="btn btn-outline-danger btn-sm" id="btnClearFailedGroups">
+                        <i class="fas fa-trash-alt"></i> Limpiar
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2" >
-                <button type="button" style="display: none;" class="btn btn-outline-danger btn-sm" id="btnClearFailedGroups">
-                    <i class="fas fa-trash-alt"></i> Limpiar
-                </button>
-            </div>
-        </div>
-        <hr>
-        <div id="vacationList" style="
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1050;
-        width: 320px;
-        max-height: 400px;
-        overflow-y: auto;
-        background-color: #fff3cd;
-        border: 1px solid #ffeeba;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        display: none;
-    ">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h6 class="mb-0"><i class="fas fa-plane-departure"></i> Vacaciones</h6>
-        <button type="button" class="close text-dark" onclick="$('#vacationList').hide();">
-            <span>&times;</span>
+            <hr>
+            
+            <!-- Modal unificado -->
+<div class="modal fade" id="validationModal" tabindex="-1" role="dialog" aria-labelledby="validationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="validationModalLabel">
+          <i class="fas fa-clipboard-check"></i> Resultados de Validación
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
         </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
+              <i class="fas fa-plane-departure"></i> Vacaciones
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
+              <i class="fas fa-file-signature"></i> Contratos
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
+              <i class="fas fa-exclamation-triangle"></i> Conflictos
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
+            <ul class="list-group list-group-flush" id="vacationItems"></ul>
+          </div>
+
+          <div class="tab-pane fade" id="contratos" role="tabpanel">
+            <ul class="list-group list-group-flush" id="nocontratoItem"></ul>
+          </div>
+
+          <div class="tab-pane fade" id="conflictos" role="tabpanel">
+            <div class="accordion" id="conflicList">
+              <ul class="list-group list-group-flush" id="conflicItem"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      </div>
     </div>
-    <ul class="list-group list-group-flush" id="vacationItems" style="font-size: 16px;">
-        <!-- Aquí se cargará la lista -->
-    </ul>
+  </div>
 </div>
+
+
+
 
         <div class="row">
             <div class="col-md-4 mb-3">
@@ -419,6 +454,32 @@
         return `${day}/${month}/${year}`;
     }
 
+    function resetSelect2Style(selector) {
+        // Para cada elemento select2 encontrado
+        $(selector).each(function() {
+            const selectEl = $(this);
+
+            if (selectEl.hasClass('select2-hidden-accessible')) {
+                // Si está inicializado con select2, resetea el contenedor visual
+                selectEl.next('.select2-container')
+                    .find('.select2-selection')
+                    .css({
+                        'border': '',
+                        'background-color': '',
+                        'color': ''
+                    });
+            } else {
+                // Si es un select normal (por alguna razón)
+                selectEl.css({
+                    'border': '',
+                    'background-color': '',
+                    'color': ''
+                });
+            }
+        });
+    }
+
+
 
 
     $('#btnValidar').on('click', function () {
@@ -426,6 +487,10 @@
         const endDate = $('#end_date').val();
         const shiftId =  $('#shift_id').val();
         const zoneId = $('#zone_id').val();
+
+        const work_days = $('input[name="days[]"]:checked').map(function() {
+            return $(this).val();
+        }).get();
 
         if (!validarDates()) {
             return;
@@ -438,6 +503,7 @@
             end_date: endDate,
             shift_id: shiftId,
             zone_id: zoneId,
+            work_days: work_days,
             helpers: getHelpersData(),
 
         }
@@ -449,40 +515,53 @@
             data: data ,
             success: function(response) {
                 const no_disponibles = response.no_disponibles;
-               if(Array.isArray(no_disponibles)){
-                     no_disponibles.forEach(id => {
-                        // Marcar el campo correspondiente como inválido (borde rojo)
-                        if (parseInt($('#employee_conductor_id').val()) === parseInt(id)) {
-                            const selectEl = $('#employee_conductor_id');
+                if(Array.isArray(no_disponibles)){
+                        resetSelect2Style('#employee_conductor_id, select[name^="employee_helper_id"]');
+                        if(no_disponibles.length === 0) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Todos disponibles!',
+                                text: 'Los conductores y ayudantes seleccionados están disponibles para las fechas indicadas.',
+                                confirmButtonColor: '#3085d6',
+                                confirmButtonText: 'Aceptar'
+                            });
+                            return;
+                        }
 
-                                if (selectEl.hasClass('select2-hidden-accessible')) {
-                                    selectEl.next('.select2-container')
-                                        .find('.select2-selection')
-                                        .css('border', '2px solid red');
-                                } else {
-                                    selectEl.css('border', '2px solid red');
-                                }
-                            }
+                        
 
-                            $('select[name^="employee_helper_id"]').each(function() {
-                                if (parseInt($(this).val()) === parseInt(id)) {
-                                    if ($(this).hasClass('select2-hidden-accessible')) {
-                                        $(this).next('.select2-container')
+                        no_disponibles.forEach(id => {
+                            // Marcar el campo correspondiente como inválido (borde rojo)
+                            if (parseInt($('#employee_conductor_id').val()) === parseInt(id)) {
+                                const selectEl = $('#employee_conductor_id');
+
+                                    if (selectEl.hasClass('select2-hidden-accessible')) {
+                                        selectEl.next('.select2-container')
                                             .find('.select2-selection')
                                             .css('border', '2px solid red');
                                     } else {
-                                        $(this).css('border', '2px solid red');
+                                        selectEl.css('border', '2px solid red');
                                     }
                                 }
-                            });
 
-                    });
-               }
+                                $('select[name^="employee_helper_id"]').each(function() {
+                                    if (parseInt($(this).val()) === parseInt(id)) {
+                                        if ($(this).hasClass('select2-hidden-accessible')) {
+                                            $(this).next('.select2-container')
+                                                .find('.select2-selection')
+                                                .css('border', '2px solid red');
+                                        } else {
+                                            $(this).css('border', '2px solid red');
+                                        }
+                                    }
+                                });
+
+                        });
+                }
 
                 // Mostrar vacaciones aprobadas (si hay)
                const vacaciones = response.vacaciones || [];
                 $('#vacationItems').empty();
-
                 if (vacaciones.length > 0) {
                     $('#vacationList').show();
 
@@ -503,7 +582,104 @@
                     $('#vacationList').hide();
                 }
 
-                if(no_disponibles.length == 0){
+                const nocontrato = response.nocontrato || [];
+                $('#nocontratoItem').empty();
+
+                if (nocontrato.length > 0) {
+                    $('#nocontratoList').show();
+
+                    nocontrato.forEach(v => {
+                        // Convertir fechas a formato local (dd/mm/yyyy)
+    
+                        const requestDate = formatDate(v.contract.start_date);
+                        const endDate = formatDate(v.contract.end_date);
+
+                        $('#nocontratoItem').append(`
+                            <li class="list-group-item d-flex flex-col justify-content-between align-items-center">
+                                <span><strong>${v.employee.names}</strong></span>
+                                <span>${v.message}</span>
+                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
+                            </li>
+                        `);
+                    });
+                } else {
+                    $('#nocontratoList').hide();
+                }
+
+
+            
+                const conflictos = response.conflictos || [];
+                $('#conflicList').empty();
+
+                if (conflictos.length > 0) {
+                    $('#conflicList').show();
+
+                    conflictos.forEach((conflict, index) => {
+                        const collapseId = `collapse-${conflict.employee_id}`;
+                        const headingId = `heading-${conflict.employee_id}`;
+
+                        let messageItems = '';
+                        conflict.messages.forEach(msg => {
+                            messageItems += `<li class="list-group-item">${msg}</li>`;
+                        });
+
+                      const accordionItem = `
+                        <div class="card accordion-card" data-toggle="collapse" data-target="#${collapseId}">
+                            <div class="card-header" id="${headingId}">
+                            <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                                <span>👤 ${conflict.employee_name}</span>
+                                <i class="fas fa-chevron-down rotate-icon"></i>
+                            </h6>
+                            </div>
+                            <div id="${collapseId}" 
+                                class="collapse" 
+                                aria-labelledby="${headingId}" 
+                                data-parent="#conflicList">
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                ${messageItems}
+                                </ul>
+                            </div>
+                            </div>
+                        </div>
+                        `;
+
+                        $('#conflicList').append(accordionItem);
+                    });
+
+                } else {
+                    $('#conflicList').hide();
+                }
+
+               // --- Limpiar estados previos ---
+                $('#vacaciones-tab, #contratos-tab, #conflictos-tab').removeClass('text-danger text-success');
+
+                // --- Colorear los tabs según resultados ---
+                if (vacaciones.length > 0) {
+                $('#vacaciones-tab').addClass('text-danger'); // rojo si hay vacaciones activas
+                } else {
+                $('#vacaciones-tab').addClass('text-success'); // verde si todo bien
+                }
+
+                if (nocontrato.length > 0) {
+                $('#contratos-tab').addClass('text-danger');
+                } else {
+                $('#contratos-tab').addClass('text-success');
+                }
+
+                if (conflictos.length > 0) {
+                $('#conflictos-tab').addClass('text-danger');
+                } else {
+                $('#conflictos-tab').addClass('text-success');
+                }
+                
+                $('#validationModal').modal('show');
+
+
+
+
+
+                if(no_disponibles.length == 0 && vacaciones.length == 0){
                     $('#saveSchedulingBtn').removeAttr('disabled');
                 }
 

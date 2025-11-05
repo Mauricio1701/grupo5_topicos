@@ -13,8 +13,10 @@ use App\Models\Vehicle;
 use App\Models\Zone;
 use App\Models\EmployeeType;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use App\Models\Groupdetail;
 use App\Models\Reason;
+use App\Models\Contract;
 use Illuminate\Support\Facades\DB;
 use App\Models\Change;
 use App\Models\Attendance;
@@ -162,6 +164,58 @@ class SchedulingController extends Controller
             ->whereDate('request_date', '<=', $end_date)
             ->whereDate('end_date', '>=', $start_date)
             ->first();
+    }
+
+    private function checkContract($employeeId, $start_date, $end_date)
+    {
+        // Obtenemos el contrato con el empleado relacionado
+        $contract = Contract::with('employee')
+            ->where('employee_id', $employeeId)
+            ->first();
+
+        // Si no tiene contrato
+        if (!$contract) {
+            return [
+                'status' => 'sin_contrato',
+                'employee_id' => $employeeId,
+                'message' => 'El empleado no tiene contrato registrado.',
+                'employee' => Employee::find($employeeId)
+            ];
+        }
+
+        // Si el contrato es temporal
+        if ($contract->contract_type === 'Temporal') {
+            $isWithinDates =
+                $contract->start_date <= $end_date &&
+                $contract->end_date >= $start_date;
+
+            if ($isWithinDates) {
+                return [
+                    'status' => 'temporal_valido',
+                    'employee_id' => $employeeId,
+                    'message' => 'Contrato temporal válido en el rango de fechas.',
+                    'employee' => $contract->employee,
+                    'contract' => $contract
+                ];
+            } else {
+                return [
+                    'status' => 'temporal_fuera_de_rango',
+                    'employee_id' => $employeeId,
+                    'message' => 'No cubre el rango de fechas solicitado.',
+                    'employee' => $contract->employee,
+                    'contract' => $contract
+                ];
+            }
+        }
+
+        // Si el contrato NO es temporal (ej. indefinido, por servicio, etc.)
+        return [
+            'status' => 'contrato_permanente',
+            'employee_id' => $employeeId,
+            'message' => 'Contrato permanente o diferente de temporal.',
+            'employee' => $contract->employee,
+            'contract' => $contract
+        ];
     }
 
 
@@ -858,58 +912,105 @@ class SchedulingController extends Controller
             }
     }
 
-public function validationVacations(Request $request)
-{
-    $ListaNoDisponibles = [];
-    $ListaVacaciones = [];
-    $listboolean = [];
-    $helpersData = $request->helpers;
-    $start_date = $request->start_date;
-    $end_date = $request->end_date ?? $start_date;
+    public function validationVacations(Request $request)
+    {
+        $ListaNoDisponibles = [];
+        $ListaNoContrato = [];
+        $ListaVacaciones = [];
+        $ListaConflictos = [];
+        $listboolean = [];
+        $helpersData = $request->helpers;
+        $start_date = $request->start_date;
+        $workDays = $this->normalizeWorkDays($request->work_days ?? []);
+        $end_date = $request->end_date ?? $start_date;
 
-    foreach ($helpersData as $groupData) {
-        $groupId = $groupData['group_id'] ?? null;
-        $employees = $groupData['employees'] ?? [];
+        foreach ($helpersData as $groupData) {
+            $groupId = $groupData['group_id'] ?? null;
+            $employees = $groupData['employees'] ?? [];
 
-        // Obtenemos zona y turno si están en el request o desde el grupo
-        $zone_id = $request->zone_id;
-        $shift_id = $request->shift_id;
+            // Obtenemos zona y turno si están en el request o desde el grupo
+            $zone_id = $request->zone_id;
+            $shift_id = $request->shift_id;
 
-        if (!$zone_id || !$shift_id) {
-            $group = \App\Models\EmployeeGroup::find($groupId);
-            if ($group) {
-                $zone_id = $zone_id ?? $group->zone_id;
-                $shift_id = $shift_id ?? $group->shift_id;
+            if (!$zone_id || !$shift_id) {
+                $group = \App\Models\EmployeeGroup::find($groupId);
+                if ($group) {
+                    $zone_id = $zone_id ?? $group->zone_id;
+                    $shift_id = $shift_id ?? $group->shift_id;
+                }
             }
+
+            // Recorremos los empleados de este grupo
+            foreach ($employees as $employeeId) {
+                $vacation = $this->checkVacation($employeeId, $start_date, $end_date);
+              
+
+                if ($vacation) {
+                    $ListaNoDisponibles[] = $vacation->employee_id;
+                    $ListaVacaciones[] = $vacation;
+                }else{
+                    $contract = $this->checkContract($employeeId, $start_date, $end_date);
+                    if ($contract['status'] == 'temporal_fuera_de_rango' || $contract['status'] == 'sin_contrato') {
+                        $ListaNoDisponibles[] = $contract['employee_id'];
+                        $ListaNoContrato[] = $contract;
+                    }else{
+                       
+                            $hasConflicts = $this->checkEmployeeHasScheduleByWorkDays(
+                                $employeeId,
+                                $zone_id,
+                                $shift_id,
+                                $start_date,
+                                $end_date,
+                                $workDays
+                            );
+                            if (!empty($hasConflicts)) {
+                                foreach ($hasConflicts as $conflict) {
+                                    $employeeId = $conflict['employee_id'];
+                                    $ListaNoDisponibles[] = $employeeId;
+
+                                    // 🔍 Buscar o recuperar nombre del empleado
+                                    if (!isset($employeeNames[$employeeId])) {
+                                        $employee = Employee::find($employeeId);
+                                        $employeeNames[$employeeId] = $employee ? $employee->fullname ?? $employee->name : "Empleado {$employeeId}";
+                                    }
+
+                                    $employeeName = $employeeNames[$employeeId];
+
+                                    // 📝 Mensaje descriptivo
+                                    $message = "{$employeeName} ya tiene programación el {$conflict['date']} en zona {$conflict['zone']} (turno {$conflict['shift']})";
+
+                                    // 👥 Agrupar por empleado
+                                    if (!isset($ListaConflictos[$employeeId])) {
+                                        $ListaConflictos[$employeeId] = [
+                                            'employee_id' => $employeeId,
+                                            'employee_name' => $employeeName,
+                                            'messages' => []
+                                        ];
+                                    }
+
+                                    $ListaConflictos[$employeeId]['messages'][] = $message;
+                                }
+                            }
+                        
+                    }
+                }
+                
+            }
+            
         }
 
-        // Recorremos los empleados de este grupo
-        foreach ($employees as $employeeId) {
-            $vacation = $this->checkVacation($employeeId, $start_date, $end_date);
-            $hasSchedule = $this->checkEmployeeHasSchedule($employeeId, $zone_id, $shift_id, $start_date, $end_date);
+        // Quitar duplicados
+        $ListaNoDisponibles = array_values(array_unique($ListaNoDisponibles));
+        $ListaConflictos = array_values($ListaConflictos);
 
-            if ($vacation) {
-                $ListaNoDisponibles[] = $vacation->employee_id;
-                $ListaVacaciones[] = $vacation;
-            }
 
-            $listboolean [] = $hasSchedule;
-
-            if ($hasSchedule) {
-                $ListaNoDisponibles[] = (int) $employeeId;
-            }
-        }
-        
+        return response()->json([
+            'no_disponibles' => $ListaNoDisponibles,
+            'vacaciones' => $ListaVacaciones,
+            'nocontrato' => $ListaNoContrato,
+            'conflictos' => $ListaConflictos,
+        ]);
     }
-
-    // Quitar duplicados
-    $ListaNoDisponibles = array_values(array_unique($ListaNoDisponibles));
-
-    return response()->json([
-        'no_disponibles' => $ListaNoDisponibles,
-        'vacaciones' => $ListaVacaciones,
-    ]);
-}
 
 
     public function validationDuplicate($fecha,$zona,$shift){
@@ -934,6 +1035,69 @@ public function validationVacations(Request $request)
             })
             ->exists();
     }
+
+   private function checkEmployeeHasScheduleByWorkDays($employeeId, $zoneId, $shiftId, $startDate, $endDate, array $workDays)
+    {
+        // 1️⃣ Generar las fechas laborales dentro del rango
+        $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        $targetDates = [];
+        foreach ($period as $date) {
+            if (in_array($date->dayOfWeekIso, $workDays)) { // ISO: 1=Lunes ... 7=Domingo
+                $targetDates[] = $date->toDateString();
+            }
+        }
+
+        if (empty($targetDates)) return [];
+
+        // 2️⃣ Buscar programaciones del empleado en esas fechas
+        $schedules = \App\Models\Scheduling::whereIn('date', $targetDates)
+            ->where('shift_id', $shiftId)
+            ->whereHas('groupdetails', function ($q) use ($employeeId) {
+                $q->where('employee_id', $employeeId);
+            })
+            ->with(['employeegroup.zone', 'shift'])
+            ->get();
+
+        // 3️⃣ Retornar las fechas o detalles de conflicto
+        return $schedules->map(function ($s) use ($employeeId) {
+            $date = \Carbon\Carbon::parse($s->date)->locale('es');
+
+            return [
+                'employee_id' => $employeeId,
+                'date' => $date->isoFormat('dddd D [de] MMMM YYYY'), // Lunes 3 de noviembre 2025
+                'group_id' => $s->group_id,
+                'zone' => $s->employeegroup->zone->name ?? null,
+                'shift' => $s->shift->name ?? null,
+            ];
+        })->toArray();
+    }
+
+
+    private function normalizeWorkDays(array $days): array
+    {
+        $map = [
+            'lunes' => 1,
+            'martes' => 2,
+            'miércoles' => 3,
+            'miercoles' => 3, // sin tilde por si acaso
+            'jueves' => 4,
+            'viernes' => 5,
+            'sábado' => 6,
+            'sabado' => 6,
+            'domingo' => 7,
+        ];
+
+        $result = [];
+        foreach ($days as $day) {
+            $key = strtolower(trim($day));
+            if (isset($map[$key])) {
+                $result[] = $map[$key];
+            }
+        }
+
+        return array_values(array_unique($result));
+    }
+
 
 
 
