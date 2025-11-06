@@ -1059,6 +1059,7 @@ class SchedulingController extends Controller
 
         $schedules = \App\Models\Scheduling::whereIn('date', $targetDates)
             ->where('shift_id', $shiftId)
+            ->where('status', 1)
             ->whereHas('groupdetails', function ($q) use ($employeeId) {
                 $q->where('employee_id', $employeeId);
             })
