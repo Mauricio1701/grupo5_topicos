@@ -5,11 +5,11 @@
     <div class="row">
             {{-- CAMBIO DE TURNO --}}
         <div class="col-md-12">
-            <label style="font-weight: 600">Cambio de Turno</label>
+            <label style="font-weight: 600">Cambio de Programación</label>
             <div class="row align-items-end">
                 <div class="col-md-4">
                     <label>Turno Actual</label>
-                    <input type="text" class="form-control" value="{{ $scheduling->employeegroup->shift->name ?? 'No asignado' }}" readonly>
+                    <input type="text" class="form-control" value="{{ $scheduling->shift->name ?? 'No asignado' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label>Nuevo Turno</label>
@@ -33,7 +33,7 @@
         <div class="row align-items-end">
             <div class="col-md-4">
                 <label>Vehículo Actual</label>
-                <input type="text" class="form-control" value="{{ $scheduling->employeegroup->vehicle->plate ?? 'No asignado' }}" readonly>
+                <input type="text" class="form-control" value="{{ $scheduling->vehicle->plate ?? 'No asignado' }}" readonly>
             </div>
             <div class="col-md-6">
                 <div class="col-md-12">

@@ -74,7 +74,7 @@ class SchedulingController extends Controller
                     return $scheduling->shift->name;
                 })
                 ->addColumn('vehicle', function ($scheduling) {
-                    return $scheduling->vehicle->code;
+                    return $scheduling->vehicle->plate;
                 })
                 ->addColumn('zone', function ($scheduling) {
                     return $scheduling->employeegroup->zone->name;
@@ -921,10 +921,11 @@ class SchedulingController extends Controller
         $listboolean = [];
         $helpersData = $request->helpers;
         $start_date = $request->start_date;
-        $workDays = $this->normalizeWorkDays($request->work_days ?? []);
+        $groupWorkDays = $this->normalizeWorkDays($request->work_days ?? []);
         $end_date = $request->end_date ?? $start_date;
 
         foreach ($helpersData as $groupData) {
+            $workDays = $groupWorkDays;
             $groupId = $groupData['group_id'] ?? null;
             $employees = $groupData['employees'] ?? [];
 
@@ -932,11 +933,16 @@ class SchedulingController extends Controller
             $zone_id = $request->zone_id;
             $shift_id = $request->shift_id;
 
-            if (!$zone_id || !$shift_id) {
+            if (!$zone_id || !$shift_id || empty($workDays)) {
                 $group = \App\Models\EmployeeGroup::find($groupId);
                 if ($group) {
                     $zone_id = $zone_id ?? $group->zone_id;
                     $shift_id = $shift_id ?? $group->shift_id;
+
+                    if (empty($workDays)) {
+                       $groupDays  = explode(',', $group->days);
+                       $workDays = $this->normalizeWorkDays($groupDays  ?? []);
+                    }
                 }
             }
 
@@ -944,18 +950,18 @@ class SchedulingController extends Controller
             foreach ($employees as $employeeId) {
                 $vacation = $this->checkVacation($employeeId, $start_date, $end_date);
               
-
                 if ($vacation) {
-                    $ListaNoDisponibles[] = $vacation->employee_id;
+                    $ListaNoDisponibles[] = (int) $vacation->employee_id;
                     $ListaVacaciones[] = $vacation;
+                     
                 }else{
                     $contract = $this->checkContract($employeeId, $start_date, $end_date);
                     if ($contract['status'] == 'temporal_fuera_de_rango' || $contract['status'] == 'sin_contrato') {
-                        $ListaNoDisponibles[] = $contract['employee_id'];
+                        $ListaNoDisponibles[] = (int) $contract['employee_id'];
                         $ListaNoContrato[] = $contract;
-                    }else{
-                       
-                            $hasConflicts = $this->checkEmployeeHasScheduleByWorkDays(
+                    }
+
+                    $hasConflicts = $this->checkEmployeeHasScheduleByWorkDays(
                                 $employeeId,
                                 $zone_id,
                                 $shift_id,
@@ -963,36 +969,37 @@ class SchedulingController extends Controller
                                 $end_date,
                                 $workDays
                             );
-                            if (!empty($hasConflicts)) {
-                                foreach ($hasConflicts as $conflict) {
-                                    $employeeId = $conflict['employee_id'];
-                                    $ListaNoDisponibles[] = $employeeId;
 
-                                    // 🔍 Buscar o recuperar nombre del empleado
-                                    if (!isset($employeeNames[$employeeId])) {
-                                        $employee = Employee::find($employeeId);
-                                        $employeeNames[$employeeId] = $employee ? $employee->fullname ?? $employee->name : "Empleado {$employeeId}";
-                                    }
+                    if (!empty($hasConflicts)) {
+                        foreach ($hasConflicts as $conflict) {
+                            $employeeId = (int) $conflict['employee_id'];
+                            $ListaNoDisponibles[] = $employeeId;
 
-                                    $employeeName = $employeeNames[$employeeId];
-
-                                    // 📝 Mensaje descriptivo
-                                    $message = "{$employeeName} ya tiene programación el {$conflict['date']} en zona {$conflict['zone']} (turno {$conflict['shift']})";
-
-                                    // 👥 Agrupar por empleado
-                                    if (!isset($ListaConflictos[$employeeId])) {
-                                        $ListaConflictos[$employeeId] = [
-                                            'employee_id' => $employeeId,
-                                            'employee_name' => $employeeName,
-                                            'messages' => []
-                                        ];
-                                    }
-
-                                    $ListaConflictos[$employeeId]['messages'][] = $message;
-                                }
+                            if (!isset($employeeNames[$employeeId])) {
+                                $employee = Employee::find($employeeId);
+                                $employeeNames[$employeeId] = $employee ? $employee->fullname ?? $employee->name : "Empleado {$employeeId}";
                             }
-                        
+
+                            $employeeName = $employeeNames[$employeeId];
+
+                            if (!isset($ListaConflictos[$employeeId])) {
+                                $ListaConflictos[$employeeId] = [
+                                        'employee_id'   => (int) $employeeId,
+                                        'employee_name' => $employeeName,
+                                        'messages'      => [] // aquí guardaremos los conflictos individuales
+                                    ];
+                            }
+
+                                // Agregamos el conflicto como objeto dentro de "messages"
+                                $ListaConflictos[$employeeId]['messages'][] = [
+                                    'date'  => $conflict['date'],
+                                    'zone'  => $conflict['zone'],
+                                    'shift' => $conflict['shift'],
+                                    // puedes añadir más campos si existen
+                                ];
+                        }
                     }
+                   
                 }
                 
             }
@@ -1038,7 +1045,7 @@ class SchedulingController extends Controller
 
    private function checkEmployeeHasScheduleByWorkDays($employeeId, $zoneId, $shiftId, $startDate, $endDate, array $workDays)
     {
-        // 1️⃣ Generar las fechas laborales dentro del rango
+
         $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
         $targetDates = [];
         foreach ($period as $date) {
@@ -1049,7 +1056,7 @@ class SchedulingController extends Controller
 
         if (empty($targetDates)) return [];
 
-        // 2️⃣ Buscar programaciones del empleado en esas fechas
+
         $schedules = \App\Models\Scheduling::whereIn('date', $targetDates)
             ->where('shift_id', $shiftId)
             ->whereHas('groupdetails', function ($q) use ($employeeId) {
@@ -1058,7 +1065,7 @@ class SchedulingController extends Controller
             ->with(['employeegroup.zone', 'shift'])
             ->get();
 
-        // 3️⃣ Retornar las fechas o detalles de conflicto
+
         return $schedules->map(function ($s) use ($employeeId) {
             $date = \Carbon\Carbon::parse($s->date)->locale('es');
 
@@ -1098,11 +1105,4 @@ class SchedulingController extends Controller
         return array_values(array_unique($result));
     }
 
-
-
-
-  
-
-
-        
 }

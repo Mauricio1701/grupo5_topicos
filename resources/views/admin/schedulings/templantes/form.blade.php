@@ -17,6 +17,62 @@
         color: #333 !important;  /* Cambiar el color del texto */
     }
 </style>
+<div class="modal fade" id="validationModal" tabindex="-1" role="dialog" aria-labelledby="validationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="validationModalLabel">
+          <i class="fas fa-clipboard-check"></i> Resultados de Validación
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
+              <i class="fas fa-plane-departure"></i> Vacaciones
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
+              <i class="fas fa-file-signature"></i> Contratos
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
+              <i class="fas fa-exclamation-triangle"></i> Conflictos
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
+            <ul class="list-group list-group-flush" id="vacationItems"></ul>
+          </div>
+
+          <div class="tab-pane fade" id="contratos" role="tabpanel">
+            <ul class="list-group list-group-flush" id="nocontratoItem"></ul>
+          </div>
+
+          <div class="tab-pane fade" id="conflictos" role="tabpanel">
+            <div class="accordion" id="conflicList">
+              <ul class="list-group list-group-flush" id="conflicItem"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <div class="modal fade" id="modalForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
@@ -274,6 +330,37 @@
         })
     });
 
+     function resetSelect2Style(selector) {
+        // Para cada elemento select2 encontrado
+        $(selector).each(function() {
+            const selectEl = $(this);
+
+            if (selectEl.hasClass('select2-hidden-accessible')) {
+                // Si está inicializado con select2, resetea el contenedor visual
+                selectEl.next('.select2-container')
+                    .find('.select2-selection')
+                    .css({
+                        'border': '',
+                        'background-color': '',
+                        'color': ''
+                    });
+            } else {
+                // Si es un select normal (por alguna razón)
+                selectEl.css({
+                    'border': '',
+                    'background-color': '',
+                    'color': ''
+                });
+            }
+        });
+    }
+
+    function formatDate(dateString) {
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+
 
     $('#btnValidar').on('click', function () {
         const startDate = $('#start_date').val();
@@ -296,6 +383,8 @@
             },
             success: function(response) {
                 const no_disponibles = response.no_disponibles;
+                resetSelect2Style('select[name="driver_id[${groupId}]"], select[name^="employee_helper_id"]');
+                $('#vacaciones-tab, #contratos-tab, #conflictos-tab').removeClass('text-danger text-success');
 
                 $('.group-card').each(function () {
                     const groupId = $(this).data('group-id');
@@ -303,8 +392,8 @@
 
                     // === CONDUCTOR ===
                     const $driverSelect = $(this).find(`select[name="driver_id[${groupId}]"]`);
-                    const driverId = $driverSelect.val();
-
+                    const driverId = parseInt($driverSelect.val(), 10);
+                    
                     if (no_disponibles.includes(driverId)) {
                         if ($driverSelect.hasClass('select2-hidden-accessible')) {
                             $driverSelect.next('.select2-container')
@@ -326,7 +415,7 @@
                     // === AYUDANTES ===
                     $(this).find(`select[name="helpers[${groupId}][]"]`).each(function () {
                         const $helperSelect = $(this);
-                        const helperId = $helperSelect.val();
+                        const helperId = parseInt($helperSelect.val(), 10);
 
                         if (no_disponibles.includes(helperId)) {
                             if ($helperSelect.hasClass('select2-hidden-accessible')) {
@@ -347,6 +436,100 @@
                         }
                     });
                 });
+
+                const vacaciones = response.vacaciones || [];
+                $('#vacationItems').empty();
+                if (vacaciones.length > 0) {
+                    $('#vacaciones-tab').addClass('text-danger');
+
+                    vacaciones.forEach(v => {
+                        // Convertir fechas a formato local (dd/mm/yyyy)
+    
+                        const requestDate = formatDate(v.request_date);
+                        const endDate = formatDate(v.end_date);
+
+                        $('#vacationItems').append(`
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><strong>${v.employee.names}</strong></span>
+                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
+                            </li>
+                        `);
+                    });
+                } else {                
+                    $('#vacaciones-tab').addClass('text-success'); // verde si todo bien
+                }
+
+                const nocontrato = response.nocontrato || [];
+                $('#nocontratoItem').empty();
+
+                if (nocontrato.length > 0) {
+                    $('#contratos-tab').addClass('text-danger');
+
+                    nocontrato.forEach(v => {
+                        // Convertir fechas a formato local (dd/mm/yyyy)
+    
+                        const requestDate = formatDate(v.contract.start_date);
+                        const endDate = formatDate(v.contract.end_date);
+
+                        $('#nocontratoItem').append(`
+                            <li class="list-group-item d-flex flex-col justify-content-between align-items-center">
+                                <span><strong>${v.employee.names}</strong></span>
+                                <span>${v.message}</span>
+                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
+                            </li>
+                        `);
+                    });
+                } else {
+                    $('#contratos-tab').addClass('text-success');
+                }
+            
+                const conflictos = response.conflictos || [];
+                $('#conflicList').empty();
+
+                if (conflictos.length > 0) {
+                    $('#conflictos-tab').addClass('text-danger');
+
+                    conflictos.forEach((conflict, index) => {
+                        const collapseId = `collapse-${conflict.employee_id}`;
+                        const headingId = `heading-${conflict.employee_id}`;
+
+                        let messageItems = '';
+                       conflict.messages.forEach(msg => {
+                            messageItems += `
+                                <li class="list-group-item">
+                                    Programación <strong>${msg.date}</strong> en zona ${msg.zone} (Turno: ${msg.shift})
+                                </li>`;
+                        });
+
+                      const accordionItem = `
+                        <div class="card accordion-card" data-toggle="collapse" data-target="#${collapseId}">
+                            <div class="card-header" id="${headingId}">
+                            <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                                <span>👤 ${conflict.employee_name}</span>
+                                <i class="fas fa-chevron-down rotate-icon"></i>
+                            </h6>
+                            </div>
+                            <div id="${collapseId}" 
+                                class="collapse" 
+                                aria-labelledby="${headingId}" 
+                                data-parent="#conflicList">
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush">
+                                   ${messageItems} 
+                                </ul>
+                            </div>
+                            </div>
+                        </div>
+                        `;
+
+                        $('#conflicList').append(accordionItem);
+                    });
+
+                } else {
+                   $('#conflictos-tab').addClass('text-success');
+                }
+
+                $('#validationModal').modal('show');
 
                 
                 Swal.fire({

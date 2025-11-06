@@ -73,62 +73,62 @@
             <hr>
             
             <!-- Modal unificado -->
-<div class="modal fade" id="validationModal" tabindex="-1" role="dialog" aria-labelledby="validationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-    <div class="modal-content">
+            <div class="modal fade" id="validationModal" tabindex="-1" role="dialog" aria-labelledby="validationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+                <div class="modal-content">
 
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="validationModalLabel">
-          <i class="fas fa-clipboard-check"></i> Resultados de Validación
-        </h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="validationModalLabel">
+                    <i class="fas fa-clipboard-check"></i> Resultados de Validación
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
 
-      <div class="modal-body">
-        <!-- Tabs -->
-        <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
-              <i class="fas fa-plane-departure"></i> Vacaciones
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
-              <i class="fas fa-file-signature"></i> Contratos
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
-              <i class="fas fa-exclamation-triangle"></i> Conflictos
-            </button>
-          </li>
-        </ul>
+                <div class="modal-body">
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
+                        <i class="fas fa-plane-departure"></i> Vacaciones
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
+                        <i class="fas fa-file-signature"></i> Contratos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
+                        <i class="fas fa-exclamation-triangle"></i> Conflictos
+                        </button>
+                    </li>
+                    </ul>
 
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
-            <ul class="list-group list-group-flush" id="vacationItems"></ul>
-          </div>
+                    <div class="tab-content">
+                    <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
+                        <ul class="list-group list-group-flush" id="vacationItems"></ul>
+                    </div>
 
-          <div class="tab-pane fade" id="contratos" role="tabpanel">
-            <ul class="list-group list-group-flush" id="nocontratoItem"></ul>
-          </div>
+                    <div class="tab-pane fade" id="contratos" role="tabpanel">
+                        <ul class="list-group list-group-flush" id="nocontratoItem"></ul>
+                    </div>
 
-          <div class="tab-pane fade" id="conflictos" role="tabpanel">
-            <div class="accordion" id="conflicList">
-              <ul class="list-group list-group-flush" id="conflicItem"></ul>
+                    <div class="tab-pane fade" id="conflictos" role="tabpanel">
+                        <div class="accordion" id="conflicList">
+                        <ul class="list-group list-group-flush" id="conflicItem"></ul>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
+            </div>
 
 
 
@@ -479,9 +479,6 @@
         });
     }
 
-
-
-
     $('#btnValidar').on('click', function () {
         const startDate = $('#start_date').val();
         const endDate = $('#end_date').val();
@@ -515,6 +512,9 @@
             data: data ,
             success: function(response) {
                 const no_disponibles = response.no_disponibles;
+                // --- Limpiar estados previos ---
+                $('#vacaciones-tab, #contratos-tab, #conflictos-tab').removeClass('text-danger text-success');
+
                 if(Array.isArray(no_disponibles)){
                         resetSelect2Style('#employee_conductor_id, select[name^="employee_helper_id"]');
                         if(no_disponibles.length === 0) {
@@ -525,10 +525,9 @@
                                 confirmButtonColor: '#3085d6',
                                 confirmButtonText: 'Aceptar'
                             });
+                             $('#saveSchedulingBtn').removeAttr('disabled');
                             return;
                         }
-
-                        
 
                         no_disponibles.forEach(id => {
                             // Marcar el campo correspondiente como inválido (borde rojo)
@@ -560,10 +559,10 @@
                 }
 
                 // Mostrar vacaciones aprobadas (si hay)
-               const vacaciones = response.vacaciones || [];
+                const vacaciones = response.vacaciones || [];
                 $('#vacationItems').empty();
                 if (vacaciones.length > 0) {
-                    $('#vacationList').show();
+                    $('#vacaciones-tab').addClass('text-danger');
 
                     vacaciones.forEach(v => {
                         // Convertir fechas a formato local (dd/mm/yyyy)
@@ -578,15 +577,15 @@
                             </li>
                         `);
                     });
-                } else {
-                    $('#vacationList').hide();
+                } else {                
+                    $('#vacaciones-tab').addClass('text-success'); // verde si todo bien
                 }
 
                 const nocontrato = response.nocontrato || [];
                 $('#nocontratoItem').empty();
 
                 if (nocontrato.length > 0) {
-                    $('#nocontratoList').show();
+                    $('#contratos-tab').addClass('text-danger');
 
                     nocontrato.forEach(v => {
                         // Convertir fechas a formato local (dd/mm/yyyy)
@@ -603,16 +602,14 @@
                         `);
                     });
                 } else {
-                    $('#nocontratoList').hide();
+                    $('#contratos-tab').addClass('text-success');
                 }
-
-
             
                 const conflictos = response.conflictos || [];
                 $('#conflicList').empty();
 
                 if (conflictos.length > 0) {
-                    $('#conflicList').show();
+                    $('#conflictos-tab').addClass('text-danger');
 
                     conflictos.forEach((conflict, index) => {
                         const collapseId = `collapse-${conflict.employee_id}`;
@@ -620,7 +617,10 @@
 
                         let messageItems = '';
                         conflict.messages.forEach(msg => {
-                            messageItems += `<li class="list-group-item">${msg}</li>`;
+                            messageItems += `
+                                <li class="list-group-item">
+                                    Programación <strong>${msg.date}</strong> en zona ${msg.zone} (Turno: ${msg.shift})
+                                </li>`;
                         });
 
                       const accordionItem = `
@@ -637,7 +637,7 @@
                                 data-parent="#conflicList">
                             <div class="card-body p-0">
                                 <ul class="list-group list-group-flush">
-                                ${messageItems}
+                                   ${messageItems} 
                                 </ul>
                             </div>
                             </div>
@@ -648,36 +648,10 @@
                     });
 
                 } else {
-                    $('#conflicList').hide();
+                   $('#conflictos-tab').addClass('text-success');
                 }
 
-               // --- Limpiar estados previos ---
-                $('#vacaciones-tab, #contratos-tab, #conflictos-tab').removeClass('text-danger text-success');
-
-                // --- Colorear los tabs según resultados ---
-                if (vacaciones.length > 0) {
-                $('#vacaciones-tab').addClass('text-danger'); // rojo si hay vacaciones activas
-                } else {
-                $('#vacaciones-tab').addClass('text-success'); // verde si todo bien
-                }
-
-                if (nocontrato.length > 0) {
-                $('#contratos-tab').addClass('text-danger');
-                } else {
-                $('#contratos-tab').addClass('text-success');
-                }
-
-                if (conflictos.length > 0) {
-                $('#conflictos-tab').addClass('text-danger');
-                } else {
-                $('#conflictos-tab').addClass('text-success');
-                }
-                
                 $('#validationModal').modal('show');
-
-
-
-
 
                 if(no_disponibles.length == 0 && vacaciones.length == 0){
                     $('#saveSchedulingBtn').removeAttr('disabled');

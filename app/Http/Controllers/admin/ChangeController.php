@@ -184,7 +184,7 @@ class ChangeController extends Controller
                 ]);
 
                 $scheduling->update([
-                    'status' => 2,
+                    'status' => 3,
                     'shift_id'=>$request->new_shift_id,
                 ]);
             }
