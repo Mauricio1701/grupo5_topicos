@@ -171,6 +171,7 @@ class SchedulingController extends Controller
         // Obtenemos el contrato con el empleado relacionado
         $contract = Contract::with('employee')
             ->where('employee_id', $employeeId)
+            ->where('is_active', 1)
             ->first();
 
         // Si no tiene contrato
@@ -178,7 +179,7 @@ class SchedulingController extends Controller
             return [
                 'status' => 'sin_contrato',
                 'employee_id' => $employeeId,
-                'message' => 'El empleado no tiene contrato registrado.',
+                'message' => 'El empleado no tiene contrato registrado o activo.',
                 'employee' => Employee::find($employeeId)
             ];
         }
@@ -954,53 +955,54 @@ class SchedulingController extends Controller
                     $ListaNoDisponibles[] = (int) $vacation->employee_id;
                     $ListaVacaciones[] = $vacation;
                      
-                }else{
-                    $contract = $this->checkContract($employeeId, $start_date, $end_date);
-                    if ($contract['status'] == 'temporal_fuera_de_rango' || $contract['status'] == 'sin_contrato') {
-                        $ListaNoDisponibles[] = (int) $contract['employee_id'];
-                        $ListaNoContrato[] = $contract;
-                    }
+                }
+                
+                $contract = $this->checkContract($employeeId, $start_date, $end_date);
+                if ($contract['status'] == 'temporal_fuera_de_rango' || $contract['status'] == 'sin_contrato') {
+                    $ListaNoDisponibles[] = (int) $contract['employee_id'];
+                    $ListaNoContrato[] = $contract;
+                }
 
-                    $hasConflicts = $this->checkEmployeeHasScheduleByWorkDays(
-                                $employeeId,
-                                $zone_id,
-                                $shift_id,
-                                $start_date,
-                                $end_date,
-                                $workDays
-                            );
+                $hasConflicts = $this->checkEmployeeHasScheduleByWorkDays(
+                            $employeeId,
+                            $zone_id,
+                            $shift_id,
+                            $start_date,
+                            $end_date,
+                            $workDays
+                        );
 
-                    if (!empty($hasConflicts)) {
-                        foreach ($hasConflicts as $conflict) {
-                            $employeeId = (int) $conflict['employee_id'];
-                            $ListaNoDisponibles[] = $employeeId;
+                if (!empty($hasConflicts)) {
+                    foreach ($hasConflicts as $conflict) {
+                        $employeeId = (int) $conflict['employee_id'];
+                        $ListaNoDisponibles[] = $employeeId;
 
-                            if (!isset($employeeNames[$employeeId])) {
-                                $employee = Employee::find($employeeId);
-                                $employeeNames[$employeeId] = $employee ? $employee->fullname ?? $employee->name : "Empleado {$employeeId}";
-                            }
+                        if (!isset($employeeNames[$employeeId])) {
+                            $employee = Employee::find($employeeId);
+                            $employeeNames[$employeeId] = $employee ? $employee->fullname ?? $employee->name : "Empleado {$employeeId}";
+                        }
 
-                            $employeeName = $employeeNames[$employeeId];
+                        $employeeName = $employeeNames[$employeeId];
 
-                            if (!isset($ListaConflictos[$employeeId])) {
-                                $ListaConflictos[$employeeId] = [
-                                        'employee_id'   => (int) $employeeId,
-                                        'employee_name' => $employeeName,
-                                        'messages'      => [] // aquí guardaremos los conflictos individuales
-                                    ];
-                            }
-
-                                // Agregamos el conflicto como objeto dentro de "messages"
-                                $ListaConflictos[$employeeId]['messages'][] = [
-                                    'date'  => $conflict['date'],
-                                    'zone'  => $conflict['zone'],
-                                    'shift' => $conflict['shift'],
-                                    // puedes añadir más campos si existen
+                        if (!isset($ListaConflictos[$employeeId])) {
+                            $ListaConflictos[$employeeId] = [
+                                    'employee_id'   => (int) $employeeId,
+                                    'employee_name' => $employeeName,
+                                    'messages'      => [] // aquí guardaremos los conflictos individuales
                                 ];
                         }
+
+                            // Agregamos el conflicto como objeto dentro de "messages"
+                            $ListaConflictos[$employeeId]['messages'][] = [
+                                'date'  => $conflict['date'],
+                                'zone'  => $conflict['zone'],
+                                'shift' => $conflict['shift'],
+                                // puedes añadir más campos si existen
+                            ];
                     }
-                   
                 }
+                   
+                
                 
             }
             
@@ -1024,6 +1026,7 @@ class SchedulingController extends Controller
         $isDuplicate = false;
         $scheduling = Scheduling::where('date', $fecha)
             ->where('shift_id', $shift)
+            ->where('zone_id', $zona)
             ->first();
         
         if ($scheduling) {

@@ -18,61 +18,105 @@
     }
 </style>
 <div class="modal fade" id="validationModal" tabindex="-1" role="dialog" aria-labelledby="validationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-    <div class="modal-content">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+                <div class="modal-content">
 
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="validationModalLabel">
-          <i class="fas fa-clipboard-check"></i> Resultados de Validación
-        </h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+                <!-- HEADER -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="validationModalLabel">
+                    <i class="fas fa-clipboard-check"></i> Resultados de Validación de Programación
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
 
-      <div class="modal-body">
-        <!-- Tabs -->
-        <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
-              <i class="fas fa-plane-departure"></i> Vacaciones
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
-              <i class="fas fa-file-signature"></i> Contratos
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
-              <i class="fas fa-exclamation-triangle"></i> Conflictos
-            </button>
-          </li>
-        </ul>
+                <!-- BODY -->
+                <div class="modal-body">
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" id="validationTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="vacaciones-tab" data-toggle="tab" data-target="#vacaciones" type="button" role="tab">
+                        <i class="fas fa-plane-departure"></i> Vacaciones
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="contratos-tab" data-toggle="tab" data-target="#contratos" type="button" role="tab">
+                        <i class="fas fa-file-signature"></i> Contratos
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="conflictos-tab" data-toggle="tab" data-target="#conflictos" type="button" role="tab">
+                        <i class="fas fa-exclamation-triangle"></i> Conflictos
+                        </button>
+                    </li>
+                    </ul>
 
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
-            <ul class="list-group list-group-flush" id="vacationItems"></ul>
-          </div>
+                    <div class="tab-content">
 
-          <div class="tab-pane fade" id="contratos" role="tabpanel">
-            <ul class="list-group list-group-flush" id="nocontratoItem"></ul>
-          </div>
+                    <!-- VACACIONES -->
+                    <div class="tab-pane fade show active" id="vacaciones" role="tabpanel">
+                        <h6 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-user-clock"></i> Empleados con Vacaciones Programadas
+                        </h6>
+                        <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Motivo</th>
+                                <th>Fechas de Vacaciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="vacationItems">
+                            <!-- Se insertan dinámicamente los resultados -->
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
 
-          <div class="tab-pane fade" id="conflictos" role="tabpanel">
-            <div class="accordion" id="conflicList">
-              <ul class="list-group list-group-flush" id="conflicItem"></ul>
+                    <!-- CONTRATOS -->
+                    <div class="tab-pane fade" id="contratos" role="tabpanel">
+                        <h6 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-file-contract"></i> Empleados sin Contrato Vigente
+                        </h6>
+                        <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle">
+                            <thead class="thead-light">
+                            <tr>
+                                <th>Colaborador</th>
+                                <th>Motivo</th>
+                                <th>Fechas de Contrato</th>
+                            </tr>
+                            </thead>
+                            <tbody id="nocontratoItem">
+                            <!-- Se insertan dinámicamente los resultados -->
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+
+                    <!-- CONFLICTOS -->
+                    <div class="tab-pane fade" id="conflictos" role="tabpanel">
+                        <h6 class="fw-bold text-primary mb-2">
+                        <i class="fas fa-exclamation-circle"></i> Conflictos Detectados
+                        </h6>
+                        <ul class="list-group list-group-flush" id="conflicList"></ul>
+                    </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
+
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 <div class="modal fade" id="modalForm" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="ModalLongTitle" aria-hidden="true">
@@ -439,26 +483,29 @@
 
                 const vacaciones = response.vacaciones || [];
                 $('#vacationItems').empty();
+
                 if (vacaciones.length > 0) {
                     $('#vacaciones-tab').addClass('text-danger');
 
                     vacaciones.forEach(v => {
-                        // Convertir fechas a formato local (dd/mm/yyyy)
-    
                         const requestDate = formatDate(v.request_date);
                         const endDate = formatDate(v.end_date);
 
                         $('#vacationItems').append(`
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong>${v.employee.names}</strong></span>
-                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
-                            </li>
+                            <tr>
+                                <td><strong>${v.employee.names}</strong></td>
+                                <td>Vacaciones aprobadas</td>
+                                <td><span class="badge badge-warning">Del ${requestDate} al ${endDate}</span></td>
+                            </tr>
                         `);
                     });
-                } else {                
-                    $('#vacaciones-tab').addClass('text-success'); // verde si todo bien
+                } else {
+                    $('#vacaciones-tab').addClass('text-success');
                 }
 
+
+
+                // === CONTRATOS ===
                 const nocontrato = response.nocontrato || [];
                 $('#nocontratoItem').empty();
 
@@ -466,17 +513,19 @@
                     $('#contratos-tab').addClass('text-danger');
 
                     nocontrato.forEach(v => {
-                        // Convertir fechas a formato local (dd/mm/yyyy)
-    
-                        const requestDate = formatDate(v.contract.start_date);
-                        const endDate = formatDate(v.contract.end_date);
+                        var startDate = 'N/A';
+                        var endDate = 'N/A';
+                        if(v.contract){
+                            startDate = formatDate(v.contract.start_date);
+                            endDate = formatDate(v.contract.end_date);
+                        } 
 
                         $('#nocontratoItem').append(`
-                            <li class="list-group-item d-flex flex-col justify-content-between align-items-center">
-                                <span><strong>${v.employee.names}</strong></span>
-                                <span>${v.message}</span>
-                                <span class="badge badge-warning">Del ${requestDate} al ${endDate}</span>
-                            </li>
+                            <tr>
+                                <td><strong>${v.employee.names}</strong></td>
+                                <td>${v.message}</td>
+                                <td><span class="badge badge-warning">Del ${startDate} al ${endDate}</span></td>
+                            </tr>
                         `);
                     });
                 } else {
